@@ -1,4 +1,13 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+# Custom static blog generator written in Next.js/TypeScript/MDX
+## Features
+
+- Static blog generation using MDX files
+- Multi-language support
+- Customizable themes and layouts
+- SEO optimization
+- Responsive design
+- Easy to use and extend
 
 ## Getting Started
 
