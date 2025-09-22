@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Stratégies de mise en cache avancées pour Next.js et le Web",
+    "description": "Des couches HTTP, edge et base de données pour garder des réponses rapides sans sacrifier la fraîcheur.",
+    "date": "2025-09-11",
+    "slug": "advanced-caching-strategies"
+  },
+  {
+    "title": "Guide de conception d’API",
+    "description": "Modélisation, pagination et versionning pour des API évolutives côté client comme serveur.",
+    "date": "2025-09-12",
+    "slug": "api-design-handbook"
+  },
+  {
+    "title": "Concevoir des interfaces résilientes",
+    "description": "Motifs pour les états d’erreur, de chargement et l’amélioration progressive dans vos UI.",
+    "date": "2025-09-12",
+    "slug": "building-resilient-uis"
+  },
+  {
+    "title": "Outils CLI pour développeurs productifs",
+    "description": "Scripts, gabarits et environnements reproductibles pour accélérer le quotidien.",
+    "date": "2025-09-12",
+    "slug": "cli-tooling-for-devs"
+  },
+  {
+    "title": "Edge vs Serverless — analyse approfondie",
+    "description": "Comparer latence, cold starts, coûts et architectures hybrides entre edge et régions.",
+    "date": "2025-09-11",
+    "slug": "edge-vs-serverless-deep-dive"
+  },
+  {
+    "title": "Observabilité full stack pour Next.js",
+    "description": "Métriques, logs, traces et SLO adaptés aux déploiements App Router.",
+    "date": "2025-09-12",
+    "slug": "fullstack-observability"
+  },
+  {
+    "title": "Manuel de la récupération de données Next.js",
+    "description": "Comprendre le cache RSC, l’ISR, les route handlers et les modèles de cohérence.",
+    "date": "2025-09-11",
+    "slug": "nextjs-data-fetching-handbook"
+  },
+  {
+    "title": "Checklist sécurité production pour Next.js",
+    "description": "Garde-fous pratiques : auth, secrets, SSRF, hygiène des dépendances et monitoring.",
+    "date": "2025-09-12",
+    "slug": "production-security-checklist"
+  },
+  {
+    "title": "Patterns et anti-patterns RSC en production",
+    "description": "Retours d’expérience pour composer des React Server Components performants.",
+    "date": "2025-09-11",
+    "slug": "real-world-rsc-patterns"
+  },
+  {
+    "title": "Bonnes pratiques SEO avancées pour Next.js",
+    "description": "Architecture d’information, données structurées et UX de recherche orientées résultats.",
+    "date": "2025-09-11",
+    "slug": "seo-deep-practices"
+  }
+]

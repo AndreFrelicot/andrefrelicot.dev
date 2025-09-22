@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Estrategias de caché avanzadas para Next.js y la web",
+    "description": "Patrones de caché HTTP, edge y de datos en capas para mantener respuestas rápidas sin perder frescura.",
+    "date": "2025-09-11",
+    "slug": "advanced-caching-strategies"
+  },
+  {
+    "title": "Guía de diseño de APIs",
+    "description": "Modelado de recursos, paginación y técnicas de versionado que mantienen las APIs evolutivas.",
+    "date": "2025-09-12",
+    "slug": "api-design-handbook"
+  },
+  {
+    "title": "Construyendo interfaces resilientes",
+    "description": "Patrones de diseño para estados de error, skeletons de carga y mejora progresiva en aplicaciones modernas.",
+    "date": "2025-09-12",
+    "slug": "building-resilient-uis"
+  },
+  {
+    "title": "Herramientas CLI para desarrolladores productivos",
+    "description": "Haz repetibles las tareas diarias con scripts, generadores y entornos locales fiables.",
+    "date": "2025-09-12",
+    "slug": "cli-tooling-for-devs"
+  },
+  {
+    "title": "Edge vs Serverless — un análisis profundo",
+    "description": "Compara latencia, cold starts, costes y arquitecturas híbridas entre edge y cómputo regional.",
+    "date": "2025-09-11",
+    "slug": "edge-vs-serverless-deep-dive"
+  },
+  {
+    "title": "Observabilidad full-stack para Next.js",
+    "description": "Métricas, logs, trazas y flujos de SLO adaptados a despliegues con App Router.",
+    "date": "2025-09-12",
+    "slug": "fullstack-observability"
+  },
+  {
+    "title": "Guía de obtención de datos en Next.js",
+    "description": "Comprende la caché de fetch en RSC, ISR, route handlers y modelos de consistencia en App Router.",
+    "date": "2025-09-11",
+    "slug": "nextjs-data-fetching-handbook"
+  },
+  {
+    "title": "Checklist de seguridad en producción para Next.js",
+    "description": "Medidas prácticas sobre auth, secretos, SSRF, higiene de dependencias y monitorización.",
+    "date": "2025-09-12",
+    "slug": "production-security-checklist"
+  },
+  {
+    "title": "Patrones y anti-patrones de RSC en proyectos reales",
+    "description": "Lecciones aprendidas para componer React Server Components sin cascadas ni regresiones.",
+    "date": "2025-09-11",
+    "slug": "real-world-rsc-patterns"
+  },
+  {
+    "title": "Prácticas avanzadas de SEO para sitios Next.js",
+    "description": "Arquitectura de información, datos estructurados y tácticas de UX de búsqueda que mejoran la descubribilidad.",
+    "date": "2025-09-11",
+    "slug": "seo-deep-practices"
+  }
+]
