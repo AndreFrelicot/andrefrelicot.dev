@@ -4,7 +4,7 @@
 
 - Static blog generation using MDX files
 - Multi-language support
-- Customizable themes and layouts
+- Search functionality with Fuse.js
 - SEO optimization
 - Responsive design
 - Easy to use and extend
