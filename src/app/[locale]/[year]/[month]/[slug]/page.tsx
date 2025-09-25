@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
 import remarkGfm from "remark-gfm";
@@ -25,6 +27,43 @@ export const dynamic = "error";
 
 const FALLBACK_OG_IMAGE = "/af16bits.jpg";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
+const PUBLIC_DIR = path.join(process.cwd(), "public");
+
+function normalizeImagePath(imagePath: string | undefined): string {
+  if (!imagePath) return FALLBACK_OG_IMAGE;
+  return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+}
+
+function toAbsoluteUrl(urlPath: string): string {
+  return new URL(urlPath, SITE_URL).toString();
+}
+
+function getImageCandidate(imagePath: string | undefined): { og: string; twitter: string } {
+  const normalized = normalizeImagePath(imagePath);
+  const relativeNormalized = normalized.replace(/^\/+/, "");
+  const absoluteOg = toAbsoluteUrl(normalized);
+
+  if (!normalized.endsWith(".webp")) {
+    return { og: absoluteOg, twitter: absoluteOg };
+  }
+
+  const parsed = path.posix.parse(relativeNormalized);
+  const basePath = parsed.dir ? `${parsed.dir}/${parsed.name}` : parsed.name;
+  const fallbackTwitter = [".jpg", ".jpeg", ".png"].map((extension) => {
+    const candidateRelativePath = `${basePath}${extension}`;
+    const fileSystemPath = path.join(PUBLIC_DIR, candidateRelativePath);
+    if (fs.existsSync(fileSystemPath)) {
+      return `/${candidateRelativePath}`;
+    }
+    return null;
+  }).find((candidate): candidate is string => candidate !== null);
+
+  const twitterPath = fallbackTwitter ?? normalized;
+  return {
+    og: absoluteOg,
+    twitter: toAbsoluteUrl(twitterPath),
+  };
+}
 
 export function generateStaticParams() {
   refreshTranslationIndex();
@@ -58,8 +97,7 @@ export async function generateMetadata({
   const post = readPostBySlug(localizedSlug, locale);
   const defaultPost = readPostBySlug(canonicalSlug, DEFAULT_LOCALE);
   const pathForLocale = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
-  const previewImagePath = post.frontmatter.image ?? FALLBACK_OG_IMAGE;
-  const previewImageUrl = new URL(previewImagePath, SITE_URL).toString();
+  const previewImages = getImageCandidate(post.frontmatter.image);
 
   const languageAlternates = Object.fromEntries(
     SUPPORTED_LOCALES.map((loc) => {
@@ -80,7 +118,7 @@ export async function generateMetadata({
       url: pathForLocale,
       images: [
         {
-          url: previewImageUrl,
+          url: previewImages.og,
           width: 1200,
           height: 630,
           alt: post.frontmatter.title,
@@ -91,7 +129,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.frontmatter.title,
       description: post.frontmatter.description,
-      images: [previewImageUrl],
+      images: [previewImages.twitter],
     },
   };
 }

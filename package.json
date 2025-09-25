@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "prebuild": "tsx scripts/build-search-index.ts",
+    "prebuild": "node scripts/generate-social-images.mjs && tsx scripts/build-search-index.ts",
     "export": "next build --turbopack && next export"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "rehype-pretty-code": "^0.14.1",
     "remark-gfm": "^4.0.1",
     "remark-smartypants": "^3.0.2",
+    "sharp": "^0.34.4",
     "shiki": "^3.12.2",
     "three": "^0.180.0"
   },
