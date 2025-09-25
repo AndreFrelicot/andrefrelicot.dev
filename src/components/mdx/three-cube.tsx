@@ -32,6 +32,8 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
   }>>([]);
   const confettiActiveRef = useRef(false);
   const htmlConfettiRef = useRef<HTMLDivElement[]>([]);
+  const successAudioRef = useRef<HTMLAudioElement | null>(null);
+  const completionTriggeredRef = useRef(false);
   const spotlightsRef = useRef<Array<{
     light: THREE.SpotLight;
     helper?: THREE.SpotLightHelper;
@@ -154,6 +156,22 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       return context;
     };
 
+    const ensureSuccessAudio = (): HTMLAudioElement | null => {
+      if (typeof window === "undefined") return null;
+      if (!successAudioRef.current) {
+        try {
+          const audio = new Audio("/success.mp3");
+          audio.preload = "auto";
+          audio.volume = 0.6;
+          successAudioRef.current = audio;
+        } catch (error) {
+          console.warn("Unable to initialize success audio:", error);
+          return null;
+        }
+      }
+      return successAudioRef.current;
+    };
+
     const createOscillator = (faceIndex: number, context: AudioContext) => {
       const oscillator = context.createOscillator();
       const gainNode = context.createGain();
@@ -183,6 +201,18 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
 
     const checkAllFacesActive = () => {
       return faceAnimationsRef.current.every(animation => animation.looping);
+    };
+
+    const resetFaces = () => {
+      faceAnimationsRef.current.forEach((animation, index) => {
+        animation.active = false;
+        animation.looping = false;
+        animation.opacity = 0;
+        animation.startTime = 0;
+        materials[index].color.setRGB(1, 1, 1);
+        materials[index].needsUpdate = true;
+        stopOscillator(index);
+      });
     };
 
     const createConfetti = () => {
@@ -346,10 +376,12 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
 
     const handlePointerDown = () => {
       void ensureAudioContext();
+      ensureSuccessAudio();
     };
 
     const handleTouchStart = () => {
       void ensureAudioContext();
+      ensureSuccessAudio();
     };
 
     const handleClick = async (event: MouseEvent) => {
@@ -427,9 +459,31 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       });
 
       // Check for confetti trigger
-      if (checkAllFacesActive() && !confettiActiveRef.current) {
-        createConfetti();
-        createHtmlConfetti();
+      if (checkAllFacesActive() && !completionTriggeredRef.current) {
+        completionTriggeredRef.current = true;
+
+        if (!confettiActiveRef.current) {
+          createConfetti();
+          createHtmlConfetti();
+        }
+
+        setTimeout(() => {
+          const successAudio = ensureSuccessAudio();
+          if (successAudio) {
+            try {
+              successAudio.pause();
+              successAudio.currentTime = 0;
+              void successAudio.play().catch(() => {
+                // Ignore promise rejection caused by abrupt play interruptions
+              });
+            } catch (error) {
+              console.warn("Failed to play success audio:", error);
+            }
+          }
+
+          resetFaces();
+          completionTriggeredRef.current = false;
+        }, 200);
       }
 
       // Update confetti particles
@@ -551,6 +605,14 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       if (currentAudioContext) {
         currentAudioContext.close();
       }
+
+      const successAudio = successAudioRef.current;
+      if (successAudio) {
+        successAudio.pause();
+        successAudio.currentTime = 0;
+      }
+      successAudioRef.current = null;
+      completionTriggeredRef.current = false;
 
       // Clean up confetti
       confettiRef.current.forEach(particle => {
