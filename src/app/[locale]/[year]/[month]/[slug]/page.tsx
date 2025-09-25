@@ -28,6 +28,16 @@ export const dynamic = "error";
 const FALLBACK_OG_IMAGE = "/af16bits.jpg";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
 const PUBLIC_DIR = path.join(process.cwd(), "public");
+const SITE_NAME = "André Frélicot - TechLead & Solopreneur";
+const AUTHOR_NAME = "André Frélicot";
+const AUTHOR_URL = "https://andrefrelicot.dev/en/about";
+
+const OG_LOCALE_MAP: Record<string, string> = {
+  en: "en_US",
+  fr: "fr_FR",
+  pt: "pt_BR",
+  es: "es_ES",
+};
 
 function normalizeImagePath(imagePath: string | undefined): string {
   if (!imagePath) return FALLBACK_OG_IMAGE;
@@ -100,6 +110,24 @@ export async function generateMetadata({
   const defaultPost = readPostBySlug(canonicalSlug, DEFAULT_LOCALE);
   const pathForLocale = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
   const previewImages = getImageCandidate(post.frontmatter.image);
+  const publishedTime = `${post.frontmatter.date}T00:00:00+00:00`;
+  const ogLocale = OG_LOCALE_MAP[locale] ?? OG_LOCALE_MAP[DEFAULT_LOCALE];
+  const alternateOgLocales = SUPPORTED_LOCALES.filter((loc) => loc !== locale).map(
+    (loc) => OG_LOCALE_MAP[loc] ?? OG_LOCALE_MAP[DEFAULT_LOCALE],
+  );
+  const description = post.frontmatter.description ?? defaultPost.frontmatter.description;
+  const keywords = Array.from(
+    new Set(
+      [
+        post.frontmatter.title,
+        ...(post.frontmatter.tags ?? []),
+        "iOS",
+        "apps",
+        AUTHOR_NAME,
+      ].filter(Boolean),
+    ),
+  );
+  const absoluteArticleUrl = toAbsoluteUrl(pathForLocale);
 
   const languageAlternates = Object.fromEntries(
     SUPPORTED_LOCALES.map((loc) => {
@@ -111,14 +139,24 @@ export async function generateMetadata({
 
   return {
     title: post.frontmatter.title,
-    description: post.frontmatter.description,
+    description,
+    keywords,
+    authors: [{ name: AUTHOR_NAME, url: AUTHOR_URL }],
+    creator: AUTHOR_NAME,
+    publisher: AUTHOR_NAME,
     alternates: {
       canonical: getPostPermalink(DEFAULT_LOCALE, canonicalSlug, defaultPost.frontmatter.date),
       languages: languageAlternates,
     },
     openGraph: {
       type: "article",
-      url: pathForLocale,
+      title: post.frontmatter.title,
+      description,
+      url: absoluteArticleUrl,
+      siteName: SITE_NAME,
+      locale: ogLocale,
+      alternateLocale: alternateOgLocales,
+      publishedTime,
       images: [
         {
           url: previewImages.og,
@@ -127,13 +165,23 @@ export async function generateMetadata({
           alt: post.frontmatter.title,
         },
       ],
+      article: {
+        publishedTime,
+        authors: [AUTHOR_URL],
+        tags: post.frontmatter.tags,
+      },
     },
     twitter: {
       card: "summary_large_image",
       title: post.frontmatter.title,
-      description: post.frontmatter.description,
+      description,
       site: "@AndreFrelicot",
+      creator: "@AndreFrelicot",
       images: [previewImages.twitter],
+    },
+    other: {
+      "article:published_time": publishedTime,
+      "article:author": AUTHOR_URL,
     },
   };
 }
@@ -151,46 +199,74 @@ export default async function PostPage({
   const post = readPostBySlug(localizedSlug, locale);
   const sharePath = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
   const formattedDate = formatLocaleDate(locale, post.frontmatter.date);
+  const previewImages = getImageCandidate(post.frontmatter.image);
+  const absoluteShareUrl = toAbsoluteUrl(sharePath);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.frontmatter.title,
+    description: post.frontmatter.description ?? "",
+    author: {
+      "@type": "Person",
+      name: AUTHOR_NAME,
+      url: AUTHOR_URL,
+    },
+    publisher: {
+      "@type": "Person",
+      name: AUTHOR_NAME,
+    },
+    datePublished: post.frontmatter.date,
+    image: previewImages.og,
+    url: absoluteShareUrl,
+    inLanguage: locale,
+  };
 
   return (
-    <article className="prose prose-invert max-w-none">
-      <h1 className="mb-2 text-3xl font-bold tracking-tight">
-        {post.frontmatter.title}
-      </h1>
-      <div className="mb-6 flex flex-col gap-3 text-sm text-foreground/80 sm:flex-row sm:items-center sm:justify-between">
-        <p className="flex flex-wrap items-center gap-2 opacity-70">
-          <span>
-            {dictionary.post.publishedOnPrefix} {formattedDate}
-          </span>
-          <span aria-hidden="true">·</span>
-          <span>{formatReadingTime(dictionary, post.frontmatter.readingTimeMinutes)}</span>
-        </p>
-        <div className="not-prose flex items-center justify-start sm:justify-end">
-          <ShareMenu title={post.frontmatter.title} urlPath={sharePath} />
+    <>
+      <article className="prose prose-invert max-w-none">
+        <h1 className="mb-2 text-3xl font-bold tracking-tight">
+          {post.frontmatter.title}
+        </h1>
+        <div className="mb-6 flex flex-col gap-3 text-sm text-foreground/80 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex flex-wrap items-center gap-2 opacity-70">
+            <span>
+              {dictionary.post.publishedOnPrefix} {formattedDate}
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>{formatReadingTime(dictionary, post.frontmatter.readingTimeMinutes)}</span>
+          </p>
+          <div className="not-prose flex items-center justify-start sm:justify-end">
+            <ShareMenu title={post.frontmatter.title} urlPath={sharePath} />
+          </div>
         </div>
-      </div>
-      <MDXRemote
-        source={post.content}
-        components={mdxComponents}
-        options={{
-          mdxOptions: {
-            remarkPlugins: [remarkGfm, remarkSmartypants],
-            rehypePlugins: [
-              [
-                rehypePrettyCode,
-                {
-                  theme: {
-                    light: "github-light",
-                    dark: "github-dark",
+        <MDXRemote
+          source={post.content}
+          components={mdxComponents}
+          options={{
+            mdxOptions: {
+              remarkPlugins: [remarkGfm, remarkSmartypants],
+              rehypePlugins: [
+                [
+                  rehypePrettyCode,
+                  {
+                    theme: {
+                      light: "github-light",
+                      dark: "github-dark",
+                    },
                   },
-                },
+                ],
+                rehypeCodeHeaders,
               ],
-              rehypeCodeHeaders,
-            ],
-          },
-        }}
+            },
+          }}
+        />
+        <CodeCopyListener />
+      </article>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CodeCopyListener />
-    </article>
+    </>
   );
 }
