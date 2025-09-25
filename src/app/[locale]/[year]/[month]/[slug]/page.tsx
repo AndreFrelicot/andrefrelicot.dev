@@ -41,27 +41,29 @@ function toAbsoluteUrl(urlPath: string): string {
 function getImageCandidate(imagePath: string | undefined): { og: string; twitter: string } {
   const normalized = normalizeImagePath(imagePath);
   const relativeNormalized = normalized.replace(/^\/+/, "");
-  const absoluteOg = toAbsoluteUrl(normalized);
+  const isWebp = normalized.endsWith(".webp");
 
-  if (!normalized.endsWith(".webp")) {
-    return { og: absoluteOg, twitter: absoluteOg };
+  let preferredPath: string | null = null;
+
+  if (isWebp) {
+    const parsed = path.posix.parse(relativeNormalized);
+    const basePath = parsed.dir ? `${parsed.dir}/${parsed.name}` : parsed.name;
+    preferredPath = [".jpg", ".jpeg", ".png"].map((extension) => {
+      const candidateRelativePath = `${basePath}${extension}`;
+      const fileSystemPath = path.join(PUBLIC_DIR, candidateRelativePath);
+      if (fs.existsSync(fileSystemPath)) {
+        return `/${candidateRelativePath}`;
+      }
+      return null;
+    }).find((candidate): candidate is string => candidate !== null) ?? null;
   }
 
-  const parsed = path.posix.parse(relativeNormalized);
-  const basePath = parsed.dir ? `${parsed.dir}/${parsed.name}` : parsed.name;
-  const fallbackTwitter = [".jpg", ".jpeg", ".png"].map((extension) => {
-    const candidateRelativePath = `${basePath}${extension}`;
-    const fileSystemPath = path.join(PUBLIC_DIR, candidateRelativePath);
-    if (fs.existsSync(fileSystemPath)) {
-      return `/${candidateRelativePath}`;
-    }
-    return null;
-  }).find((candidate): candidate is string => candidate !== null);
+  const resolvedPath = preferredPath ?? normalized;
+  const absoluteUrl = toAbsoluteUrl(resolvedPath);
 
-  const twitterPath = fallbackTwitter ?? normalized;
   return {
-    og: absoluteOg,
-    twitter: toAbsoluteUrl(twitterPath),
+    og: absoluteUrl,
+    twitter: absoluteUrl,
   };
 }
 
@@ -115,6 +117,7 @@ export async function generateMetadata({
       languages: languageAlternates,
     },
     openGraph: {
+      type: "article",
       url: pathForLocale,
       images: [
         {
@@ -129,6 +132,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.frontmatter.title,
       description: post.frontmatter.description,
+      site: "@AndreFrelicot",
       images: [previewImages.twitter],
     },
   };
