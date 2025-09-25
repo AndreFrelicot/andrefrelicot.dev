@@ -1,10 +1,11 @@
+import { AppStoreLink } from "./app-store-link";
 import { Callout } from "./callout";
-import { ThreeCube } from "./three-cube";
 import { ThemeImage } from "./theme-image";
+import { ThreeCube } from "./three-cube";
 
 export const mdxComponents = {
+  AppStoreLink,
   Callout,
   ThreeCube,
   ThemeImage,
 };
-
