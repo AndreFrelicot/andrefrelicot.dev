@@ -23,6 +23,9 @@ import { rehypeCodeHeaders } from "@/lib/rehype-code-headers";
 
 export const dynamic = "error";
 
+const FALLBACK_OG_IMAGE = "/af16bits.jpg";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
+
 export function generateStaticParams() {
   refreshTranslationIndex();
   const canonicalSlugs = listCanonicalSlugs();
@@ -55,6 +58,8 @@ export async function generateMetadata({
   const post = readPostBySlug(localizedSlug, locale);
   const defaultPost = readPostBySlug(canonicalSlug, DEFAULT_LOCALE);
   const pathForLocale = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
+  const previewImagePath = post.frontmatter.image ?? FALLBACK_OG_IMAGE;
+  const previewImageUrl = new URL(previewImagePath, SITE_URL).toString();
 
   const languageAlternates = Object.fromEntries(
     SUPPORTED_LOCALES.map((loc) => {
@@ -73,6 +78,20 @@ export async function generateMetadata({
     },
     openGraph: {
       url: pathForLocale,
+      images: [
+        {
+          url: previewImageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.frontmatter.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.frontmatter.title,
+      description: post.frontmatter.description,
+      images: [previewImageUrl],
     },
   };
 }
