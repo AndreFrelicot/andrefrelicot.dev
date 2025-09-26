@@ -45,6 +45,13 @@ export default async function RootLayout({
   const locale = getValidLocale(resolved?.locale);
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="682271ce-8738-436c-a03d-0b285b3e8341"
+        ></script>
+      </head>
       <body className={`${brandSans.variable} ${brandMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {children}
