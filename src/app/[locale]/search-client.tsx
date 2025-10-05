@@ -341,7 +341,7 @@ export function ClientSearch({
           <li key={p.slug} className="overflow-hidden rounded-lg border">
             <Link
               href={pathsBySlug?.[p.slug] ?? buildPostPath(locale, p.slug, p.date)}
-              className="block h-full"
+              className="group block h-full"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-foreground/5">
                 <Image
@@ -349,7 +349,7 @@ export function ClientSearch({
                   alt={p.title}
                   fill
                   sizes="(min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
+                  className="object-cover transition-transform duration-300 ease-out motion-safe:group-focus-visible:scale-105 motion-safe:group-hover:scale-105"
                   priority={false}
                   unoptimized
                 />
