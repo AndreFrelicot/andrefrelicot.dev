@@ -63,10 +63,9 @@ export function LanguageSwitcher({
     <div
       ref={containerRef}
       className={clsx(
-        "flex h-9 items-center rounded-full text-xs font-semibold uppercase tracking-wide backdrop-blur transition-all duration-200",
-        open
-          ? "overflow-hidden border border-foreground/20 bg-background/70 gap-1 pl-0.5 pr-1.5"
-          : "overflow-visible border-none bg-transparent w-9 justify-center",
+        "relative flex h-9 w-9 items-center justify-center text-xs font-semibold uppercase tracking-wide transition-all duration-200",
+        open ? "z-40" : "z-10",
+        "flex-shrink-0",
         className,
       )}
     >
@@ -87,10 +86,11 @@ export function LanguageSwitcher({
       <nav
         aria-hidden={!open}
         className={clsx(
-          "flex h-full items-center gap-1 overflow-hidden pr-0.5 transition-all duration-200",
+          "absolute right-0 top-full z-50 mt-2 flex items-center gap-1 rounded-full border border-foreground/20 bg-background/90 px-0.5 py-1 text-xs font-semibold uppercase tracking-wide shadow-lg backdrop-blur transition duration-150",
+          "origin-top-right transform",
           open
-            ? "max-w-[220px] opacity-100"
-            : "pointer-events-none max-w-0 opacity-0",
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-1 opacity-0",
         )}
       >
         {SUPPORTED_LOCALES.map((locale) => (
