@@ -60,7 +60,8 @@ export function ThemeImage({
   const wrapperClassName = clsx(
     shouldFill
       ? "relative mx-auto w-full max-w-3xl overflow-hidden"
-      : "mx-auto flex justify-center",
+      : "mx-auto flex justify-center overflow-hidden",
+    "rounded-lg",
     className,
   );
   const wrapperStyle: CSSProperties | undefined = shouldFill
@@ -85,14 +86,14 @@ export function ThemeImage({
         {...dimensionProps}
         src={resolvedLightSrc}
         alt={alt}
-        className={clsx("block dark:hidden", imageClassName)}
+        className={clsx("block rounded-lg dark:hidden", imageClassName)}
       />
       <Image
         {...sharedImageProps}
         {...dimensionProps}
         src={resolvedDarkSrc}
         alt={alt}
-        className={clsx("hidden dark:block", imageClassName)}
+        className={clsx("hidden rounded-lg dark:block", imageClassName)}
       />
     </div>
   );
