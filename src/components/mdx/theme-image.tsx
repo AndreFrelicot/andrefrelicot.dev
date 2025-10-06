@@ -36,6 +36,7 @@ export function ThemeImage({
   height,
   fill,
   unoptimized = true,
+  priority = false,
   sizes,
   style,
   ...rest
@@ -71,6 +72,7 @@ export function ThemeImage({
   const sharedImageProps: Omit<NextImageProps, "src" | "className" | "alt"> = {
     ...rest,
     unoptimized,
+    priority,
     sizes: resolvedSizes,
     style,
   };
@@ -80,22 +82,29 @@ export function ThemeImage({
     : ({ width, height } as const);
 
   return (
-    <div className={wrapperClassName} style={wrapperStyle}>
-      <Image
-        {...sharedImageProps}
-        {...dimensionProps}
-        src={resolvedLightSrc}
-        alt={alt}
-        className={clsx("block rounded-lg dark:hidden", imageClassName)}
-      />
-      <Image
-        {...sharedImageProps}
-        {...dimensionProps}
-        src={resolvedDarkSrc}
-        alt={alt}
-        className={clsx("hidden rounded-lg dark:block", imageClassName)}
-      />
-    </div>
+    <figure className="mx-auto w-full max-w-3xl">
+      <div className={wrapperClassName} style={wrapperStyle}>
+        <Image
+          {...sharedImageProps}
+          {...dimensionProps}
+          src={resolvedLightSrc}
+          alt={alt}
+          className={clsx("block rounded-lg dark:hidden", imageClassName)}
+        />
+        <Image
+          {...sharedImageProps}
+          {...dimensionProps}
+          src={resolvedDarkSrc}
+          alt={alt}
+          className={clsx("hidden rounded-lg dark:block", imageClassName)}
+        />
+      </div>
+      {alt && (
+        <figcaption className="mt-2 px-2 text-center text-sm text-foreground/60">
+          {alt}
+        </figcaption>
+      )}
+    </figure>
   );
 }
 

@@ -337,7 +337,7 @@ export function ClientSearch({
       ) : null}
 
       <ul className="mt-6 grid gap-6 sm:grid-cols-2">
-        {visibleResults.map((p) => (
+        {visibleResults.map((p, index) => (
           <li key={p.slug} className="overflow-hidden rounded-lg border">
             <Link
               href={pathsBySlug?.[p.slug] ?? buildPostPath(locale, p.slug, p.date)}
@@ -350,7 +350,7 @@ export function ClientSearch({
                   fill
                   sizes="(min-width: 640px) 50vw, 100vw"
                   className="object-cover transition-transform duration-300 ease-out motion-safe:group-focus-visible:scale-105 motion-safe:group-hover:scale-105"
-                  priority={false}
+                  priority={index === 0}
                   unoptimized
                 />
               </div>
