@@ -5,7 +5,7 @@ import clsx from "clsx";
 const socials = [
   {
     name: "LinkedIn",
-    href: "https://www.linkedin.com/in/andr%C3%A9-fr%C3%A9licot-44aa2336/",
+    href: "https://www.linkedin.com/in/andrefrelicot/",
     icon: LinkedInIcon,
   },
   {
