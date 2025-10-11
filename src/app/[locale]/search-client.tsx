@@ -257,11 +257,11 @@ export function ClientSearch({
           </button>
 
           {showTags ? (
-            <div className="space-y-4 rounded-md border border-foreground/15 p-4">
+            <div className="space-y-4 rounded-md border border-foreground/10 dark:border-foreground/15 p-4">
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
+                  className={`inline-flex items-center gap-2 rounded-full border border-foreground/10 dark:border-foreground/15 px-3 py-1 text-sm transition-colors ${
                     !tag
                       ? "bg-foreground text-background"
                       : "text-foreground/70 hover:text-foreground"
@@ -278,7 +278,7 @@ export function ClientSearch({
                   <button
                     type="button"
                     key={candidate}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
+                    className={`inline-flex items-center gap-2 rounded-full border border-foreground/10 dark:border-foreground/15 px-3 py-1 text-sm transition-colors ${
                       candidate === tag
                         ? "bg-foreground text-background"
                         : "text-foreground/70 hover:text-foreground"
@@ -314,7 +314,7 @@ export function ClientSearch({
                 }}
                 type="search"
                 placeholder={copy.placeholder}
-                className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                className="w-full rounded-md border border-foreground/10 dark:border-foreground/15 bg-transparent px-3 py-2 text-sm"
               />
             </div>
           ) : null}
@@ -332,7 +332,7 @@ export function ClientSearch({
           }}
           type="search"
           placeholder={copy.placeholder}
-          className="mt-4 w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+          className="mt-4 w-full rounded-md border border-foreground/10 dark:border-foreground/15 bg-transparent px-3 py-2 text-sm"
         />
       ) : null}
 
@@ -395,7 +395,7 @@ export function ClientSearch({
         <div ref={loadMoreRef} className="mt-6 flex justify-center">
           <button
             type="button"
-            className="rounded-full border px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:border-foreground hover:text-foreground"
+            className="rounded-full border border-foreground/10 dark:border-foreground/15 px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:border-foreground hover:text-foreground"
             onClick={handleLoadMore}
           >
             {copy.loadMore}
