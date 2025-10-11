@@ -61,8 +61,8 @@ export function SiteHeader({
       href={link.href}
       className={
         link.variant === "ghost"
-          ? "rounded-md border border-foreground/30 px-4 py-1.5 text-sm font-medium text-foreground/80 transition hover:border-foreground/60 hover:text-foreground"
-          : "rounded-md border border-foreground px-4 py-1.5 text-sm font-medium transition hover:bg-foreground hover:text-background"
+          ? "rounded-md border border-foreground/10 dark:border-foreground/15 px-4 py-1.5 text-sm font-medium text-foreground/80 transition hover:border-foreground/60 hover:text-foreground"
+          : "rounded-md border border-foreground/10 dark:border-foreground/15 px-4 py-1.5 text-sm font-medium transition hover:bg-foreground hover:text-background"
       }
       onClick={() => setMenuOpen(false)}
     >
@@ -88,7 +88,7 @@ export function SiteHeader({
               aria-label="Toggle navigation"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((value) => !value)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/20 text-foreground transition hover:border-foreground/50 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 dark:border-foreground/15 text-foreground transition hover:border-foreground/50 md:hidden"
             >
               <MenuIcon open={menuOpen} />
             </button>
@@ -107,7 +107,7 @@ export function SiteHeader({
           className={clsx(
             "md:hidden flex origin-top flex-col gap-2 overflow-hidden rounded-xl transition-all duration-200 ease-out",
             menuOpen
-              ? "glass-nav mt-2 max-h-64 border border-foreground/15 p-3 opacity-100 pointer-events-auto"
+              ? "glass-nav mt-2 max-h-64 border border-foreground/10 dark:border-foreground/15 p-3 opacity-100 pointer-events-auto"
               : "max-h-0 border border-transparent p-0 opacity-0 pointer-events-none",
           )}
         >
