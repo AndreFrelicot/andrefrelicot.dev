@@ -338,7 +338,7 @@ export function ClientSearch({
 
       <ul className="mt-6 grid gap-6 sm:grid-cols-2">
         {visibleResults.map((p, index) => (
-          <li key={p.slug} className="overflow-hidden rounded-lg border">
+          <li key={p.slug} className="overflow-hidden rounded-lg border border-foreground/10 dark:border-foreground/15">
             <Link
               href={pathsBySlug?.[p.slug] ?? buildPostPath(locale, p.slug, p.date)}
               className="group block h-full"
@@ -376,7 +376,7 @@ export function ClientSearch({
                     {onlyVisibleTags(p.tags).map((t) => (
                       <span
                         key={t}
-                        className="rounded border px-2 py-0.5 text-xs opacity-80"
+                        className="rounded border border-foreground/10 dark:border-foreground/15 px-2 py-0.5 text-xs opacity-80"
                       >
                         {t}
                       </span>
