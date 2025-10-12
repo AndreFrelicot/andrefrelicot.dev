@@ -32,6 +32,12 @@ export type Dictionary = {
     publishedOnPrefix: string;
     readingTimeLabel: string;
   };
+  notFound: {
+    title: string;
+    heading: string;
+    message: string;
+    backHome: string;
+  };
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -67,6 +73,12 @@ const dictionaries: Record<Locale, Dictionary> = {
       publishedOnPrefix: "Published",
       readingTimeLabel: "{minutes} min read",
     },
+    notFound: {
+      title: "404 - Page Not Found",
+      heading: "Page Not Found",
+      message: "The page you're looking for doesn't exist or has been moved.",
+      backHome: "Back to Home",
+    },
   },
   fr: {
     site: {
@@ -100,6 +112,12 @@ const dictionaries: Record<Locale, Dictionary> = {
     post: {
       publishedOnPrefix: "Publié",
       readingTimeLabel: "{minutes} min de lecture",
+    },
+    notFound: {
+      title: "404 - Page non trouvée",
+      heading: "Page non trouvée",
+      message: "La page que vous recherchez n'existe pas ou a été déplacée.",
+      backHome: "Retour à l'accueil",
     },
   },
   pt: {
@@ -135,6 +153,12 @@ const dictionaries: Record<Locale, Dictionary> = {
       publishedOnPrefix: "Publicado",
       readingTimeLabel: "{minutes} min de leitura",
     },
+    notFound: {
+      title: "404 - Página não encontrada",
+      heading: "Página não encontrada",
+      message: "A página que você está procurando não existe ou foi movida.",
+      backHome: "Voltar ao início",
+    },
   },
   es: {
     site: {
@@ -168,6 +192,12 @@ const dictionaries: Record<Locale, Dictionary> = {
     post: {
       publishedOnPrefix: "Publicado",
       readingTimeLabel: "{minutes} min de lectura",
+    },
+    notFound: {
+      title: "404 - Página no encontrada",
+      heading: "Página no encontrada",
+      message: "La página que buscas no existe o ha sido movida.",
+      backHome: "Volver al inicio",
     },
   },
 };
