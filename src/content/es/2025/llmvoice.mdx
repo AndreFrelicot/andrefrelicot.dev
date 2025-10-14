@@ -1,0 +1,50 @@
+---
+title: LLMVoice 1.0
+date: 2025-10-14
+description: Demostración técnica que permite evaluar las nuevas API de reconocimiento de voz de iOS 26 (SpeechAnalyzer / SpeechTranscriber) y la ejecución local de modelos LLM de código abierto (cuantificados en 4 bits) en un iPhone compatible con el framework MLX.    
+tags: [apps, llm, mlx, apple_intelligence, ios26, speechanalyzer, speechtranscriber, audio, voice, local, on_device, source_code]
+image: /images/2025/llmvoice.webp
+---
+
+<ThemeImage
+  lightSrc="/images/2025/llmvoice.webp"
+  darkSrc="/images/2025/llmvoice.webp"
+  alt="LLMVoice en acción"
+  width={800}
+  height={600}
+  priority={true}
+/>
+
+
+<br/>
+Aquí está **LLMVoice**, una demostración técnica que permite evaluar las nuevas API de reconocimiento de voz de iOS 26 (**SpeechAnalyzer / SpeechTranscriber**) y la ejecución de modelos **LLM de código abierto** (cuantificados en **4 bits**) localmente en un iPhone compatible con el framework **MLX**. Puedes resumir una transcripción o enviar un prompt directamente al modelo.
+
+Seamos claros: modelos tan comprimidos no son realmente útiles, pero sigue siendo divertido verlos alucinar. ¡Aun así, logran poner de rodillas a mi viejo iPhone 13!
+
+Estos son los modelos disponibles para descargar: <br/>
+**Gemma3_1b** (mlx-community/gemma-3-1b-it-4bit) <br/>
+**Qwen25_05b** (lmstudio-community/Qwen2.5-0.5B-Instruct-MLX-4bit) <br/>
+**Llama32_1b** (mlx-community/Llama-3.2-1B-Instruct-4bit) <br/>
+
+## Código fuente: 
+
+[LLMVoice source code](https://github.com/AndreFrelicot/llmvoice)
+
+## Requisitos del sistema
+iOS 26.0+ / iPadOS 26.0+
+### Para Apple Intelligence
+iPhone 15 Pro o modelo posterior  
+Apple Intelligence activado en los ajustes
+### Para los modelos locales MLX 
+iPhone 12 o modelo posterior (chip A14 Bionic o superior).<br/> 
+iPad Pro 2021 o modelo posterior (chip M1 o superior).<br/>
+iPad Air de 5ª generación o modelo posterior (chip M1 o superior). <br/>
+GPU Metal con características específicas: air.simd_sum, compatibilidad con el núcleo rmsfloat16. <br/>
+
+### Almacenamiento
+Tamaño de la aplicación: aproximadamente 50 MB  
+Descargas de modelos (solo MLX):
+
+Qwen2.5 (0,5B): aproximadamente 150 MB<br/>
+Gemma 3 (1B): aproximadamente 300 MB<br/>
+Llama 3.2 (1B): aproximadamente 500 MB<br/>

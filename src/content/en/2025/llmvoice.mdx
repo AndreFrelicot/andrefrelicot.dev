@@ -1,11 +1,10 @@
 ---
 title: LLMVoice 1.0
-date: 2025-10-15
-description: 
-tags: [_apps]
+date: 2025-10-14
+description: Technical demo designed to evaluate the new speech recognition APIs of iOS 26 (SpeechAnalyzer / SpeechTranscriber) and the execution of open-weight LLM models (quantized in 4 bits) locally on an iPhone supporting the MLX framework.    
+tags: [apps, llm, mlx, apple_intelligence, ios26, speechanalyzer, speechtranscriber, audio, voice, local, on_device, source_code]
 image: /images/2025/llmvoice.webp
 ---
-
 
 <ThemeImage
   lightSrc="/images/2025/llmvoice.webp"
@@ -17,15 +16,35 @@ image: /images/2025/llmvoice.webp
 />
 
 
-# **LLMVoice – MLX Local LLM proof of concept**
+<br/>
+Here is **LLMVoice**, a technical demo designed to evaluate the new iOS 26 speech recognition APIs (**SpeechAnalyzer / SpeechTranscriber**) and the execution of **open-weight LLM models** (quantized in **4 bits**) locally on an iPhone that supports the **MLX** framework. You can either summarize a transcription or send a prompt directly to the model.
 
-### **Download LLMVoice today**
+Let’s be honest — models this compressed aren’t particularly useful, but it’s still fun to watch them hallucinate. That said, they’re powerful enough to bring my old iPhone 13 to its knees!
 
-<br />
+Here are the available downloadable models: <br/>
+**Gemma3_1b** (mlx-community/gemma-3-1b-it-4bit) <br/>
+**Qwen25_05b** (lmstudio-community/Qwen2.5-0.5B-Instruct-MLX-4bit) <br/>
+**Llama32_1b** (mlx-community/Llama-3.2-1B-Instruct-4bit) <br/>
 
-#Under development
-Coming soon...
+## Source Code
 
----
-## 🛟 Support
-Need help or want to share feedback? Email [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).
+[LLMVoice source code](https://github.com/AndreFrelicot/llmvoice)
+
+## System Requirements
+iOS 26.0+ / iPadOS 26.0+
+### For Apple Intelligence
+iPhone 15 Pro or later  
+Apple Intelligence enabled in Settings
+### For local MLX models
+iPhone 12 or later (A14 Bionic chip or higher).<br/> 
+iPad Pro 2021 or later (M1 chip or higher).<br/>
+iPad Air 5th generation or later (M1 chip or higher).<br/>
+Metal GPU with specific features: air.simd_sum, rmsfloat16 kernel support.<br/>
+
+### Storage
+App size: about 50 MB  
+Model downloads (MLX only):
+
+Qwen2.5 (0.5B): about 150 MB<br/>
+Gemma 3 (1B): about 300 MB<br/>
+Llama 3.2 (1B): about 500 MB<br/>

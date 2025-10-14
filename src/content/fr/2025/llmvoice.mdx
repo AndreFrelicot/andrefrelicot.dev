@@ -1,0 +1,51 @@
+---
+title: LLMVoice 1.0
+date: 2025-10-14
+description: Démo technique permettant d’évaluer les nouvelles API de reconnaissance vocale d’iOS 26 (SpeechAnalyzer / SpeechTranscriber) et l’exécution de modèles LLM open-weight (quantifés en 4bits) en local sur un iPhone supportant le framework MLX.    
+tags: [apps, llm, mlx, apple_intelligence, ios26, speechanalyzer, speechtranscriber, audio, voice, local, on_device, source_code]
+image: /images/2025/llmvoice.webp
+---
+
+<ThemeImage
+  lightSrc="/images/2025/llmvoice.webp"
+  darkSrc="/images/2025/llmvoice.webp"
+  alt="LLMVoice in action"
+  width={800}
+  height={600}
+  priority={true}
+/>
+
+
+<br/>
+Voici **LLMVoice**, une démo technique permettant d’évaluer les nouvelles API de reconnaissance vocale d’iOS 26 (**SpeechAnalyzer / SpeechTranscriber**) et l’exécution de modèles **LLM open-weights** (quantifés en **4bits**) en local sur un iPhone supportant le framework **MLX**. Vous pouvez soit résumer une transcription ou envoyer un prompt directement au modèle.
+
+Autant être clair, des modèles aussi compressés ne sont pas réellement utiles, c’est quand même divertissant de les voir halluciner. Mais il a quand même de quoi mettre mon antique iPhone 13 à genoux !
+
+
+Voici les modèles disponibles en téléchargement : <br/>
+**Gemma3_1b** (mlx-community/gemma-3-1b-it-4bit) <br/>
+**Qwen25_05b** (lmstudio-community/Qwen2.5-0.5B-Instruct-MLX-4bit) <br/>
+**Llama32_1b** (mlx-community/Llama-3.2-1B-Instruct-4bit) <br/>
+
+## Code source : 
+
+[LLMVoice source code](https://github.com/AndreFrelicot/llmvoice)
+
+## Configuration requise
+iOS 26.0+ / iPadOS 26.0+
+### Pour Apple Intelligence
+iPhone 15 Pro ou modèle ultérieur
+Apple Intelligence activée dans les réglages
+### Pour les modèles locaux MLX 
+iPhone 12 ou modèle ultérieur (puce A14 Bionic ou supérieure).<br/> 
+iPad Pro 2021 ou modèle ultérieur (puce M1 ou supérieure).<br/>
+iPad Air 5ᵉ génération ou modèle ultérieur (puce M1 ou supérieure). <br/>
+GPU Metal avec fonctionnalités spécifiques : air.simd_sum, prise en charge du noyau rmsfloat16. <br/>
+
+### Stockage
+Taille de l’application : environ 50 Mo
+Téléchargements de modèles (MLX uniquement) :
+
+Qwen2.5 (0,5B) : environ 150 Mo<br/>
+Gemma 3 (1B) : environ 300 Mo<br/>
+Llama 3.2 (1B) : environ 500 Mo<br/>
