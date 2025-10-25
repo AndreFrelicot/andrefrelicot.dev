@@ -111,6 +111,9 @@ export async function generateMetadata({
   const pathForLocale = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
   const previewImages = getImageCandidate(post.frontmatter.image);
   const publishedTime = `${post.frontmatter.date}T00:00:00+00:00`;
+  const modifiedTime = post.frontmatter.modified
+    ? `${post.frontmatter.modified}T00:00:00+00:00`
+    : null;
   const ogLocale = OG_LOCALE_MAP[locale] ?? OG_LOCALE_MAP[DEFAULT_LOCALE];
   const alternateOgLocales = SUPPORTED_LOCALES.filter((loc) => loc !== locale).map(
     (loc) => OG_LOCALE_MAP[loc] ?? OG_LOCALE_MAP[DEFAULT_LOCALE],
@@ -167,6 +170,7 @@ export async function generateMetadata({
       ],
       article: {
         publishedTime,
+        ...(modifiedTime ? { modifiedTime } : {}),
         authors: [AUTHOR_URL],
         tags: post.frontmatter.tags,
       },
@@ -182,6 +186,7 @@ export async function generateMetadata({
     other: {
       "article:published_time": publishedTime,
       "article:author": AUTHOR_URL,
+      ...(modifiedTime ? { "article:modified_time": modifiedTime } : {}),
     },
   };
 }
@@ -199,6 +204,11 @@ export default async function PostPage({
   const post = readPostBySlug(localizedSlug, locale);
   const sharePath = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
   const formattedDate = formatLocaleDate(locale, post.frontmatter.date);
+  const normalizedTags = post.frontmatter.tags?.map((tag) => tag.trim().toLowerCase()) ?? [];
+  const isDevlog = normalizedTags.includes("devlog");
+  const formattedModifiedDate = post.frontmatter.modified
+    ? formatLocaleDate(locale, post.frontmatter.modified)
+    : null;
   const previewImages = getImageCandidate(post.frontmatter.image);
   const absoluteShareUrl = toAbsoluteUrl(sharePath);
   const jsonLd = {
@@ -216,6 +226,9 @@ export default async function PostPage({
       name: AUTHOR_NAME,
     },
     datePublished: post.frontmatter.date,
+    ...(post.frontmatter.modified
+      ? { dateModified: post.frontmatter.modified }
+      : {}),
     image: previewImages.og,
     url: absoluteShareUrl,
     inLanguage: locale,
@@ -228,13 +241,20 @@ export default async function PostPage({
           {post.frontmatter.title}
         </h1>
         <div className="mb-6 flex flex-col gap-3 text-sm text-foreground/80 sm:flex-row sm:items-center sm:justify-between">
-          <p className="flex flex-wrap items-center gap-2 opacity-70">
-            <span>
-              {dictionary.post.publishedOnPrefix} {formattedDate}
-            </span>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-foreground/80">
+            <div className="flex flex-col leading-tight">
+              <span>
+                {dictionary.post.publishedOnPrefix} {formattedDate}
+              </span>
+              {isDevlog && formattedModifiedDate && (
+                <span className="text-xs text-foreground/60">
+                  {dictionary.post.modifiedOnPrefix} {formattedModifiedDate}
+                </span>
+              )}
+            </div>
             <span aria-hidden="true">·</span>
             <span>{formatReadingTime(dictionary, post.frontmatter.readingTimeMinutes)}</span>
-          </p>
+          </div>
           <div className="not-prose flex items-center justify-start sm:justify-end">
             <ShareMenu title={post.frontmatter.title} urlPath={sharePath} />
           </div>

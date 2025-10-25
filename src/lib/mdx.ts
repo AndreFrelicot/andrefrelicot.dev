@@ -21,6 +21,7 @@ export type PostFrontMatter = {
   title: string;
   description?: string;
   date: string;
+  modified?: string;
   tags?: string[];
   image?: string;
   type?: string;
@@ -228,7 +229,7 @@ export function readPostBySlug(
 
   const raw = fs.readFileSync(finalPath, "utf8");
   const { content, data } = matter(raw);
-  const fm = data as PostFrontMatter & { date: unknown };
+  const fm = data as PostFrontMatter & { date: unknown; modified?: unknown };
   const reading = readingTime(content);
   const translations: Partial<Record<Locale, string>> = {};
 
@@ -245,7 +246,7 @@ export function readPostBySlug(
 
   const filteredFrontMatter = Object.fromEntries(
     Object.entries(fm).filter(([key]) => !key.endsWith("_mdx")),
-  ) as PostFrontMatter & { date: unknown };
+  ) as PostFrontMatter & { date: unknown; modified?: unknown };
 
   return {
     slug,
@@ -254,6 +255,10 @@ export function readPostBySlug(
     frontmatter: {
       ...filteredFrontMatter,
       date: normalizeDate(fm.date),
+      modified:
+        fm.modified === undefined || fm.modified === null || fm.modified === ""
+          ? undefined
+          : normalizeDate(fm.modified),
       readingTimeMinutes: Math.ceil(reading.minutes),
       image: typeof fm.image === "string" ? fm.image : undefined,
       type: typeof fm.type === "string" ? fm.type : undefined,

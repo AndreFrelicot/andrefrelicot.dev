@@ -30,6 +30,7 @@ export type Dictionary = {
   };
   post: {
     publishedOnPrefix: string;
+    modifiedOnPrefix: string;
     readingTimeLabel: string;
   };
   notFound: {
@@ -71,6 +72,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     post: {
       publishedOnPrefix: "Published",
+      modifiedOnPrefix: "Modified",
       readingTimeLabel: "{minutes} min read",
     },
     notFound: {
@@ -111,6 +113,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     post: {
       publishedOnPrefix: "Publié",
+      modifiedOnPrefix: "Modifié",
       readingTimeLabel: "{minutes} min de lecture",
     },
     notFound: {
@@ -151,6 +154,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     post: {
       publishedOnPrefix: "Publicado",
+      modifiedOnPrefix: "Atualizado",
       readingTimeLabel: "{minutes} min de leitura",
     },
     notFound: {
@@ -191,6 +195,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     post: {
       publishedOnPrefix: "Publicado",
+      modifiedOnPrefix: "Actualizado",
       readingTimeLabel: "{minutes} min de lectura",
     },
     notFound: {
