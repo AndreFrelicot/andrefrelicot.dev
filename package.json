@@ -26,12 +26,12 @@
     "remark-smartypants": "^3.0.2",
     "sharp": "^0.34.5",
     "shiki": "^3.19.0",
-    "three": "^0.181.2"
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4.1.17",
-    "@types/node": "^24.10.2",
+    "@types/node": "^25.0.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.181.0",
