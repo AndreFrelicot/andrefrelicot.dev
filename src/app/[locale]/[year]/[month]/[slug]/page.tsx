@@ -26,7 +26,8 @@ import { rehypeCodeHeaders } from "@/lib/rehype-code-headers";
 export const dynamic = "error";
 
 const FALLBACK_OG_IMAGE = "/af16bits.jpg";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 const SITE_NAME = "André Frélicot - TechLead & Solopreneur";
 const AUTHOR_NAME = "André Frélicot";
@@ -48,7 +49,10 @@ function toAbsoluteUrl(urlPath: string): string {
   return new URL(urlPath, SITE_URL).toString();
 }
 
-function getImageCandidate(imagePath: string | undefined): { og: string; twitter: string } {
+function getImageCandidate(imagePath: string | undefined): {
+  og: string;
+  twitter: string;
+} {
   const normalized = normalizeImagePath(imagePath);
   const relativeNormalized = normalized.replace(/^\/+/, "");
   const isWebp = normalized.endsWith(".webp");
@@ -58,14 +62,17 @@ function getImageCandidate(imagePath: string | undefined): { og: string; twitter
   if (isWebp) {
     const parsed = path.posix.parse(relativeNormalized);
     const basePath = parsed.dir ? `${parsed.dir}/${parsed.name}` : parsed.name;
-    preferredPath = [".jpg", ".jpeg", ".png"].map((extension) => {
-      const candidateRelativePath = `${basePath}${extension}`;
-      const fileSystemPath = path.join(PUBLIC_DIR, candidateRelativePath);
-      if (fs.existsSync(fileSystemPath)) {
-        return `/${candidateRelativePath}`;
-      }
-      return null;
-    }).find((candidate): candidate is string => candidate !== null) ?? null;
+    preferredPath =
+      [".jpg", ".jpeg", ".png"]
+        .map((extension) => {
+          const candidateRelativePath = `${basePath}${extension}`;
+          const fileSystemPath = path.join(PUBLIC_DIR, candidateRelativePath);
+          if (fs.existsSync(fileSystemPath)) {
+            return `/${candidateRelativePath}`;
+          }
+          return null;
+        })
+        .find((candidate): candidate is string => candidate !== null) ?? null;
   }
 
   const resolvedPath = preferredPath ?? normalized;
@@ -97,28 +104,29 @@ type PageParams = Promise<{
   slug: string;
 }>;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: PageParams;
-}) {
+export async function generateMetadata({ params }: { params: PageParams }) {
   const resolved = await params;
   const locale = getValidLocale(resolved.locale);
   const canonicalSlug = getCanonicalSlug(locale, resolved.slug);
   const localizedSlug = getLocalizedSlug(canonicalSlug, locale);
   const post = readPostBySlug(localizedSlug, locale);
   const defaultPost = readPostBySlug(canonicalSlug, DEFAULT_LOCALE);
-  const pathForLocale = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
+  const pathForLocale = getPostPermalink(
+    locale,
+    localizedSlug,
+    post.frontmatter.date,
+  );
   const previewImages = getImageCandidate(post.frontmatter.image);
   const publishedTime = `${post.frontmatter.date}T00:00:00+00:00`;
   const modifiedTime = post.frontmatter.modified
     ? `${post.frontmatter.modified}T00:00:00+00:00`
     : null;
   const ogLocale = OG_LOCALE_MAP[locale] ?? OG_LOCALE_MAP[DEFAULT_LOCALE];
-  const alternateOgLocales = SUPPORTED_LOCALES.filter((loc) => loc !== locale).map(
-    (loc) => OG_LOCALE_MAP[loc] ?? OG_LOCALE_MAP[DEFAULT_LOCALE],
-  );
-  const description = post.frontmatter.description ?? defaultPost.frontmatter.description;
+  const alternateOgLocales = SUPPORTED_LOCALES.filter(
+    (loc) => loc !== locale,
+  ).map((loc) => OG_LOCALE_MAP[loc] ?? OG_LOCALE_MAP[DEFAULT_LOCALE]);
+  const description =
+    post.frontmatter.description ?? defaultPost.frontmatter.description;
   const keywords = Array.from(
     new Set(
       [
@@ -136,7 +144,10 @@ export async function generateMetadata({
     SUPPORTED_LOCALES.map((loc) => {
       const targetSlug = getLocalizedSlug(canonicalSlug, loc);
       const localizedPost = readPostBySlug(targetSlug, loc);
-      return [loc, getPostPermalink(loc, targetSlug, localizedPost.frontmatter.date)];
+      return [
+        loc,
+        getPostPermalink(loc, targetSlug, localizedPost.frontmatter.date),
+      ];
     }),
   );
 
@@ -148,7 +159,11 @@ export async function generateMetadata({
     creator: AUTHOR_NAME,
     publisher: AUTHOR_NAME,
     alternates: {
-      canonical: getPostPermalink(DEFAULT_LOCALE, canonicalSlug, defaultPost.frontmatter.date),
+      canonical: getPostPermalink(
+        DEFAULT_LOCALE,
+        canonicalSlug,
+        defaultPost.frontmatter.date,
+      ),
       languages: languageAlternates,
     },
     openGraph: {
@@ -191,21 +206,19 @@ export async function generateMetadata({
   };
 }
 
-export default async function PostPage({
-  params,
-}: {
-  params: PageParams;
-}) {
+export default async function PostPage({ params }: { params: PageParams }) {
   const resolved = await params;
   const locale = getValidLocale(resolved.locale);
   const dictionary = getDictionary(locale);
   const canonicalSlug = getCanonicalSlug(locale, resolved.slug);
   const localizedSlug = getLocalizedSlug(canonicalSlug, locale);
   const post = readPostBySlug(localizedSlug, locale);
-  const sharePath = getPostPermalink(locale, localizedSlug, post.frontmatter.date);
+  const sharePath = getPostPermalink(
+    locale,
+    localizedSlug,
+    post.frontmatter.date,
+  );
   const formattedDate = formatLocaleDate(locale, post.frontmatter.date);
-  const normalizedTags = post.frontmatter.tags?.map((tag) => tag.trim().toLowerCase()) ?? [];
-  const isDevlog = normalizedTags.includes("devlog");
   const formattedModifiedDate = post.frontmatter.modified
     ? formatLocaleDate(locale, post.frontmatter.modified)
     : null;
@@ -246,14 +259,19 @@ export default async function PostPage({
               <span>
                 {dictionary.post.publishedOnPrefix} {formattedDate}
               </span>
-              {isDevlog && formattedModifiedDate && (
+              {formattedModifiedDate && (
                 <span className="text-xs text-foreground/60">
                   {dictionary.post.modifiedOnPrefix} {formattedModifiedDate}
                 </span>
               )}
             </div>
             <span aria-hidden="true">·</span>
-            <span>{formatReadingTime(dictionary, post.frontmatter.readingTimeMinutes)}</span>
+            <span>
+              {formatReadingTime(
+                dictionary,
+                post.frontmatter.readingTimeMinutes,
+              )}
+            </span>
           </div>
           <div className="not-prose flex items-center justify-start sm:justify-end">
             <ShareMenu title={post.frontmatter.title} urlPath={sharePath} />
