@@ -45,7 +45,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   en: {
     site: {
       title: "André Frélicot",
-      description: "TechLead & Solopreneur devlogs.",
+      description: "TechLead & Entrepreneur devlogs.",
     },
     nav: {
       home: "Home",
@@ -55,14 +55,14 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline:
-        "TechLead & Solopreneur",
+      tagline: "TechLead & Entrepreneur",
       callToAction: "View content",
       linksHeading: "Selected Reading",
     },
     content: {
       heading: "Content",
-      intro: "A curated collection of my software development writing and projects.",
+      intro:
+        "A curated collection of my software development writing and projects.",
       searchPlaceholder: "Search content by title or body...",
       allTag: "All",
       empty: "No matching entries yet.",
@@ -85,8 +85,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   fr: {
     site: {
       title: "André Frélicot",
-      description:
-        "Un site statique Next.js alimenté par des articles MDX.",
+      description: "Un site statique Next.js alimenté par des articles MDX.",
     },
     nav: {
       home: "Accueil",
@@ -96,8 +95,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline:
-        "TechLead & Solopreneur",
+      tagline: "TechLead & Entrepreneur",
       callToAction: "Voir les contenus",
       linksHeading: "Lectures sélectionnées",
     },
@@ -126,8 +124,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   pt: {
     site: {
       title: "André Frélicot",
-      description:
-        "TechLead & Solopreneur",
+      description: "TechLead & Entrepreneur",
     },
     nav: {
       home: "Início",
@@ -137,8 +134,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline:
-        "TechLead & Solopreneur",
+      tagline: "TechLead & Entrepreneur",
       callToAction: "Ver conteúdo",
       linksHeading: "Leituras em destaque",
     },
@@ -167,8 +163,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   es: {
     site: {
       title: "André Frélicot",
-      description:
-        "Un sitio estático de Next.js impulsado por artículos MDX.",
+      description: "Un sitio estático de Next.js impulsado por artículos MDX.",
     },
     nav: {
       home: "Inicio",
@@ -178,8 +173,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline:
-        "TechLead & Solopreneur",
+      tagline: "TechLead & Entrepreneur",
       callToAction: "Ver contenidos",
       linksHeading: "Lecturas destacadas",
     },
@@ -215,8 +209,5 @@ export function formatReadingTime(
   dictionary: Dictionary,
   minutes: number,
 ): string {
-  return dictionary.post.readingTimeLabel.replace(
-    "{minutes}",
-    String(minutes),
-  );
+  return dictionary.post.readingTimeLabel.replace("{minutes}", String(minutes));
 }

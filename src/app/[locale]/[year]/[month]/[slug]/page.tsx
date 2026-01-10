@@ -29,7 +29,7 @@ const FALLBACK_OG_IMAGE = "/af16bits.jpg";
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
 const PUBLIC_DIR = path.join(process.cwd(), "public");
-const SITE_NAME = "André Frélicot - TechLead & Solopreneur";
+const SITE_NAME = "André Frélicot - TechLead & Entrepreneur";
 const AUTHOR_NAME = "André Frélicot";
 const AUTHOR_URL = "https://andrefrelicot.dev/en/about";
 

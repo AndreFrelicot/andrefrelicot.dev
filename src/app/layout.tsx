@@ -16,15 +16,16 @@ const brandMono = JetBrains_Mono({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://andrefrelicot.dev";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "André Frélicot - TechLead & Solopreneur",
-    template: "%s · André Frélicot - TechLead & Solopreneur",
+    default: "André Frélicot - TechLead & Entrepreneur",
+    template: "%s · André Frélicot - TechLead & Entrepreneur",
   },
-  description: "André Frélicot - TechLead & Solopreneur",
+  description: "André Frélicot - TechLead & Entrepreneur",
   alternates: {
     types: {
       "application/rss+xml": `${SITE_URL}/feed.xml`,
@@ -52,7 +53,9 @@ export default async function RootLayout({
           data-website-id="682271ce-8738-436c-a03d-0b285b3e8341"
         ></script>
       </head>
-      <body className={`${brandSans.variable} ${brandMono.variable} antialiased`}>
+      <body
+        className={`${brandSans.variable} ${brandMono.variable} antialiased`}
+      >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {children}
         </ThemeProvider>
