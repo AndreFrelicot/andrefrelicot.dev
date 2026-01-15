@@ -3,7 +3,11 @@
 import Link from "next/link";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
-import { SUPPORTED_LOCALES, type Locale } from "@/lib/locales";
+import {
+  SUPPORTED_LOCALES,
+  LOCALE_STORAGE_KEY,
+  type Locale,
+} from "@/lib/locales";
 
 const LOCALE_LABEL: Record<Locale, string> = {
   en: "EN",
@@ -104,7 +108,10 @@ export function LanguageSwitcher({
                 ? "bg-foreground text-background shadow"
                 : "text-foreground/60 hover:text-foreground",
             )}
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+              setOpen(false);
+            }}
           >
             {LOCALE_LABEL[locale]}
           </Link>
