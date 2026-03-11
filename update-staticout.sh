@@ -1,8 +1,22 @@
 #!/bin/bash
 
-# Paths
-SOURCE_DIR="/Users/andre/code/andrefrelicot.dev"
-TARGET_DIR="/Users/andre/code/andrefrelicot.dev-static-out"
+# Detect machine and set paths accordingly
+case "$(uname -s)" in
+  Darwin)
+    # macOS
+    SOURCE_DIR="/Users/andre/code/andrefrelicot.dev"
+    TARGET_DIR="/Users/andre/code/andrefrelicot.dev-static-out"
+    ;;
+  Linux)
+    # Linux
+    SOURCE_DIR="/home/andre/code/andrefrelicot.dev"
+    TARGET_DIR="/home/andre/code/andrefrelicot.dev-static-out"
+    ;;
+  *)
+    echo "OS non supporté: $(uname -s)"
+    exit 1
+    ;;
+esac
 
 # Get the last synced commit hash from the static repo (stored in a marker file)
 MARKER_FILE="$TARGET_DIR/.last-synced-commit"
@@ -33,7 +47,11 @@ echo "Found $COMMIT_COUNT commit(s) to sync."
 
 # Build once with current HEAD
 echo "Building production output..."
-npm run build
+if command -v pnpm &>/dev/null; then
+  pnpm build
+else
+  npm run build
+fi
 
 if [ $? -ne 0 ]; then
   echo "Build failed!"
