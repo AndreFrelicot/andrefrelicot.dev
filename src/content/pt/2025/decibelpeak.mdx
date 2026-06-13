@@ -1,9 +1,9 @@
 ---
-title: DecibelPeak 1.0
-description: Decibel Peak é um aplicativo de medidor de decibéis de precisão desenvolvido para iOS, oferecendo medições confiáveis de nível de som para entusiastas e usuários que precisam de monitoramento de ruído preciso.
+title: DecibelPeak
+description: DecibelPeak é um sonômetro móvel para iOS e Android com medição em tempo real, visualizações de áudio, histórico, pico dB e calibração local.
 date: 2025-09-23
-modified: 2025-12-10
-tags: [apps, ios, audio]
+modified: 2026-06-13
+tags: [apps, ios, android, audio]
 en_mdx: decibelpeak.mdx
 fr_mdx: decibelpeak.mdx
 pt_mdx: decibelpeak.mdx
@@ -14,73 +14,55 @@ image: /images/2025/decibelpeak.webp
 <ThemeImage
   lightSrc="/images/2025/decibelpeak.webp"
   darkSrc="/images/2025/decibelpeak.webp"
-  alt="Captura de tela do aplicativo Decibel Peak"
+  alt="DecibelPeak no iPhone"
   width={800}
   height={600}
   priority={true}
 />
 
-# Visão Geral
+# Nível sonoro em tempo real com contexto visual
 
-Decibel Peak é um aplicativo de medidor de decibéis de precisão desenvolvido para iOS, oferecendo medições confiáveis de nível de som para entusiastas e usuários que precisam de monitoramento de ruído preciso. Seja para monitorar níveis de ruído no ambiente, acompanhar variações sonoras ao longo do tempo ou simplesmente matar a curiosidade sobre o ambiente acústico ao seu redor, o Decibel Peak oferece recursos de medição de som práticos e fáceis de usar.
+DecibelPeak parte de uma ideia simples: abrir o app, permitir acesso ao microfone e ver imediatamente o nível sonoro ao redor.
 
-## Principais Recursos
+A versão atual mantém essa leitura direta e adiciona mais contexto: medidor circular, onda, espectro, barras FFT, círculo FFT, waterfall, curva dB e visualização de pico dB. A intenção não é substituir um sonômetro certificado, mas oferecer uma ferramenta prática para observar um ambiente acústico, comparar duas situações e manter uma referência visual em tempo real.
 
-### 🎯 Medição de Precisão
-- Monitoramento em tempo real do nível de decibéis com alta precisão  
-- Detecção precisa de nível sonoro usando o microfone do dispositivo  
-- Feedback visual suave e responsivo com curvas dinâmicas  
-- Medições consistentes para acompanhamento confiável de tendências  
+<YouTubeEmbed
+  videoId="BJJYvYWmodY"
+  title="Demonstração do DecibelPeak"
+  caption="Vídeo de demonstração não listado do DecibelPeak em uso."
+/>
 
-### 📱 Otimizado para iOS
-- Aplicativo nativo para iOS  
-- Interface em SwiftUI otimizada para desempenho fluido  
-- Design responsivo que se adapta a diferentes tamanhos de tela  
-- Experiência do usuário moderna e intuitiva  
+## O que o app mostra
 
-### 📊 Excelência Visual
-- Visualização em tempo real dos níveis de som  
-- Curvas suaves em gradiente que reagem ao áudio de entrada  
-- Interface limpa e minimalista  
-- Exibições de medição fáceis de ler  
+A tela principal combina um valor instantâneo em dB, uma escala graduada e um indicador de zona sonora. Os níveis são agrupados em faixas legíveis, de silencioso a forte, para que o app não mostre apenas um número isolado.
 
-### ⚡ Desempenho Otimizado
-- Aplicativo leve com impacto mínimo na bateria  
-- Algoritmos eficientes de processamento de áudio  
-- Inicialização instantânea e controles responsivos  
-- Otimizado para iPhone  
+A área superior pode alternar entre várias visualizações de áudio. As vistas rápidas mostram a onda e o espectro, enquanto os modos FFT e waterfall oferecem uma leitura mais voltada para frequências. A curva dB e o pico dB ajudam a entender a evolução ao longo do tempo: uma subida progressiva, um evento curto, a média da sessão ou o maior valor atingido.
 
-## Casos de Uso
+A calibração local permite ajustar o offset de medição em passos de 0,5 dB. Isso ajuda a aproximar o DecibelPeak de um dispositivo de referência ou compensar diferenças entre microfones.
 
-**Aplicações de Referência:**  
-- Conscientização sobre ruído ambiental  
-- Monitoramento de níveis sonoros em locais de trabalho  
-- Comparação de equipamentos de áudio  
-- Experimentos educacionais de nível sonoro  
+## Capturas
 
-**Uso Pessoal:**  
-- Monitoramento de ruído em casa  
-- Verificação de nível de som em eventos  
-- Experimentos sonoros educacionais  
-- Curiosidade geral sobre ruído ambiente  
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2025/decibelpeak/decibelpeak-pt-01.webp",
+      alt: "Tela principal do DecibelPeak com medidor circular e pico dB",
+    },
+    {
+      src: "/images/2025/decibelpeak/decibelpeak-pt-02.webp",
+      alt: "DecibelPeak em orientação paisagem com histórico do pico dB",
+    },
+  ]}
+  caption="Capturas de iPhone do DecibelPeak 1.2."
+/>
 
-## Especificações Técnicas
+## Implementação
 
-- **Plataforma:** iOS 17.0+  
-- **Framework:** Desenvolvido com SwiftUI para desempenho nativo  
-- **Processamento de Áudio:** Análise de nível sonoro em tempo real  
-- **Interface:** Interface de usuário moderna e adaptável  
-- **Desempenho:** Otimizado para eficiência de bateria  
+A versão iOS é desenvolvida com SwiftUI, AVFoundation para captura de áudio e Accelerate para análise de frequência. A versão Android segue a mesma direção de produto com Kotlin, Jetpack Compose e AudioRecord.
 
-## Privacidade & Segurança
+O processamento acontece no dispositivo. O áudio é analisado em tempo real para calcular o nível sonoro, alimentar as visualizações e atualizar o histórico. O DecibelPeak não foi criado para gravar conversas: ele trabalha com o sinal ao vivo e não envia dados de áudio para um servidor.
 
-O Decibel Peak respeita sua privacidade:  
-- Nenhuma gravação ou armazenamento de áudio  
-- Processamento somente em tempo real  
-- Nenhuma transmissão de dados para servidores externos  
-- Todas as medições processadas localmente no seu dispositivo  
-
-## Código Fonte
+## Código fonte
 
 <GitHubLink href="https://github.com/AndreFrelicot/DecibelPeak" label="Código fonte iOS" />
 <GitHubLink href="https://github.com/AndreFrelicot/DecibelPeak-android" label="Código fonte Android" />
@@ -94,8 +76,6 @@ Disponível na App Store e Google Play.
 
 ---
 
-## Suporte & Contato
-**Desenvolvedor:** André Frélicot  
-**Suporte:** support@andrefrelicot.dev  
+## Suporte
 
-Transforme sua experiência de monitoramento de som com o Decibel Peak – onde a precisão encontra a simplicidade.
+Precisa de ajuda ou quer enviar feedback? Escreva para [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).

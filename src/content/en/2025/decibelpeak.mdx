@@ -1,85 +1,68 @@
 ---
-title: DecibelPeak 1.0
-description: DecibelPeak is a precision decibel meter application designed for iOS, providing reliable sound level measurements for enthusiasts and users who need accurate noise monitoring.
+title: DecibelPeak
+description: DecibelPeak is a mobile sound level meter for iOS and Android with real-time decibel readings, audio visualizations, history, dB peak tracking, and local calibration.
 date: 2025-09-23
-modified: 2025-12-10
-tags: [apps, ios, audio]
+modified: 2026-06-13
+tags: [apps, ios, android, audio]
 en_mdx: decibelpeak.mdx
 fr_mdx: decibelpeak.mdx
 pt_mdx: decibelpeak.mdx
+es_mdx: decibelpeak.mdx
 image: /images/2025/decibelpeak.webp
 ---
 
 <ThemeImage
   lightSrc="/images/2025/decibelpeak.webp"
   darkSrc="/images/2025/decibelpeak.webp"
-  alt="Decibel Peak App Screenshot"
+  alt="DecibelPeak on iPhone"
   width={800}
   height={600}
   priority={true}
 />
 
-# Overview
+# Real-time sound levels with visual context
 
-Decibel Peak is a precision decibel meter application designed for iOS, providing reliable sound level measurements for enthusiasts and users who need accurate noise monitoring. Whether you're monitoring noise levels in your environment, tracking sound levels over time, or simply curious about the acoustic environment around you, Decibel Peak delivers convenient and easy-to-use sound measurement capabilities.
+DecibelPeak starts from a simple idea: open the app, allow microphone access, and immediately see the sound level around you.
 
-## Key Features
+The current version keeps that direct reading, then adds more context: a circular gauge, waveform, spectrum, FFT bars, FFT circle, waterfall, dB curve, and dB peak view. It is not meant to replace a certified laboratory sound meter, but it is useful for observing an acoustic environment, comparing two situations, and keeping a real-time visual reference.
 
-### 🎯 Precision Measurement
-- Real-time decibel level monitoring with precision measurement
-- Accurate sound level detection using device microphone
-- Smooth, responsive visual feedback with dynamic curves
-- Consistent measurements for reliable trend tracking
+<YouTubeEmbed
+  videoId="BJJYvYWmodY"
+  title="DecibelPeak demo"
+  caption="Unlisted demo video of DecibelPeak in use."
+/>
 
-### 📱 iOS Optimized
-- Native iOS application
-- Optimized SwiftUI interface for seamless performance
-- Responsive design that adapts to different screen sizes
-- Modern, intuitive user experience
+## What the app shows
 
-### 📊 Visual Excellence
-- Beautiful real-time visualization of sound levels
-- Smooth gradient curves that respond to audio input
-- Clean, minimalist interface design
-- Easy-to-read measurement displays
+The main view combines an instant dB value, a graduated gauge, and a sound-zone indicator. Levels are grouped into readable ranges, from quiet to loud, so the app does not leave you with a number alone.
 
-### ⚡ Performance Optimized
-- Lightweight application with minimal battery impact
-- Efficient audio processing algorithms
-- Instant startup and responsive controls
-- Optimized for iPhone  
+The top area can cycle through several audio visualizations. The fast views show the waveform and spectrum, while the FFT and waterfall modes provide a more frequency-oriented look. The dB curve and dB peak modes are better suited for understanding changes over time: a gradual rise, a short event, the session average, or the highest value reached.
 
-## Use Cases
+Local calibration lets you adjust the measurement offset in 0.5 dB steps. That helps bring DecibelPeak closer to a reference device or compensate for differences between phone microphones.
 
-**Reference Applications:**
-- Environmental noise awareness  
-- Workplace sound level monitoring  
-- Audio equipment comparison  
-- Educational sound level experiments  
+## Screenshots
 
-**Personal Use:**
-- Home noise level monitoring  
-- Event sound level checking  
-- Educational sound experiments  
-- General curiosity about ambient noise  
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2025/decibelpeak/decibelpeak-en-01.webp",
+      alt: "DecibelPeak main view with circular gauge and dB peak",
+    },
+    {
+      src: "/images/2025/decibelpeak/decibelpeak-en-02.webp",
+      alt: "DecibelPeak in landscape orientation with dB peak history",
+    },
+  ]}
+  caption="iPhone screenshots from DecibelPeak 1.2."
+/>
 
-## Technical Specifications
+## Implementation
 
-- **Platform:** iOS 17.0+  
-- **Framework:** Built with SwiftUI for native performance  
-- **Audio Processing:** Real-time sound level analysis  
-- **Interface:** Modern, adaptive user interface  
-- **Performance:** Optimized for battery efficiency  
+The iOS version is built with SwiftUI, AVFoundation for audio capture, and Accelerate for frequency analysis. The Android version follows the same product direction with Kotlin, Jetpack Compose, and AudioRecord.
 
-## Privacy & Security
+Processing happens on device. Audio is analyzed in real time to compute the sound level, feed the visualizations, and update the history. DecibelPeak is not designed to record conversations: it works from the live signal and does not send audio data to a server.
 
-Decibel Peak respects your privacy:  
-- No audio recording or storage  
-- Real-time processing only  
-- No data transmission to external servers  
-- All measurements processed locally on your device  
-
-## Source Code
+## Source code
 
 <GitHubLink href="https://github.com/AndreFrelicot/DecibelPeak" label="iOS source code" />
 <GitHubLink href="https://github.com/AndreFrelicot/DecibelPeak-android" label="Android source code" />
@@ -93,8 +76,6 @@ Available on the App Store and Google Play.
 
 ---
 
-## Support & Contact
-**Developer:** André Frélicot  
-**Support:** support@andrefrelicot.dev  
+## Support
 
-Transform your sound level monitoring experience with Decibel Peak – where precision meets simplicity.
+Need help or want to share feedback? Write to [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).

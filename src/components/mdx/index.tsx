@@ -3,8 +3,10 @@ import { Callout } from "./callout";
 import { GitHubLink } from "./github-link";
 import { OsibitsLogo } from "./osibits-logo";
 import { PlayStoreLink } from "./play-store-link";
+import { ScreenshotGallery } from "./screenshot-gallery";
 import { ThemeImage } from "./theme-image";
 import { ThreeCube } from "./three-cube";
+import { YouTubeEmbed } from "./youtube-embed";
 
 export const mdxComponents = {
   AppStoreLink,
@@ -12,6 +14,8 @@ export const mdxComponents = {
   GitHubLink,
   OsibitsLogo,
   PlayStoreLink,
+  ScreenshotGallery,
   ThreeCube,
   ThemeImage,
+  YouTubeEmbed,
 };
