@@ -1,148 +1,110 @@
 ---
 title: BLE UScope 1.0
 date: 2025-10-06
-modified: 2025-12-10
-description: Advanced Bluetooth Low Energy Scanner and Analyzer for iOS/iPadOS and macOS (catalyst).
-tags: [apps, bluetooth, ble, ios, macos, ipados]
+modified: 2026-06-14
+description: Advanced Bluetooth Low Energy scanner and analyzer for iOS, iPadOS, Android, and macOS Catalyst.
+tags: [apps, bluetooth, ble, ios, android, macos, ipados]
 image: /images/2025/ble-uscope.webp
 ---
-
 
 <ThemeImage
   lightSrc="/images/2025/ble-uscope.webp"
   darkSrc="/images/2025/ble-uscope.webp"
-  alt="BLE UScope App Screenshot"
+  alt="BLE UScope on iPhone"
   width={800}
   height={600}
   priority={true}
 />
 
-
 # **BLE UScope – Advanced Bluetooth Low Energy Scanner and Analyzer**
 
-**BLE UScope** is a professional-grade Bluetooth Low Energy analysis tool designed for developers, engineers, IoT professionals, and tech enthusiasts who need comprehensive insight into BLE devices.
+BLE UScope is a Bluetooth Low Energy analysis tool for iOS, iPadOS, Android, and macOS Catalyst. The app scans nearby peripherals, reads advertisement data, tracks RSSI, then connects to explore their GATT structure.
 
+Its goal is to make everyday BLE work more direct: inspect services and characteristics, read or write values, enable notifications, follow connection events, record monitoring sessions, and export usable traces.
 
-## ⚙️ Core Features
+## Demos
 
-### **Device Discovery & Scanning**
-Scan and discover nearby Bluetooth Low Energy devices in real-time.  
-View detailed information including:
-- Device names  
-- Signal strength (RSSI)  
-- Manufacturer data  
-- Advertised services  
-- Connection status  
+<YouTubeEmbed
+  videoId="n_EJOZfy4vo"
+  title="BLE UScope demo"
+  caption="Unlisted BLE UScope demo showing scanning and device exploration."
+/>
 
-Advanced filtering options help you quickly find specific devices.
+<YouTubeEmbed
+  videoId="XsccrDK7ITg"
+  title="BLE UScope additional demo"
+  caption="Second unlisted BLE UScope demo focused on analyzing a connected device."
+/>
 
+## From scanning to GATT
 
-### **GATT Service Explorer**
-Deep dive into device architecture with full GATT exploration.  
-- Browse services, characteristics, and descriptors with a clear hierarchical view  
-- Read, write, and monitor characteristic values (hex, UTF-8, decimal)  
-- Enable notifications to receive real-time updates from your devices  
+The first screen is about observing the BLE environment in real time. BLE UScope shows discovered devices with RSSI, advertisement data, advertised services when available, and an estimated device category based on service UUIDs, manufacturer data, or the device name.
 
+Once connected, the app moves into a more diagnostic-oriented detail view. You can browse services, characteristics, and descriptors, filter readable, writable, or notifiable characteristics, then inspect values as hexadecimal, UTF-8, or decimal data depending on the case. GATT properties stay visible, so you do not have to guess whether a characteristic supports `read`, `write`, `notify`, or `indicate`.
 
-### **Smart Device Categorization**
-Automatically identifies and categorizes devices such as:
-- Fitness trackers  
-- Heart rate monitors  
-- Smartwatches  
-- Headphones  
-- Keyboards  
-- Game controllers  
+This part intentionally stays close to BLE terminology. When inspecting a peripheral, you need UUIDs, raw values, descriptors, and notification state to remain visible instead of being hidden behind a simplified UI.
 
-Color-coded categories and custom icons make device identification intuitive.
+## Screenshots
 
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2025/ble-uscope/ble-uscope-ios.webp",
+      alt: "BLE UScope on iPhone with a BLE device detail view",
+      width: 720,
+      height: 1485,
+    },
+    {
+      src: "/images/2025/ble-uscope/ble-uscope-android.webp",
+      alt: "BLE UScope on Android scanning BLE devices",
+      width: 720,
+      height: 1516,
+    },
+    {
+      src: "/images/2025/ble-uscope/ble-uscope-ipad.webp",
+      alt: "BLE UScope on iPad with a multi-column layout",
+      width: 1400,
+      height: 1011,
+    },
+    {
+      src: "/images/2025/ble-uscope/ble-uscope-macos.webp",
+      alt: "BLE UScope on macOS Catalyst",
+      width: 1400,
+      height: 925,
+    },
+  ]}
+  caption="BLE UScope 1.0.1 screenshots on iPhone, Android, iPad, and macOS Catalyst."
+/>
 
-### **Connection Management**
-- Connect to multiple devices simultaneously  
-- Monitor connection quality in real-time  
-- View connection duration, signal strength trends, and stability metrics  
-- Auto-reconnect to favorite devices when they disconnect  
+## Monitoring, diagnostics, and exports
 
+Scanning is only one part of the workflow. BLE UScope also lets you follow a connection over time: signal quality, connection duration, RSSI history, connection events, and received notifications.
 
-### **Advanced Analytics**
-Track and visualize metrics like:
-- RSSI over time  
-- Connection quality indicators  
-- Estimated distance calculations  
-- TX power levels  
+BLE notifications can be recorded into monitoring sessions. This is useful when a characteristic emits a measurement, a state update, or a domain-specific event at a regular cadence. The app keeps values with their timestamp, device, service, characteristic, and RSSI when that information is available.
 
-Detailed logging helps you monitor discovery patterns and connection events.
+Diagnostics help validate a connected peripheral: service discovery, connection stability, characteristic reads, and simple response or throughput checks. Exports make it possible to keep a record of what was observed: device profile, GATT structure, characteristic values, logs, or notification sessions.
 
+## Implementation
 
-### **Diagnostic Tools**
-Run comprehensive tests on connected devices:
-- Connection stability  
-- Throughput measurements  
-- Characteristic validation  
+The Apple version is built with SwiftUI and CoreBluetooth. It supports iOS, iPadOS, and macOS through Catalyst, with layouts adapted to each screen size. The BLE layer handles scanning, multiple connections, CoreBluetooth restoration, reconnects, GATT exploration, and notification monitoring.
 
-Export diagnostic results for analysis or documentation.
+The Android version is built with Kotlin and Jetpack Compose. It uses `BluetoothGatt`, a sequential operation queue to avoid BLE operation collisions, state flows to synchronize the UI, Room for local data, and dedicated views for logs, favorites, history, and diagnostics.
 
+Both versions share the same product intent while respecting each platform's constraints. On Android, that means dealing with modern Bluetooth permissions, scan throttling, and device-specific BLE stack behavior. On iOS, CoreBluetooth defines its own restoration, authorization, and lifecycle model.
 
-### **Data Management**
-- Save favorite devices for quick access  
-- Export device profiles, GATT structures, and characteristic data  
-- Copy values, UUIDs, and other data with a single tap  
+## Data and privacy
 
-Perfect for seamless integration into your development workflow.
+BLE UScope runs locally. There is no account, no analytics, and no BLE data sent to a server. Favorites, custom names, histories, logs, and exports stay on the device unless you explicitly share or export them.
 
+## Download
 
-### **Developer-Friendly Features**
-- Complete GATT hierarchy visualization  
-- Characteristic property inspection *(read, write, notify, indicate)*  
-- Descriptor exploration and analysis  
-- Advertisement data parsing and display  
-- Service UUID lookup with Bluetooth SIG standard names  
-- Manufacturer data decoding  
-- Real-time value monitoring and logging  
-
-
-## 🔒 Privacy & Security
-Your privacy is paramount.  
-**BLE UScope operates entirely on your device** — with zero data collection.  
-- No internet connection required  
-- No analytics  
-- No tracking  
-
-All scanning, analysis, and storage happen locally on your iOS device.
-
-
-## 👩‍💻 Perfect For
-- iOS developers building BLE-enabled applications  
-- Hardware engineers testing BLE peripherals  
-- IoT professionals debugging connected devices  
-- Security researchers analyzing BLE implementations  
-- Students learning about Bluetooth Low Energy  
-- Tech enthusiasts exploring wireless technology  
-
-
-## 🧠 Technical Specifications
-- Supports all standard Bluetooth Low Energy profiles  
-- Compatible with Bluetooth 4.0 → 5.3 devices  
-- Reads and writes to all accessible characteristics  
-- Supports notifications and indications  
-- Handles multiple simultaneous connections  
-- Automatic service discovery  
-- UUID translation for standard services and characteristics  
-
-
-## 🎨 User Experience
-Clean, modern interface designed for iOS — with full support for **light and dark modes**.  
-Intuitive navigation using a tab-based architecture.  
-Context-aware actions and helpful tooltips guide you through each operation.
-
-
-### **Download BLE UScope today**
-Gain **professional-level insight** into the Bluetooth Low Energy devices around you.
-
-<br />
+Available on the App Store and Google Play.
 
 <AppStoreLink href="https://apps.apple.com/us/app/ble-uscope/id6753627148" />
 <PlayStoreLink href="https://play.google.com/store/apps/details?id=dev.andrefrelicot.bleuscope" />
 
 ---
-## 🛟 Support
+
+## Support
+
 Need help or want to share feedback? Email [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).
