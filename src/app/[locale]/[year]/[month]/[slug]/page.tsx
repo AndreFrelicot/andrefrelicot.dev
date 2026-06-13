@@ -281,6 +281,8 @@ export default async function PostPage({ params }: { params: PageParams }) {
           source={post.content}
           components={mdxComponents}
           options={{
+            blockJS: false,
+            blockDangerousJS: true,
             mdxOptions: {
               remarkPlugins: [remarkGfm, remarkSmartypants],
               rehypePlugins: [
