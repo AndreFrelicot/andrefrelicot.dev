@@ -82,7 +82,7 @@ export function ThemeImage({
     : ({ width, height } as const);
 
   return (
-    <figure className="mx-auto w-full max-w-3xl">
+    <figure className="mx-auto my-10 w-full max-w-3xl">
       <div className={wrapperClassName} style={wrapperStyle}>
         <Image
           {...sharedImageProps}

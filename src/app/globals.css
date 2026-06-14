@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -55,6 +57,22 @@ body {
 
 :root.dark .footer-border {
   border-color: color-mix(in oklab, var(--foreground) 24%, transparent);
+}
+
+.theme-light-only {
+  display: block !important;
+}
+
+.theme-dark-only {
+  display: none !important;
+}
+
+:root.dark .theme-light-only {
+  display: none !important;
+}
+
+:root.dark .theme-dark-only {
+  display: block !important;
 }
 
 :root:not(.dark) pre[data-theme] {
