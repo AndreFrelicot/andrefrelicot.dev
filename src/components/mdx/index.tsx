@@ -1,3 +1,4 @@
+import type { ComponentPropsWithoutRef } from "react";
 import { AppStoreLink } from "./app-store-link";
 import { AppExpressSourceBanner } from "./app-express-source-banner";
 import { Callout } from "./callout";
@@ -9,6 +10,17 @@ import { ThemeImage } from "./theme-image";
 import { ThreeCube } from "./three-cube";
 import { YouTubeEmbed } from "./youtube-embed";
 
+function MdxTable({
+  children,
+  ...props
+}: ComponentPropsWithoutRef<"table">) {
+  return (
+    <div className="mdx-table-wrapper">
+      <table {...props}>{children}</table>
+    </div>
+  );
+}
+
 export const mdxComponents = {
   AppExpressSourceBanner,
   AppStoreLink,
@@ -19,5 +31,6 @@ export const mdxComponents = {
   ScreenshotGallery,
   ThreeCube,
   ThemeImage,
+  table: MdxTable,
   YouTubeEmbed,
 };
