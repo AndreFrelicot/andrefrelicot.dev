@@ -1,8 +1,9 @@
 ---
-title: LLMVoice 1.0
+title: LLMVoice
 date: 2025-10-14
-description: Demostración técnica que permite evaluar las nuevas API de reconocimiento de voz de iOS 26 (SpeechAnalyzer / SpeechTranscriber) y la ejecución local de modelos LLM de código abierto (cuantificados en 4 bits) en un iPhone compatible con el framework MLX.    
-tags: [apps, llm, mlx, apple_intelligence, ios26, speechanalyzer, speechtranscriber, audio, voice, local, on_device, source_code]
+modified: 2026-06-15
+description: Demo técnica iOS para evaluar las APIs de reconocimiento de voz de iOS 26 (SpeechAnalyzer / SpeechTranscriber) y ejecutar LLM open-weight cuantizados en 4 bits localmente con MLX, ahora con un primer modelo de razonamiento (Qwen3).
+tags: [apps, llm, mlx, apple_intelligence, ios26, speechanalyzer, speechtranscriber, audio, voice, local, on_device, reasoning, qwen3, source_code]
 image: /images/2025/llmvoice.webp
 ---
 
@@ -15,39 +16,126 @@ image: /images/2025/llmvoice.webp
   priority={true}
 />
 
+**LLMVoice** es una demo técnica de iOS que sirve de banco de pruebas para dos cosas: las nuevas APIs de reconocimiento de voz de iOS 26 (**SpeechAnalyzer / SpeechTranscriber**) y la ejecución de **LLM open-weight** cuantizados en **4 bits**, completamente **en local** mediante el framework **MLX** de Apple.
 
-<br/>
-Aquí está **LLMVoice**, una demostración técnica que permite evaluar las nuevas API de reconocimiento de voz de iOS 26 (**SpeechAnalyzer / SpeechTranscriber**) y la ejecución de modelos **LLM de código abierto** (cuantificados en **4 bits**) localmente en un iPhone compatible con el framework **MLX**. Puedes resumir una transcripción o enviar un prompt directamente al modelo.
+La idea es directa: dictas, la app transcribe y luego puedes resumir la transcripción o enviar un prompt directamente al modelo. Todo se ejecuta en el dispositivo: sin servidor, sin clave de API, sin datos que salgan del iPhone.
 
-Seamos claros: modelos tan comprimidos no son realmente útiles, pero sigue siendo divertido verlos alucinar. ¡Aun así, logran poner de rodillas a mi viejo iPhone 13!
+<Callout type="tip" title="Nuevo: el primer modelo de razonamiento">
+LLMVoice incorpora ahora **Qwen3 (0.6B)**, el primer modelo de razonamiento de la selección. Puede desplegar una fase de reflexión (`<think>`) antes de su respuesta, y un botón permite mostrar u ocultar ese razonamiento. Ver un modelo de 0,6 mil millones de parámetros razonar en local en un teléfono sigue siendo lo más interesante del proyecto.
+</Callout>
 
-Estos son los modelos disponibles para descargar: <br/>
-**Gemma3_1b** (mlx-community/gemma-3-1b-it-4bit) <br/>
-**Qwen25_05b** (lmstudio-community/Qwen2.5-0.5B-Instruct-MLX-4bit) <br/>
-**Llama32_1b** (mlx-community/Llama-3.2-1B-Instruct-4bit) <br/>
+Seamos claros: tan comprimidos, estos modelos siguen siendo limitados y alucinan con facilidad. El objetivo no es producción, sino medir de forma concreta qué se puede ejecutar en un iPhone y hasta dónde aguanta. Mi iPhone 13 se calienta igual que siempre, pero un 0,6B que razona en local no estaba realmente sobre la mesa cuando salió la 1.0.
+
+## Capturas de pantalla
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2025/llmvoice/screenshots/onboarding.webp",
+      alt: "Pantalla de configuración de modelos de LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/model-picker.webp",
+      alt: "Selección de modelo en LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/transcription-metrics.webp",
+      alt: "Transcripción, resumen y métricas de rendimiento en LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/summary-generating.webp",
+      alt: "Generación de un resumen en curso en LLMVoice, con progreso y métricas",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/html-generation.webp",
+      alt: "Generación de código HTML con resaltado de sintaxis en LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/svg-code.webp",
+      alt: "Generación de código SVG en LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/svg-preview.webp",
+      alt: "Vista previa renderizada de un SVG generado por LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/prompt-template.webp",
+      alt: "Plantilla de prompt y parámetros de generación en LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+    {
+      src: "/images/2025/llmvoice/screenshots/settings.webp",
+      alt: "Ajustes y gestión de modelos de LLMVoice",
+      width: 800,
+      height: 1494,
+    },
+  ]}
+  caption="Capturas de LLMVoice (interfaz en inglés)."
+/>
+
+## El reconocimiento de voz (iOS 26)
+
+La transcripción se apoya en **SpeechAnalyzer** y **SpeechTranscriber**, las APIs introducidas con iOS 26. Funcionan on-device y alimentan directamente el resto del pipeline: la transcripción se convierte en la materia de un resumen o en el contexto de un prompt.
+
+## Modelos disponibles
+
+Además de Apple Intelligence (modelo del sistema, iPhone 15 Pro y posteriores), cinco modelos MLX open-weight se descargan bajo demanda:
+
+| Modelo | ID de Hugging Face | Tamaño | Contexto | Idiomas |
+|---|---|---|---|---|
+| Gemma 3 (1B) | `mlx-community/gemma-3-1b-it-4bit` | ~300 MB | 32k | 140+ |
+| Gemma 3 QAT (1B) | `mlx-community/gemma-3-1b-it-qat-4bit` | ~733 MB | 32k | 140+ |
+| Qwen2.5 (0.5B) | `lmstudio-community/Qwen2.5-0.5B-Instruct-MLX-4bit` | ~150 MB | 32k | 29+ |
+| Qwen3 (0.6B) — razonamiento | `mlx-community/Qwen3-0.6B-4bit` | ~335 MB | 40k | 100+ |
+| Llama 3.2 (1B) | `mlx-community/Llama-3.2-1B-Instruct-4bit` | ~500 MB | 128k | 8 |
+
+Qwen3 es el único con un modo de razonamiento. Para el resumen ese modo se desactiva para mantener salidas cortas; para un prompt directo, el modelo puede desplegar su razonamiento, que se muestra u oculta al instante.
+
+## Medir el rendimiento
+
+Un panel de métricas en tiempo real acompaña cada generación: rendimiento actual, medio y pico (tokens/s), número de tokens, tiempo total, tiempo hasta el primer token (TTFT), latencia media y una estimación de progreso. Esto es lo que hace que la demo sea realmente útil: comparar modelos en el mismo dispositivo, en las mismas condiciones.
+
+## Código y HTML
+
+Cuando un modelo genera código, LLMVoice aplica resaltado de sintaxis (HTML, CSS, JavaScript/TypeScript) y ofrece una vista previa renderizada del HTML generado, dentro de la propia app.
 
 ## Código fuente
 
 <GitHubLink href="https://github.com/AndreFrelicot/llmvoice" label="Código fuente LLMVoice" />
 
 ## Requisitos del sistema
+
 iOS 26.0+ / iPadOS 26.0+
-### Para Apple Intelligence
-iPhone 15 Pro o modelo posterior  
-Apple Intelligence activado en los ajustes
-### Para los modelos locales MLX 
-iPhone 12 o modelo posterior (chip A14 Bionic o superior).<br/> 
-iPad Pro 2021 o modelo posterior (chip M1 o superior).<br/>
-iPad Air de 5ª generación o modelo posterior (chip M1 o superior). <br/>
-GPU Metal con características específicas: air.simd_sum, compatibilidad con el núcleo rmsfloat16. <br/>
 
-### Almacenamiento
-Tamaño de la aplicación: aproximadamente 50 MB  
-Descargas de modelos (solo MLX):
+**Para Apple Intelligence**
 
-Qwen2.5 (0,5B): aproximadamente 150 MB<br/>
-Gemma 3 (1B): aproximadamente 300 MB<br/>
-Llama 3.2 (1B): aproximadamente 500 MB<br/>
+- iPhone 15 Pro o modelo posterior;
+- Apple Intelligence activada en los ajustes.
+
+**Para los modelos locales MLX**
+
+- iPhone 12 o modelo posterior (chip A14 Bionic o superior);
+- iPad Pro 2021 o posterior, iPad Air 5.ª generación o posterior (chip M1 o superior);
+- GPU Metal con las funciones requeridas: `air.simd_sum`, compatibilidad con el kernel `rmsfloat16`.
+
+## Almacenamiento
+
+Tamaño de la aplicación: alrededor de 50 MB. Los modelos MLX se descargan bajo demanda, de ~150 MB (Qwen2.5) a ~733 MB (Gemma 3 QAT) — ver la tabla anterior.
 
 <br/>
 <AppStoreLink href="https://apps.apple.com/us/app/llmvoice/id6753925010" />
@@ -55,4 +143,3 @@ Llama 3.2 (1B): aproximadamente 500 MB<br/>
 ---
 ## 🛟 Soporte
 ¿Necesitas ayuda o quieres compartir comentarios? Escribe a [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).
-
