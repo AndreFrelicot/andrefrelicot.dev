@@ -1,0 +1,216 @@
+---
+title: "LogPill: um app B2C criado com AppExpress"
+description: "Dev log sobre o LogPill, um app de acompanhamento de medicação para iOS e Android usado como showcase AppExpress: Expo, React Native, Next.js, Supabase e arquitetura offline-first."
+date: 2026-06-14
+tags: [apps, appexpress, logpill, b2c, mobile, react-native, expo, nextjs, supabase]
+en_mdx: logpill-b2c-app-showcase-appexpress.mdx
+fr_mdx: logpill-app-b2c-showcase-appexpress.mdx
+pt_mdx: logpill-aplicativo-b2c-showcase-appexpress.mdx
+es_mdx: logpill-aplicacion-b2c-showcase-appexpress.mdx
+image: /images/2026/logpill/logpill-cover.webp
+---
+
+<ThemeImage
+  lightSrc="/images/2026/logpill/logpill-cover.webp"
+  darkSrc="/images/2026/logpill/logpill-cover.webp"
+  alt="Ilustração abstrata do LogPill, aplicativo de acompanhamento de medicação"
+  width={1600}
+  height={893}
+  priority={true}
+/>
+
+<AppExpressSourceBanner
+  href="https://appexpress.fr"
+  linkLabel="Conhecer AppExpress"
+>
+  LogPill é um showcase B2C desenvolvido por e para a oferta AppExpress.
+</AppExpressSourceBanner>
+
+LogPill é um aplicativo de acompanhamento de medicação. A ideia é deliberadamente direta: ajudar uma pessoa a saber quais medicamentos precisa tomar hoje, registrar uma dose rapidamente, consultar seu histórico e entender sua adesão ao longo do tempo.
+
+Não é um aplicativo médico regulado. Ele não diagnostica, não recomenda tratamentos e não substitui um profissional de saúde. É uma ferramenta de lembrete, registro e visibilidade pessoal.
+
+O que importa aqui é o ângulo de produto. LogPill é um app B2C completo, com identidade própria, presença nas lojas iOS e Android, site público, visuais de marketing localizados e uma base técnica próxima do que a oferta AppExpress pode produzir para um lançamento real.
+
+<YouTubeEmbed
+  videoId="_epf_vbSPqQ"
+  title="Demonstração do LogPill"
+  caption="Short de demonstração do LogPill."
+/>
+
+## Por que um showcase AppExpress
+
+Projetos AppExpress não são apenas protótipos ou ferramentas internas. O objetivo é entregar algo utilizável: aplicativo móvel, presença web, banco de dados, autenticação quando necessário, páginas legais, assets para as lojas e deploy.
+
+LogPill mostra esse escopo em um caso B2C. O produto parece simples na superfície, mas reúne vários assuntos concretos:
+
+- uma experiência móvel rápida, usada todos os dias;
+- lembretes locais confiáveis;
+- um banco de dados embarcado, disponível sem conexão;
+- telas de análise legíveis sem virar conselho médico;
+- textos e capturas localizados em inglês, francês, espanhol e português;
+- um protótipo web/SaaS para visualizar como a sincronização em nuvem poderia funcionar se o produto precisasse ir além do telefone.
+
+## O produto
+
+A tela principal mostra o planejamento do dia, as doses restantes e os próximos lembretes. O usuário pode registrar uma tomada, ignorar uma dose ou consultar o histórico sem passar por um fluxo pesado.
+
+A área de medicamentos guarda as informações úteis: nome, dosagem, forma, frequência, quantidade restante e instruções de tomada. As análises focam em tendências: taxa de adesão, sequência atual, doses tomadas ou perdidas, comparação por medicamento e acompanhamento de recargas.
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/logpill/screenshots/pt/store/store-01.webp",
+      alt: "Mockup do LogPill com as doses do dia",
+      width: 750,
+      height: 1630,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/store/store-02.webp",
+      alt: "Mockup do LogPill com acompanhamento de medicamentos",
+      width: 750,
+      height: 1630,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/store/store-03.webp",
+      alt: "Mockup do LogPill para registrar uma dose",
+      width: 750,
+      height: 1630,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/store/store-04.webp",
+      alt: "Mockup do LogPill com análises de adesão",
+      width: 750,
+      height: 1630,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/store/store-05.webp",
+      alt: "Mockup do LogPill com acompanhamento de recargas",
+      width: 750,
+      height: 1630,
+    },
+  ]}
+  caption="Mockups de loja localizados em português."
+/>
+
+## A stack técnica
+
+A stack não é exótica, e esse é justamente o ponto. LogPill segue os blocos habituais da AppExpress: React Native com Expo para mobile, Next.js para web e Supabase quando o produto precisa de contas, armazenamento ou sincronização.
+
+| Camada | Escolha | Papel |
+|---|---|---|
+| Mobile | Expo, React Native, TypeScript | App iOS e Android com uma base de código comum. |
+| Navegação | Expo Router | Rotas baseadas em arquivos, tabs e telas empilhadas sem configuração pesada. |
+| Dados locais | WatermelonDB, SQLite | Registros de tomadas e medicamentos disponíveis offline. |
+| Estado da UI | Zustand | Estado de aplicação leve, sem sobre-arquitetura. |
+| Lembretes | Expo Notifications | Notificações locais para doses planejadas. |
+| Localização | i18next, react-i18next | Interface e assets adaptados aos idiomas de lançamento. |
+| Web | Next.js 16, React 19, TypeScript | Site público ativo e protótipo de dashboard web. |
+| Backend web | Supabase, Zod, React Hook Form | Base técnica para autenticação, dados, validação e formulários do dashboard. |
+
+No mobile, o coração da experiência é local-first. Uma tomada deve poder ser registrada imediatamente, mesmo sem conexão. Esse detalhe muda a arquitetura: o banco local não é um cache cosmético, ele vira a fonte operacional do app.
+
+O site oficial público está ativo em [logpill.app](https://logpill.app/). O dashboard web, a sincronização em nuvem e o modo SaaS existem no código e nos mockups da AppExpress como protótipo, mas não estão ativos nem implantados na versão pública do LogPill neste estágio. As capturas abaixo documentam essa direção de produto, não uma funcionalidade disponível hoje.
+
+No código, essa parte web usa Next.js, Supabase, Tailwind, Radix UI, Lucide, Framer Motion, React Hook Form, Zod, Resend e React Email.
+
+## Protótipo web/SaaS não implantado
+
+O protótipo web reutiliza os mesmos objetos de negócio do app móvel: medicamentos, planejamento, registros, análises e preferências. Ele mostra como o LogPill poderia evoluir para uma conta online e sincronização multi-dispositivo, mantendo a experiência móvel local como base.
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/logpill/screenshots/web/dashboard-medication-summary.webp",
+      alt: "Protótipo web do LogPill com resumo de medicamentos e planejamento do dia",
+      width: 1538,
+      height: 1184,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/web/medication-management-grid-view.webp",
+      alt: "Protótipo web do LogPill com gestão de medicamentos em grade",
+      width: 1538,
+      height: 1184,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/web/medication-management-table-view.webp",
+      alt: "Protótipo web do LogPill com gestão de medicamentos em tabela",
+      width: 1538,
+      height: 1184,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/web/medication-logs-calendar-view.webp",
+      alt: "Protótipo web do LogPill com calendário de registros de doses",
+      width: 1606,
+      height: 1202,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/web/analytics-adherence-charts.webp",
+      alt: "Protótipo web do LogPill com gráficos de adesão",
+      width: 1494,
+      height: 1337,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/web/profile-settings.webp",
+      alt: "Protótipo web do LogPill com configurações de perfil",
+      width: 1606,
+      height: 1202,
+    },
+  ]}
+  caption="Capturas do protótipo web/SaaS do LogPill. Esta parte não está ativa nem implantada na versão pública."
+/>
+
+## Capturas do app
+
+Os mockups servem para as lojas. As capturas abaixo mostram a interface mais próxima do uso diário: planejamento, lista de medicamentos, registro de dose, análises e recargas.
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/logpill/screenshots/pt/app/home.webp",
+      alt: "Tela inicial do LogPill com o planejamento do dia",
+      width: 750,
+      height: 1547,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/app/medications.webp",
+      alt: "Lista de medicamentos no LogPill",
+      width: 750,
+      height: 1547,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/app/log-dose.webp",
+      alt: "Tela de registro de dose no LogPill",
+      width: 750,
+      height: 1547,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/app/analytics-overview.webp",
+      alt: "Visão geral de análises no LogPill",
+      width: 750,
+      height: 1547,
+    },
+    {
+      src: "/images/2026/logpill/screenshots/pt/app/refill-tracker.webp",
+      alt: "Acompanhamento de recargas no LogPill",
+      width: 750,
+      height: 1547,
+    },
+  ]}
+  caption="Capturas do aplicativo em português."
+/>
+
+## O que LogPill valida para AppExpress
+
+LogPill mostra que um produto B2C não se resume a "fazer um app". Também importam a primeira impressão, as lojas, os idiomas, as permissões do sistema, as páginas de suporte, a política de privacidade, o modelo de dados e o comportamento offline.
+
+É exatamente o tipo de produto em que uma stack pragmática importa mais do que uma arquitetura espetacular. As notificações precisam chegar. As doses precisam ser registradas rápido. Os dados precisam continuar legíveis. As capturas precisam ser coerentes em cada idioma. E o site precisa explicar o produto sem criar confusão médica.
+
+## Baixar LogPill
+
+Site oficial: [logpill.app](https://logpill.app/).
+
+LogPill está disponível na App Store e no Google Play.
+
+<AppStoreLink href="https://apps.apple.com/us/app/logpill/id6758589564" />
+<PlayStoreLink href="https://play.google.com/store/apps/details?id=app.logpill.osibits" />
