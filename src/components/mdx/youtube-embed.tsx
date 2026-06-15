@@ -2,12 +2,26 @@ type YouTubeEmbedProps = {
   videoId: string;
   title: string;
   caption?: string;
+  vertical?: boolean;
 };
 
-export function YouTubeEmbed({ videoId, title, caption }: YouTubeEmbedProps) {
+export function YouTubeEmbed({
+  videoId,
+  title,
+  caption,
+  vertical = false,
+}: YouTubeEmbedProps) {
   return (
-    <figure className="not-prose mx-auto my-10 w-full max-w-3xl">
-      <div className="aspect-video overflow-hidden rounded-lg bg-black">
+    <figure
+      className={`not-prose mx-auto my-10 w-full ${
+        vertical ? "max-w-xs" : "max-w-3xl"
+      }`}
+    >
+      <div
+        className={`${
+          vertical ? "aspect-[9/16]" : "aspect-video"
+        } overflow-hidden rounded-lg bg-black`}
+      >
         <iframe
           src={`https://www.youtube-nocookie.com/embed/${videoId}`}
           title={title}
