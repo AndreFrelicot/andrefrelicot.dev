@@ -35,6 +35,19 @@ body {
   color: var(--background);
 }
 
+/* Let users select text inside fully-clickable cards. WebKit treats links and
+   images as drag sources (-webkit-user-drag: element) which hijacks the
+   mousedown before a text selection can start, so disable it on the card. */
+.card-selectable,
+.card-selectable * {
+  -webkit-user-drag: none;
+}
+
+.card-selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Sticky translucent surface that adapts to theme */
 .glass-nav {
   /* Soften content underneath while keeping contrast */
