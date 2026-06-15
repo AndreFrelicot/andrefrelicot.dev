@@ -1,0 +1,182 @@
+---
+title: "WorkProof: local-first time tracking with AppExpress"
+description: "A dev log about WorkProof, an iOS, Android and web time tracking app with projects, tasks and work evidence, built with Ionic, Capacitor, Next.js, Supabase and a local-first architecture."
+date: 2026-06-14
+tags: [apps, appexpress, workproof, b2c, b2b, saas, mobile, local-first, ionic, capacitor, react, nextjs, supabase]
+en_mdx: workproof-local-first-time-tracking-appexpress.mdx
+fr_mdx: workproof-suivi-temps-local-first-appexpress.mdx
+pt_mdx: workproof-controle-tempo-local-first-appexpress.mdx
+es_mdx: workproof-seguimiento-tiempo-local-first-appexpress.mdx
+image: /images/2026/workproof/workproof-cover.webp
+---
+
+<ThemeImage
+  lightSrc="/images/2026/workproof/workproof-cover.webp"
+  darkSrc="/images/2026/workproof/workproof-cover.webp"
+  alt="WorkProof in action"
+  width={1600}
+  height={900}
+  priority={true}
+/>
+
+<AppExpressSourceBanner
+  href="https://appexpress.fr"
+  linkLabel="Discover AppExpress"
+>
+  WorkProof is a mobile and web product built in the spirit of the AppExpress offer.
+</AppExpressSourceBanner>
+
+WorkProof is a time tracking application for freelancers, remote workers and small teams that need to document hours without turning each workday into administrative data entry.
+
+The core product is straightforward: start a timer, attach it to a project or task, keep the history, then retrieve sessions, files and statistics when it is time to follow up with a client, an invoice or a project.
+
+The AppExpress angle is broader than the mobile app alone. WorkProof combines an iOS/Android experience, a web application, subscriptions, cloud sync, file handling, native permissions and a local-first data model. It is a good example of a B2C/prosumer product that quickly behaves like a small SaaS, but the same Capacitor stack works just as well for internal B2B apps.
+
+<Callout type="info" title="A demonstration, not a production product">
+WorkProof exists mainly to demonstrate the full stack end to end: a web SaaS, a Capacitor mobile app, web payments through LemonSqueezy and mobile payments through RevenueCat. The app is not meant for production use — the payment systems actually run in demo/sandbox mode.
+</Callout>
+
+## Why this AppExpress showcase
+
+WorkProof illustrates a practical case: an application that needs to feel fast on mobile, credible on desktop and robust enough for professional data.
+
+The product covers topics that often appear in real launches:
+
+- a timer that can be started in one gesture;
+- organization by projects, tasks and sessions;
+- work evidence through photos, files or audio notes;
+- reliable offline mode;
+- cloud sync for paid users;
+- a multilingual interface (French and English);
+- a web application for reporting, management and administration;
+- iOS and Android store distribution with in-app purchases.
+
+## The mobile product
+
+The timer view is deliberately central. The user starts a session, selects a project or task, then can add attachments during or after the work. This keeps the time spent and the actual work evidence in the same record.
+
+Projects and tasks structure the sessions. Statistics then make it possible to read time by period, project and activity. Attached files create a useful trail when a client asks for details or when an intervention needs to be justified.
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/timer-running.webp",
+      alt: "Running WorkProof timer with pause and stop controls",
+      width: 800,
+      height: 1650,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/projects-list.webp",
+      alt: "WorkProof project list on Android",
+      width: 800,
+      height: 1684,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/project-tasks.webp",
+      alt: "WorkProof project detail with tasks",
+      width: 800,
+      height: 1684,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/files-grouped.webp",
+      alt: "Files grouped by project in WorkProof",
+      width: 800,
+      height: 1650,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/sessions.webp",
+      alt: "WorkProof sessions list linked to the timer",
+      width: 800,
+      height: 1684,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/statistics.webp",
+      alt: "Time statistics in WorkProof",
+      width: 800,
+      height: 1684,
+    },
+  ]}
+  caption="English WorkProof mobile mockups."
+/>
+
+## Technical stack
+
+The mobile app is built with React, Ionic and Capacitor, which keeps a shared mobile web codebase while still giving access to the native APIs that matter: camera, files, local storage, network status, sharing, haptics and in-app purchases.
+
+| Layer | Choice | Role |
+|---|---|---|
+| Mobile | Ionic, Capacitor, React, TypeScript | iOS and Android app with a mobile web codebase. |
+| Local database | RxDB, IndexedDB | Data available on the device first, even offline. |
+| Synchronization | RxDB replication, Supabase Realtime | Cloud replication and data reconciliation across devices. |
+| Files | Capacitor Camera, Filesystem, Supabase Storage | Photos, audio and documents attached to projects, tasks or sessions. |
+| App state | Zustand, `@workproof/core` package | Shared business logic between mobile and web. |
+| i18n | i18next, react-i18next | Multilingual interface (French and English) shared between mobile and web. |
+| Web | Next.js 16, React 19, Tailwind, shadcn/ui | Dashboard, reports, settings, billing and administration. |
+| Backend | Supabase Auth, PostgreSQL, RLS, Storage | Accounts, workspaces, security, files and synchronized data. |
+| Payments | RevenueCat, LemonSqueezy | Mobile in-app purchases and web subscriptions. |
+| Emails | Resend, React Email | Magic links, confirmations and transactional messages. |
+
+The key architectural choice is local-first. The timer cannot depend on an active connection. A session must start immediately, remain visible, then synchronize when the network comes back. In this type of product, the local database is not just a cache: it is the main working surface.
+
+## The web application
+
+The web side is designed for larger-screen work: reviewing statistics, exploring projects, checking sessions, managing files, tracking billing and administering users or subscriptions.
+
+It uses the same business objects as the mobile app, but with an information density better suited to desktop. The dashboard highlights tracked hours, sessions, active projects, tasks and activity over time. Project and file views make the "proof of work" dimension clearer.
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/workproof/screenshots/web/dashboard-stats.webp",
+      alt: "WorkProof web dashboard with statistics and activity",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/timer-running.webp",
+      alt: "Running timer in the WorkProof web app",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/project-tasks-files.webp",
+      alt: "WorkProof project with tasks and attached files",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/all-files.webp",
+      alt: "File gallery in the WorkProof web app",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/billing-storage.webp",
+      alt: "WorkProof billing and storage settings",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/admin-dashboard.webp",
+      alt: "WorkProof admin dashboard",
+      width: 2054,
+      height: 1156,
+    },
+  ]}
+  caption="Redacted WorkProof web screenshots from the AppExpress mockup set. This set is currently shown in French."
+/>
+
+## What WorkProof validates for AppExpress
+
+WorkProof shows that an offer like AppExpress should not stop at producing an interface. The product touches mobile distribution, web SaaS, synchronization, billing, emails, local data, files and security constraints.
+
+The important point is the product split. Mobile remains the natural place to capture time and work evidence in the field. Web becomes the natural place to review, administer, analyze and bill. The stack follows that split instead of forcing one usage mode everywhere. And none of this is specific to consumer products: the same architecture serves internal B2B tools just as well, with the field on mobile and oversight on the web.
+
+## Download WorkProof
+
+Official website: [workproof.app](https://workproof.app/).
+
+WorkProof is available on the App Store and Google Play.
+
+<AppStoreLink href="https://apps.apple.com/app/work-proof/id6755934931" />
+<PlayStoreLink href="https://play.google.com/store/apps/details?id=app.workproof.osibits" />

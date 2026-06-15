@@ -1,0 +1,182 @@
+---
+title: "WorkProof: controle de tempo local-first com AppExpress"
+description: "Dev log sobre o WorkProof, um app iOS, Android e web para controle de tempo, projetos, tarefas e provas de trabalho, criado com Ionic, Capacitor, Next.js, Supabase e uma arquitetura local-first."
+date: 2026-06-14
+tags: [apps, appexpress, workproof, b2c, b2b, saas, mobile, local-first, ionic, capacitor, react, nextjs, supabase]
+en_mdx: workproof-local-first-time-tracking-appexpress.mdx
+fr_mdx: workproof-suivi-temps-local-first-appexpress.mdx
+pt_mdx: workproof-controle-tempo-local-first-appexpress.mdx
+es_mdx: workproof-seguimiento-tiempo-local-first-appexpress.mdx
+image: /images/2026/workproof/workproof-cover.webp
+---
+
+<ThemeImage
+  lightSrc="/images/2026/workproof/workproof-cover.webp"
+  darkSrc="/images/2026/workproof/workproof-cover.webp"
+  alt="WorkProof em ação"
+  width={1600}
+  height={900}
+  priority={true}
+/>
+
+<AppExpressSourceBanner
+  href="https://appexpress.fr"
+  linkLabel="Conhecer AppExpress"
+>
+  WorkProof é um produto mobile e web construído no espírito da oferta AppExpress.
+</AppExpressSourceBanner>
+
+WorkProof é um aplicativo de controle de tempo para freelancers, trabalhadores remotos e pequenas equipes que precisam documentar horas sem transformar cada dia de trabalho em preenchimento administrativo.
+
+O núcleo do produto é direto: iniciar um cronômetro, vinculá-lo a um projeto ou tarefa, manter o histórico e recuperar sessões, arquivos e estatísticas na hora de acompanhar um cliente, uma fatura ou um projeto.
+
+O ângulo AppExpress é mais amplo do que o app mobile. WorkProof combina experiência iOS/Android, aplicação web, assinaturas, sincronização em nuvem, arquivos, permissões nativas e um modelo de dados local-first. É um bom exemplo de produto B2C/prosumer que rapidamente se comporta como um pequeno SaaS, mas a mesma stack Capacitor serve igualmente bem para aplicações internas B2B.
+
+<Callout type="info" title="Uma demonstração, não um produto em produção">
+O WorkProof serve sobretudo para demonstrar a stack completa de ponta a ponta: um SaaS web, um app mobile Capacitor, pagamentos web via LemonSqueezy e pagamentos mobile via RevenueCat. O aplicativo não é destinado a uso em produção — aliás, os sistemas de pagamento funcionam em modo demo/sandbox.
+</Callout>
+
+## Por que este showcase AppExpress
+
+WorkProof ilustra um caso prático: uma aplicação que precisa ser rápida no mobile, confiável no desktop e robusta o suficiente para dados profissionais.
+
+O produto cobre temas frequentes em um lançamento real:
+
+- um cronômetro que pode ser iniciado em um gesto;
+- organização por projetos, tarefas e sessões;
+- provas de trabalho com fotos, arquivos ou notas de áudio;
+- modo offline confiável;
+- sincronização em nuvem para usuários pagos;
+- uma interface multilíngue (francês e inglês);
+- uma aplicação web para relatórios, gestão e administração;
+- distribuição nas stores iOS e Android com compras integradas.
+
+## O produto mobile
+
+A tela de cronômetro é deliberadamente central. O usuário inicia uma sessão, seleciona um projeto ou tarefa e pode adicionar anexos durante ou depois do trabalho. Assim, o tempo gasto e a prova do que foi feito ficam no mesmo registro.
+
+Projetos e tarefas estruturam as sessões. As estatísticas permitem ler o tempo por período, projeto e atividade. Os arquivos anexados criam uma trilha útil quando um cliente pede detalhes ou quando uma intervenção precisa ser justificada.
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/timer-running.webp",
+      alt: "Cronômetro WorkProof em andamento com controles de pausa e parada",
+      width: 800,
+      height: 1650,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/projects-list.webp",
+      alt: "Lista de projetos WorkProof no Android",
+      width: 800,
+      height: 1684,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/project-tasks.webp",
+      alt: "Detalhe de projeto WorkProof com tarefas",
+      width: 800,
+      height: 1684,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/files-grouped.webp",
+      alt: "Arquivos agrupados por projeto no WorkProof",
+      width: 800,
+      height: 1650,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/sessions.webp",
+      alt: "Lista de sessões WorkProof vinculada ao cronômetro",
+      width: 800,
+      height: 1684,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/en/mobile/statistics.webp",
+      alt: "Estatísticas de tempo no WorkProof",
+      width: 800,
+      height: 1684,
+    },
+  ]}
+  caption="Mockups mobile WorkProof. Este conjunto está em inglês."
+/>
+
+## Stack técnica
+
+O app mobile é construído com React, Ionic e Capacitor, o que permite compartilhar uma base web mobile e ainda acessar as APIs nativas necessárias: câmera, arquivos, armazenamento local, rede, compartilhamento, háptica e compras integradas.
+
+| Camada | Escolha | Papel |
+|---|---|---|
+| Mobile | Ionic, Capacitor, React, TypeScript | App iOS e Android com uma base web mobile. |
+| Base local | RxDB, IndexedDB | Dados disponíveis primeiro no dispositivo, mesmo sem rede. |
+| Sincronização | RxDB replication, Supabase Realtime | Replicação cloud e reconciliação de dados entre dispositivos. |
+| Arquivos | Capacitor Camera, Filesystem, Supabase Storage | Fotos, áudio e documentos vinculados a projetos, tarefas ou sessões. |
+| Estado | Zustand, pacote `@workproof/core` | Lógica de negócio compartilhada entre mobile e web. |
+| i18n | i18next, react-i18next | Interface multilíngue (francês e inglês) compartilhada entre mobile e web. |
+| Web | Next.js 16, React 19, Tailwind, shadcn/ui | Dashboard, relatórios, ajustes, cobrança e administração. |
+| Backend | Supabase Auth, PostgreSQL, RLS, Storage | Contas, workspaces, segurança, arquivos e dados sincronizados. |
+| Pagamentos | RevenueCat, LemonSqueezy | Compras integradas mobile e assinaturas web. |
+| Emails | Resend, React Email | Magic links, confirmações e mensagens transacionais. |
+
+A decisão estrutural é o local-first. O cronômetro não pode depender de uma conexão ativa. Uma sessão precisa começar imediatamente, continuar visível e sincronizar quando a rede voltar. Nesse tipo de produto, a base local não é apenas um cache: ela é a principal superfície de trabalho.
+
+## A aplicação web
+
+A parte web serve para trabalhar em tela grande: consultar estatísticas, explorar projetos, revisar sessões, gerenciar arquivos, acompanhar cobrança e administrar usuários ou assinaturas.
+
+Ela usa os mesmos objetos de negócio do app mobile, mas com uma densidade de informação mais adequada ao desktop. O dashboard destaca horas registradas, sessões, projetos ativos, tarefas e atividade ao longo do tempo. As telas de projetos e arquivos mostram melhor a dimensão de "prova de trabalho".
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/workproof/screenshots/web/dashboard-stats.webp",
+      alt: "Dashboard web WorkProof com estatísticas e atividade",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/timer-running.webp",
+      alt: "Cronômetro em andamento na aplicação web WorkProof",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/project-tasks-files.webp",
+      alt: "Projeto WorkProof com tarefas e arquivos anexados",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/all-files.webp",
+      alt: "Galeria de arquivos na aplicação web WorkProof",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/billing-storage.webp",
+      alt: "Ajustes de cobrança e armazenamento WorkProof",
+      width: 2054,
+      height: 1156,
+    },
+    {
+      src: "/images/2026/workproof/screenshots/web/admin-dashboard.webp",
+      alt: "Dashboard admin WorkProof",
+      width: 2054,
+      height: 1156,
+    },
+  ]}
+  caption="Capturas web WorkProof redigidas a partir dos mockups AppExpress. Este conjunto está em francês."
+/>
+
+## O que WorkProof valida para AppExpress
+
+WorkProof mostra que uma oferta como AppExpress não deve parar na produção de uma interface. O produto toca distribuição mobile, SaaS web, sincronização, cobrança, emails, dados locais, arquivos e restrições de segurança.
+
+O ponto importante é a divisão de uso. O mobile continua sendo o lugar natural para capturar tempo e provas em campo. A web se torna o lugar natural para revisar, administrar, analisar e cobrar. A stack segue essa separação em vez de impor o mesmo modo de uso em todos os lugares. E nada disso é exclusivo do grande público: a mesma arquitetura serve igualmente bem para ferramentas internas B2B, com o campo no mobile e a gestão no web.
+
+## Baixar WorkProof
+
+Site oficial: [workproof.app](https://workproof.app/).
+
+WorkProof está disponível na App Store e no Google Play.
+
+<AppStoreLink href="https://apps.apple.com/app/work-proof/id6755934931" />
+<PlayStoreLink href="https://play.google.com/store/apps/details?id=app.workproof.osibits" />
