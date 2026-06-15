@@ -44,7 +44,7 @@ export function PlayStoreLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={clsx("inline-flex", className)}
+      className={clsx("mt-6 inline-flex", className)}
       aria-label={label}
       title={label}
     >
