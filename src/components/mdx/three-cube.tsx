@@ -23,7 +23,7 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
   const oscillatorsRef = useRef<Array<{ oscillator: OscillatorNode | null; gainNode: GainNode | null }>>(
     Array.from({ length: 6 }, () => ({ oscillator: null, gainNode: null }))
   );
-  const lastFrameTimeRef = useRef(Date.now());
+  const lastFrameTimeRef = useRef(0);
   const confettiRef = useRef<Array<{
     mesh: THREE.Mesh;
     velocity: THREE.Vector3;
@@ -561,6 +561,7 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       renderer.render(scene, camera);
       requestRef.current = requestAnimationFrame(animate);
     };
+    lastFrameTimeRef.current = Date.now();
     animate();
 
     // Set up ResizeObserver for better responsive handling

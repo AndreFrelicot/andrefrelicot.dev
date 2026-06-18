@@ -31,6 +31,15 @@ export const metadata: Metadata = {
       "application/rss+xml": `${SITE_URL}/feed.xml`,
     },
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-256.png", sizes: "256x256", type: "image/png" },
+    ],
+    apple: [
+      { url: "/favicon-256.png", sizes: "256x256", type: "image/png" },
+    ],
+  },
 };
 
 type RootLayoutParams = Promise<{ locale?: string }>;
