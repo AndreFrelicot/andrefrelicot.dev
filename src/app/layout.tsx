@@ -22,10 +22,10 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "André Frélicot - TechLead & Entrepreneur",
-    template: "%s · André Frélicot - TechLead & Entrepreneur",
+    default: "André Frélicot - CTO / TechLead / Entrepreneur",
+    template: "%s · André Frélicot - CTO / TechLead / Entrepreneur",
   },
-  description: "André Frélicot - TechLead & Entrepreneur",
+  description: "André Frélicot - CTO / TechLead / Entrepreneur",
   alternates: {
     types: {
       "application/rss+xml": `${SITE_URL}/feed.xml`,
