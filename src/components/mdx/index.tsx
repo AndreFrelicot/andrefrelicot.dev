@@ -5,6 +5,7 @@ import { Callout } from "./callout";
 import { GitHubLink } from "./github-link";
 import { OsibitsLogo } from "./osibits-logo";
 import { PlayStoreLink } from "./play-store-link";
+import { PubDevLink } from "./pub-dev-link";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import { ThemeImage } from "./theme-image";
 import { ThreeCube } from "./three-cube";
@@ -28,6 +29,7 @@ export const mdxComponents = {
   GitHubLink,
   OsibitsLogo,
   PlayStoreLink,
+  PubDevLink,
   ScreenshotGallery,
   ThreeCube,
   ThemeImage,
