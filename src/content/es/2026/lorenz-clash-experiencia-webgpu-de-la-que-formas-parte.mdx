@@ -1,6 +1,6 @@
 ---
 title: "Lorenz Clash: construir una experiencia WebGPU de la que formas parte"
-description: "Cómo una ola de calor se convirtió en una experiencia de cámara WebGPU: matemáticas de Lorenz, renderizado con shaders, efectos guiados por la música, exportación de vídeo local y PWA fullscreen."
+description: "Cómo una ola de calor se convirtió en una experiencia de cámara WebGPU: matemáticas de Lorenz, renderizado con shaders, efectos guiados por la música, exportación de video local y PWA fullscreen."
 date: 2026-06-26
 tags: [apps, source_code, webgpu, wgsl, shaders, lorenz-attractor, chaos-theory, generative-art, pwa, graphics, typescript, audio, webcodecs]
 en_mdx: lorenz-clash-a-webgpu-experience-you-are-part-of.mdx
@@ -26,7 +26,7 @@ Este brillo es **convección**: un fluido calentado desde abajo, que sube, se en
 
 Entonces lo convertí en un juguete. **Lorenz Clash** es una experiencia audiovisual generativa WebGPU para la web móvil, y de la que tú eres *parte*: entras en ella a través de la cámara frontal — la lente para selfies de un teléfono, la cámara web de una computadora — y tu propia imagen se convierte en una materia que se recorta, se estira y se disuelve a lo largo de la trayectoria 3D del atractor de Lorenz, esa curva nacida de las matemáticas del calor. Una aplicación nacida de una ola de calor, basada en ecuaciones de calor. La simetría era demasiado hermosa para dejarla pasar.
 
-Este artículo es una inmersión técnica: las **matemáticas** detrás del caos, el **pipeline de renderizado WebGPU** y su lenguaje de shaders, **WGSL** (WebGPU Shading Language), el **análisis de la estructura musical** que permite que la experiencia se corte y respire con una canción, la **exportación de vídeo sin servidor** que guarda todo localmente, la **lucha por sobrevivir a una tableta con memoria limitada** y la **Progressive Web App** (PWA) que permite la instalación en pantalla completa en iOS y Android. Este no es un recorrido línea por línea del código fuente; son las ideas, las decisiones de diseño y las batallas.
+Este artículo es una inmersión técnica: las **matemáticas** detrás del caos, el **pipeline de renderizado WebGPU** y su lenguaje de shaders, **WGSL** (WebGPU Shading Language), el **análisis de la estructura musical** que permite que la experiencia se corte y respire con una canción, la **exportación de video sin servidor** que guarda todo localmente, la **lucha por sobrevivir a una tableta con memoria limitada** y la **Progressive Web App** (PWA) que permite la instalación en pantalla completa en iOS y Android. Este no es un recorrido línea por línea del código fuente; son las ideas, las decisiones de diseño y las batallas.
 
 <Callout type="tip" title="Probar / leer el código">
   <div className="not-prose flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -70,7 +70,7 @@ Y debajo hay una idea más discreta. Como la cámara siempre te mira, *tú* eres
 
 Algunas reglas no negociables guiaron todas las decisiones:
 
-- **Todo se ejecuta en el dispositivo.** La transmisión de vídeo nunca sale del teléfono: sin subidas, sin backend, sin seguimiento.
+- **Todo se ejecuta en el dispositivo.** La transmisión de video nunca sale del teléfono: sin subidas, sin backend, sin seguimiento.
 - **La cámara y el audio son opcionales, nunca se requiere movimiento.** Si rechazas la cámara, la pieza seguirá funcionando (una fuente procedimental se hace cargo). Silencia el sonido y las imágenes seguirán respondiendo. Ignora los gestos táctiles y el sistema seguirá respirando.
 - **Nada de valores sin procesar.** Las entradas táctiles y de audio siempre se suavizan antes de alcanzar un shader o parámetro. El caos ya es bastante salvaje sin necesidad de inyectarle nerviosismo.
 - **Sin respaldo de WebGL.** Sin WebGPU significa una pantalla limpia "no compatible", no una experiencia degradada.
@@ -412,7 +412,7 @@ El efecto que parece más caro es en realidad el más simple conceptualmente: un
 Este es un buen resumen en miniatura de toda la filosofía de composición: integra el efecto en el pase que ya toca todos los píxeles, o en un único pase posterior propio cuando se necesite un historial temporal, y mantén bajo control el número de capas del renderizador.
 
 <Callout type="info" title="Nota de debug: nunca leas la cadena de intercambio en vivo en iOS">
-La imagen final se renderiza con una textura **propia** y luego se vuelca (blit) en el lienzo. La lectura directa de `getCurrentTexture()` (la idea obvia) bloquea y corrompe la presentación en Safari iOS. El desvío a través de una textura propia también le da a la exportación de vídeo una superficie estable para capturar, sin siquiera tocar la cadena de intercambio en vivo.
+La imagen final se renderiza con una textura **propia** y luego se vuelca (blit) en el lienzo. La lectura directa de `getCurrentTexture()` (la idea obvia) bloquea y corrompe la presentación en Safari iOS. El desvío a través de una textura propia también le da a la exportación de video una superficie estable para capturar, sin siquiera tocar la cadena de intercambio en vivo.
 </Callout>
 
 ### La capa audio-reactiva
@@ -499,9 +499,9 @@ Cada título es un enlace directo a su `.m4a`: tomas únicas, cada una de más d
   | 11 | [Rastreo tribal](https://lorenzclash.andrefrelicot.dev/audio/11_tribal_trace.m4a) | 3:57 |
 </Callout>
 
-## Grabarlo: exportación de vídeo local, sin servidor
+## Grabarlo: exportación de video local, sin servidor
 
-La pieza es generativa y nunca se repite; el siguiente deseo es obvio: *guarda* un momento. Lorenz Clash graba y exporta vídeos (un `.mp4` real, con música mezclada) y, fiel a la regla local, **nada toca un servidor**. Todo se ejecuta en el navegador, en el teléfono, que es exactamente donde se pone interesante: codificar vídeo en una pestaña sin empujar la memoria al barranco.
+La pieza es generativa y nunca se repite; el siguiente deseo es obvio: *guarda* un momento. Lorenz Clash graba y exporta videos (un `.mp4` real, con música mezclada) y, fiel a la regla local, **nada toca un servidor**. Todo se ejecuta en el navegador, en el teléfono, que es exactamente donde se pone interesante: codificar video en una pestaña sin empujar la memoria al barranco.
 
 <ZoomableThemeImage
   lightSrc="/images/2026/lorenz-clash/diagram-export-pipeline-light-v1.png"
@@ -539,7 +539,7 @@ frame.close(); // critical: never accumulate raw frames
 El codificador de hardware ya se ejecuta fuera del subproceso, por lo que no es necesario Web Worker: el subproceso principal apenas interviene. La elección del códec es una prueba de capacidad rápida: primero H.264 nivel 4.0 (móvil), luego 5.0/5.1/5.2 para fotogramas de escritorio/Retina grandes que superan el techo de macrobloques de nivel 4.0; si no existe un codificador H.264, la función se desactiva discretamente. Un *clip* (una "secuencia") es una aparición de fondo (una imagen fija en HD que se disuelve y luego desaparece) capturada automáticamente, además de instantáneas manuales con un solo toque, recopiladas para su curación (consulta *Sobrevivir a ello* para explicar por qué la captura automática se detiene en lugar de reciclarse).
 
 <Callout type="info" title="Nota de debug: chunks codificados viven en el disco; de lo contrario, OOM móvil">
-Incluso comprimido, el vídeo se acumula (alrededor de 1 MB por segundo) y una larga sesión de instantáneas bloquearía todo lo que hay en el heap de JavaScript (JS) antes de bloquear la pestaña de un teléfono por falta de memoria (OOM). Por lo tanto, los chunks codificados en H.264 se descargan en **IndexedDB**: la RAM solo conserva metadatos ligeros y una miniatura de 200 px por clip; los bytes viven en el disco. El almacén tiene un **ámbito de sesión** (se borra cada vez que se inicia), lo que también significa que el vídeo de la cámara no permanece en el dispositivo después de que te vas. ¿Sin IndexedDB (modo privado)? Recurrir a la RAM. La presión de almacenamiento proviene de `navigator.storage.estimate()`: los clips automáticos dejan de acumularse más allá del 60 % de uso, las instantáneas manuales más allá del 85 %.
+Incluso comprimido, el video se acumula (alrededor de 1 MB por segundo) y una larga sesión de instantáneas bloquearía todo lo que hay en el heap de JavaScript (JS) antes de bloquear la pestaña de un teléfono por falta de memoria (OOM). Por lo tanto, los chunks codificados en H.264 se descargan en **IndexedDB**: la RAM solo conserva metadatos ligeros y una miniatura de 200 px por clip; los bytes viven en el disco. El almacén tiene un **ámbito de sesión** (se borra cada vez que se inicia), lo que también significa que el video de la cámara no permanece en el dispositivo después de que te vas. ¿Sin IndexedDB (modo privado)? Recurrir a la RAM. La presión de almacenamiento proviene de `navigator.storage.estimate()`: los clips automáticos dejan de acumularse más allá del 60 % de uso, las instantáneas manuales más allá del 85 %.
 </Callout>
 
 ### Exportar: mux, no recodificar
@@ -562,7 +562,7 @@ El audio del export no es una grabación de la salida: es la **canción real** q
 Decodificar la canción requiere `AudioContext`, pero crear uno *real* captura la sesión de audio del hardware, y en iOS esto **suspende el contexto de música en vivo**, haciendo que la aplicación esté en silencio hasta que se vuelva a cargar; cada exportación o vista previa mataría el sonido. La corrección consiste en decodificar mediante un **`OfflineAudioContext`**, que se renderiza en un buffer y no tiene sesión de salida, por lo que permanece completamente inerte. Y dado que decodificar una canción completa de varios minutos es, con diferencia, el paso más pesado, la última canción decodificada se almacena en caché, pero solo una entrada, porque una canción estéreo decodificada de 8 minutos a 48 kHz pesa ~180 MB y conservar dos sería OOM.
 </Callout>
 
-Cuando grabas las imágenes en cámara lenta, el sonido debe ralentizarse con ellas: por lo tanto, cada fotograma grabado almacena su `warp` cámara lenta, y la exportación **remuestrea la música de acuerdo con esta envolvente**. El cabezal de reproducción avanza más lentamente a través de las muestras exactamente donde se detuvo el vídeo, con interpolación lineal de la posición ahora fraccionaria. Última trampa: el móvil `AudioEncoder` a menudo omite `AudioSpecificConfig` AAC, y sin él, mp4-muxer escribe un cuadro `esds` roto y el archivo se reproduce sin sonido. Por lo tanto, esta configuración de 2 bytes se sintetiza manualmente y se transmite explícitamente al muxer.
+Cuando grabas las imágenes en cámara lenta, el sonido debe ralentizarse con ellas: por lo tanto, cada fotograma grabado almacena su `warp` cámara lenta, y la exportación **remuestrea la música de acuerdo con esta envolvente**. El cabezal de reproducción avanza más lentamente a través de las muestras exactamente donde se detuvo el video, con interpolación lineal de la posición ahora fraccionaria. Última trampa: el móvil `AudioEncoder` a menudo omite `AudioSpecificConfig` AAC, y sin él, mp4-muxer escribe un cuadro `esds` roto y el archivo se reproduce sin sonido. Por lo tanto, esta configuración de 2 bytes se sintetiza manualmente y se transmite explícitamente al muxer.
 
 El resultado es un `.mp4` independiente: tu porción de caos, completa con música, creada completamente en el teléfono.
 
@@ -573,7 +573,7 @@ Todo funcionó bien en el iPhone 13 y el iPhone SE, luego falló en un **iPad Pr
 El Web Inspector remoto de Safari fue útil mientras la página estuvo viva, pero no por el fallo en sí: una vez que el proceso de GPU murió, el estado útil ya debería ser visible en el dispositivo. Por lo tanto, la aplicación obtuvo una **línea de diagnóstico**, impresa cada diez segundos y *grabada en la propia pantalla de fallo*, que informa la velocidad de fotogramas, la cantidad de clips, la cantidad de codificadores y el total de bytes de todas las texturas asignadas. Una captura de pantalla del fallo se convirtió en un informe completo.
 
 <Callout type="info" title="Nota de debug: era memoria de GPU, no RAM, y iOS no lo dice">
-El fallo siempre fue una asignación de GPU que falló (`beginRenderPass` o `importExternalTexture` que ya no da nada), nunca una falta de memoria de JavaScript. El **proceso GPU** de WebKit tiene su propio presupuesto, separado del heap de la página, y una pantalla grande más una cámara en vivo lo llena rápidamente. Peor aún: **iOS no expone ninguna API de memoria** (`deviceMemory`, `performance.memory`, `measureUserAgentSpecificMemory` son solo para Chrome) y WebGPU no informa ninguna memoria de vídeo (VRAM): estamos volando a ciegas. Y una vez que este proceso muere, `requestAdapter()` devuelve `null`: todo el subsistema se pierde, no hay recuperación, solo una recarga.
+El fallo siempre fue una asignación de GPU que falló (`beginRenderPass` o `importExternalTexture` que ya no da nada), nunca una falta de memoria de JavaScript. El **proceso GPU** de WebKit tiene su propio presupuesto, separado del heap de la página, y una pantalla grande más una cámara en vivo lo llena rápidamente. Peor aún: **iOS no expone ninguna API de memoria** (`deviceMemory`, `performance.memory`, `measureUserAgentSpecificMemory` son solo para Chrome) y WebGPU no informa ninguna memoria de video (VRAM): estamos volando a ciegas. Y una vez que este proceso muere, `requestAdapter()` devuelve `null`: todo el subsistema se pierde, no hay recuperación, solo una recarga.
 </Callout>
 
 La palanca más grande fue el **ring buffer**. El tamaño de sus capas se ajusta a la relación de la cámara y un fotograma apaisado contiene aproximadamente **tres veces** más píxeles que uno vertical. En el iPad horizontal, el anillo por sí solo pesaba **248 de los 288 MB**. Limitar el lado más *largo* de cada capa en lugar de su altura hace que la huella sea independiente de la orientación: 288 MB se convirtieron en **125 MB**, sin afectar a los ya pequeños iPhones verticales.
@@ -596,7 +596,7 @@ La exportación, en un dispositivo ajustado, es a la vez víctima y desencadenan
 
 La última corrección fue una política. Los clips de fondo eran un *buffer rotativo*: desplazan al más antiguo en el techo, continúan codificando, lo que significa que el codificador de hardware se ejecuta **continuamente** mientras la aplicación esté abierta. Es esta carga sostenida la que finalmente hace que un dispositivo ajustado se venga abajo. Por lo tanto, la captura automática **se detiene** en el límite superior, y una pequeña interfaz de curación (conservar, descartar o "eliminar lo no mantenido") libera espacios para reanudar. No codifiques eternamente para luego desecharlo.
 
-Resultado: la cámara y la captura continua pasaron de fallar en **~5 minutos** a **más de treinta** en el mismo iPad, con memoria GPU plana. La ruta de copia final de iOS ahora registra el flujo de la cámara cuadrada (`track 720x720 aspect=1.000`) y elimina el contador `importExternalTexture` en las ejecuciones largas (`camImp=0`, `camCopy` aumentan con la tasa de depósitos). El iPad aún puede calentarse (es una tableta de 2018 que ejecuta WebGPU, cámara y codificación de vídeo en un navegador), pero el modo de falla ha pasado de un lento precipicio de la memoria de la GPU a una presión normal de calor/rendimiento. Es la diferencia entre una demo que muere y una experiencia que puedo lanzar.
+Resultado: la cámara y la captura continua pasaron de fallar en **~5 minutos** a **más de treinta** en el mismo iPad, con memoria GPU plana. La ruta de copia final de iOS ahora registra el flujo de la cámara cuadrada (`track 720x720 aspect=1.000`) y elimina el contador `importExternalTexture` en las ejecuciones largas (`camImp=0`, `camCopy` aumentan con la tasa de depósitos). El iPad aún puede calentarse (es una tableta de 2018 que ejecuta WebGPU, cámara y codificación de video en un navegador), pero el modo de falla ha pasado de un lento precipicio de la memoria de la GPU a una presión normal de calor/rendimiento. Es la diferencia entre una demo que muere y una experiencia que puedo lanzar.
 
 ## Publicarlo: una PWA a pantalla completa
 
