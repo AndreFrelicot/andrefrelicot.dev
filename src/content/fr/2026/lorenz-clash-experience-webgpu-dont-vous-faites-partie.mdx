@@ -1,0 +1,751 @@
+---
+title: "Lorenz Clash : construire une expérience WebGPU dont vous faites partie"
+description: "Comment une vague de chaleur est devenue une expérience caméra WebGPU : mathématiques de Lorenz, rendu shader, effets pilotés par la musique, export vidéo local et PWA fullscreen."
+date: 2026-06-26
+tags: [apps, source_code, webgpu, wgsl, shaders, lorenz-attractor, chaos-theory, generative-art, pwa, graphics, typescript, audio, webcodecs]
+en_mdx: lorenz-clash-a-webgpu-experience-you-are-part-of.mdx
+fr_mdx: lorenz-clash-experience-webgpu-dont-vous-faites-partie.mdx
+pt_mdx: lorenz-clash-experiencia-webgpu-da-qual-voce-faz-parte.mdx
+es_mdx: lorenz-clash-experiencia-webgpu-de-la-que-formas-parte.mdx
+image: /images/2026/lorenz-clash/cover.webp
+---
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/cover.webp"
+  darkSrc="/images/2026/lorenz-clash/cover.webp"
+  alt="Lorenz Clash en action"
+  width={1600}
+  height={1200}
+  priority={true}
+/>
+
+## Une canicule, et les maths de la chaleur
+
+Fin juin 2026, la France traversait une [vague de chaleur brutale](https://meteofrance.com/actualites-et-dossiers/actualites/canicule-une-vague-de-chaleur-sinstalle-cette-semaine). Celle où l'air tremble au-dessus de l'asphalte, où tout ralentit, et où vous vous surprenez à fixer l'air chaud qui monte d'un toit en se demandant quelle forme il trace réellement.
+
+Ce miroitement, c'est de la **convection** : un fluide chauffé par le dessous, qui monte, refroidit, redescend et s'enroule sur lui-même. Et la convection a son célèbre jeu d'équations : celles qu'Edward Lorenz a écrites en 1963 en essayant de modéliser précisément cela, l'atmosphère brassée par la chaleur.
+
+J'en ai donc fait un jouet. **Lorenz Clash** est une expérience audiovisuelle générative WebGPU pour le web mobile — et une expérience dont vous faites *partie* : vous y entrez par la caméra frontale — l'objectif selfie d'un téléphone, la webcam d'un ordinateur —, et votre image devient une matière découpée, étirée et dissoute le long de la trajectoire 3D de l'attracteur de Lorenz, cette courbe née des mathématiques de la chaleur. Une app née d'une canicule, bâtie sur les équations de la chaleur. La symétrie était trop belle pour la laisser passer.
+
+Cet article est une plongée technique : les **mathématiques** derrière le chaos, le **pipeline de rendu WebGPU** et son langage de shader, **WGSL** (WebGPU Shading Language), l'**analyse de structure musicale** qui permet à l'expérience de couper et respirer avec un morceau, l'**export vidéo sans serveur** qui enregistre tout localement, la **lutte pour survivre sur une tablette limitée en mémoire**, et la plomberie **Progressive Web App** (PWA) qui permet une installation fullscreen sur iOS et Android. Ce n'est pas une visite ligne par ligne du code source (elle fera l'objet d'un article séparé) ; ce sont les idées, les décisions de design et les batailles.
+
+<Callout type="tip" title="Essayer / lire le code">
+  <div className="not-prose flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <a
+      href="https://lorenzclash.andrefrelicot.dev/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-center gap-4 rounded-lg border border-foreground/15 p-4 text-foreground transition hover:border-foreground/35 hover:bg-foreground/5"
+    >
+      <img
+        src="/images/2026/lorenz-clash/lorenzclash-logo.svg"
+        alt="Logo Lorenz Clash"
+        width={72}
+        height={63}
+        className="h-16 w-auto shrink-0 transition group-hover:scale-105"
+      />
+      <span className="flex flex-col gap-1">
+        <span className="text-base font-semibold">Ouvrir l'app ↗</span>
+        <span className="text-sm text-foreground/70">
+          Fonctionne bien sur mobile, mais prend toute son ampleur sur grand écran avec une webcam. Casque recommandé.
+        </span>
+      </span>
+    </a>
+
+    <div className="flex flex-col gap-2 md:min-w-[16rem] md:border-l md:border-foreground/15 md:pl-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Code source</div>
+      <GitHubLink href="https://github.com/AndreFrelicot/lorenzclash" label="Code source sur GitHub" className="w-fit" />
+    </div>
+  </div>
+</Callout>
+
+## Une expérience dont vous faites partie
+
+Ce n'est pas une app que vous *utilisez* comme un outil : c'est une expérience dans laquelle vous entrez. Tout repose sur une relation simple :
+
+> La caméra est la **matière**. L'attracteur de Lorenz est la **force**. Votre main sur l'écran est le **geste**. L'audio est la **texture**.
+
+Ce n'est volontairement **pas** un visualiseur audio, ni un filtre caméra. La caméra (ou, quand elle est coupée, une source procédurale) est la *matière visuelle principale* : elle est portée par la courbe chaotique, vieillie, pixelisée et dissoute.
+
+Et il y a une idée plus discrète en dessous. Comme la caméra vous fait toujours face, *vous* êtes la matière : votre visage, votre pièce, injectés comme une condition initiale de plus dans un système chaotique. C'est une petite leçon en deux volets. D'un côté, la **responsabilité** : ce que la pièce devient dépend de ce que vous choisissez de lui donner. De l'autre, le rappel que **cela vous dépasse** : c'est l'effet papillon, le même geste ne retombe jamais deux fois au même endroit, et vous ne pouvez jamais vraiment prévoir, encore moins contrôler, où le chaos emporte votre reflet. Vous faites indéniablement *partie* du système, et vous n'en avez tout aussi indéniablement pas le contrôle. Si vous avez déjà vécu une canicule en vous demandant comment nous en sommes arrivés là, cette double contrainte devrait résonner.
+
+Quelques règles non négociables ont guidé toutes les décisions :
+
+- **Tout tourne sur l'appareil.** Le flux vidéo ne quitte jamais le téléphone : pas d'upload, pas de backend, pas de tracking.
+- **La caméra et l'audio sont optionnels, le mouvement n'est jamais requis.** Refusez la caméra et la pièce fonctionne encore (une source procédurale prend le relais). Coupez le son et les visuels continuent à réagir. Ignorez les gestes tactiles et le système respire quand même.
+- **Jamais de valeurs brutes.** Les entrées tactiles et audio sont toujours lissées avant d'atteindre un shader ou un paramètre. Le chaos est déjà assez sauvage sans lui injecter du jitter.
+- **Pas de fallback WebGL.** Pas de WebGPU signifie un écran "unsupported" net, pas une expérience dégradée.
+
+## Lorenz, 1963 : le chaos déterministe en trois équations
+
+Un peu d'histoire, parce que cela donne du goût au reste.
+
+**Edward Norton Lorenz** (1917–2008) était météorologue et mathématicien au MIT. À partir des équations de Barry Saltzman pour la convection thermique, il a réduit le problème à **trois équations différentielles ordinaires couplées** et publié [*Deterministic Nonperiodic Flow*](https://journals.ametsoc.org/view/journals/atsc/20/2/1520-0469_1963_020_0130_dnf_2_0_co_2.xml) en 1963 — l'un des articles les plus cités du domaine.
+
+La légende est vraie : un an plus tôt, en relançant une simulation météo sur un Royal McBee LGP-30, Lorenz a ressaisi une valeur sous la forme `0.506` au lieu de la valeur stockée `0.506127`. La prévision a divergé complètement. Une erreur d'arrondi à la quatrième décimale avait réécrit la météo. C'est la **dépendance sensible aux conditions initiales** — plus tard surnommée **effet papillon**, d'après sa conférence de 1972 *"Le battement d'ailes d'un papillon au Brésil peut-il déclencher une tornade au Texas ?"* (l'attracteur ressemble en plus à un papillon, ce qui n'a jamais nui au storytelling).
+
+Ce qui rend l'attracteur de Lorenz *étrange* : sa trajectoire est **bornée** (elle ne s'échappe jamais), **jamais périodique** (elle ne se répète jamais), **sans auto-intersection**, et elle vit sur une **fractale** de dimension non entière (Hausdorff) ≈ 2,06. Le système est **dissipatif** : les volumes de l'espace des phases se contractent à un taux constant, la divergence du champ étant une constante négative. Et pourtant les trajectoires sont chaotiques : tout s'effondre sur une fractale de volume nul, pendant que deux chemins voisins s'éloignent exponentiellement. Ce taux d'éloignement a un nombre : le plus grand **exposant de Lyapunov**, environ **0,906** aux paramètres canoniques. Il mesure exactement la vitesse à laquelle l'effet papillon s'amplifie : une erreur minuscule double en gros toutes les quelques unités de temps, jusqu'à rendre toute prévision impossible.
+
+<Callout type="info" title="Les paramètres sont de la physique, pas des nombres magiques">
+  Dans le modèle de convection, les trois constantes ont un sens concret :
+
+  - **σ (sigma)** est le **nombre de Prandtl** : diffusivité de quantité de mouvement divisée par diffusivité thermique.
+  - **ρ (rho)** est un **nombre de Rayleigh** normalisé : en gros, *à quel point on chauffe par le dessous*. Sous une valeur critique proche de 24,74, le flot se stabilise ; au-dessus, le chaos apparaît. Le classique **ρ = 28** est confortablement dans le régime chaotique.
+  - **β (beta)** est un facteur géométrique lié au rapport d'aspect des rouleaux de convection.
+
+  Le bouton "intensité" de l'app est donc littéralement un thermostat. De circonstance, pour une app née d'une canicule.
+</Callout>
+
+Et vous pouvez *voir* un système basculer dans le chaos en tournant ce thermostat. Gardez σ et β à leurs valeurs canoniques et faites varier ρ : à **ρ = 14**, le flot spirale calmement vers un point fixe et y reste ; poussez à **ρ ≈ 24**, juste sous le seuil, et il vacille — de longs transitoires errants qui semblent presque se stabiliser sans jamais y parvenir ; à **ρ = 28**, il ne se stabilise plus. Les mêmes trois équations, un seul nombre plus chaud.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/rho-triptych.webp"
+  darkSrc="/images/2026/lorenz-clash/rho-triptych.webp"
+  alt="Trois trajectoires de Lorenz côte à côte avec rho = 14 (spirale vers un point fixe), rho = 24 (long transitoire au bord du chaos) et rho = 28 (l'attracteur étrange complet)."
+  width={1672}
+  height={941}
+/>
+
+Et cela compte encore. Le résultat de Lorenz explique *pourquoi* la météo n'est prévisible qu'à environ deux semaines, et pourquoi les prévisions modernes se font en **ensembles** : on lance beaucoup d'états initiaux légèrement perturbés et on prédit une *distribution*, pas une ligne unique. La même idée sépare la **météo** (un épisode chaotique de chaleur) du **climat** (la ligne de base qui se déplace silencieusement en dessous). Au-delà de la météorologie, le système de Lorenz apparaît en électronique non linéaire, en biologie des populations, en communication sécurisée par synchronisation chaotique et dans beaucoup d'art génératif — dont celui-ci.
+
+## Les mathématiques, brique par brique
+
+### Le système
+
+$$
+\frac{dx}{dt} = \sigma\,(y - x), \qquad
+\frac{dy}{dt} = x\,(\rho - z) - y, \qquad
+\frac{dz}{dt} = x\,y - \beta\,z
+$$
+
+Avec les constantes canoniques **σ = 10, ρ = 28, β = 8/3 ≈ 2,667**, c'est une transcription directe :
+
+```ts
+function lorenz(p: Vec3, params: LorenzParams): Vec3 {
+  const [x, y, z] = p;
+  return [
+    params.sigma * (y - x),
+    x * (params.rho - z) - y,
+    x * y - params.beta * z,
+  ];
+}
+```
+
+### Astuce #1 — intégrer le champ *normalisé*, pour que le ruban avance à vitesse constante
+
+Voici la première décision non évidente. La vitesse brute de Lorenz varie énormément le long de la courbe : rapide sur les grands arcs extérieurs, presque arrêtée près des points fixes. Si vous générez la géométrie du ruban "par unité de temps", les tuiles se retrouvent étirées à certains endroits et tassées à d'autres.
+
+La correction : **normaliser le champ à longueur unitaire** et avancer en **longueur d'arc** plutôt qu'en temps.
+
+$$
+\hat{f}(\mathbf{p}) = \frac{f(\mathbf{p})}{\lVert f(\mathbf{p}) \rVert}
+$$
+
+```ts
+function field(p: Vec3, params: LorenzParams): Vec3 {
+  const v = lorenz(p, params);
+  const len = Math.hypot(v[0], v[1], v[2]);
+  if (len < FIELD_EPS) return v;          // don't divide by ~0 near fixed points
+  return [v[0] / len, v[1] / len, v[2] / len];
+}
+```
+
+La tête de courbe marche alors sur l'attracteur à cadence régulière, quelle que soit sa position, et un dépôt posé à chaque pas fixe de longueur d'arc produit un ruban de tuiles parfaitement régulières. La vitesse devient un simple multiplicateur par-dessus, au lieu d'être une propriété cachée de la géométrie.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/diagram-normalized-field-light-v1.png"
+  darkSrc="/images/2026/lorenz-clash/diagram-normalized-field-light-v1.png"
+  alt="Le champ brut de Lorenz a une vitesse irrégulière, ce qui produit des dépôts tassés ou étirés ; normaliser le champ le transforme en mouvement à longueur d'arc constante et en tuiles de ruban régulièrement espacées."
+  width={1672}
+  height={941}
+/>
+
+### Astuce #2 — Runge-Kutta d'ordre 4 (RK4), parce que le chaos punit l'intégration approximative
+
+La forme ne reste reconnaissable que si l'intégrateur est précis. La tête avance donc avec le **Runge-Kutta classique d'ordre 4** sur ce champ normalisé :
+
+$$
+k_1 = \hat f(p),\quad
+k_2 = \hat f\!\left(p + \tfrac{h}{2}k_1\right),\quad
+k_3 = \hat f\!\left(p + \tfrac{h}{2}k_2\right),\quad
+k_4 = \hat f(p + h\,k_3)
+$$
+
+$$
+p_{n+1} = p_n + \frac{h}{6}\,(k_1 + 2k_2 + 2k_3 + k_4)
+$$
+
+Il n'y a pas de `dt` fixe en temps réel : le pas `h` est un **pas de longueur d'arc** (plafonné par sous-pas), dérivé du temps de frame multiplié par la vitesse courante. Les deltas de frame sont bornés pour qu'un à-coup ou un onglet passé en arrière-plan ne fasse jamais exploser le système ; et si une coordonnée devient non finie ou si le point dépasse un rayon de sécurité, il réapparaît simplement près de l'origine.
+
+### Le "Clash" — deux attracteurs et l'effet papillon, rendus visibles
+
+Le nom vient du fait que **deux** attracteurs tournent en même temps. Mêmes `σ/ρ/β`, mais **conditions initiales différentes** : la courbe A démarre près de l'origine, la courbe B démarre ailleurs. Comme le système est chaotique, ces deux graines **divergent** en deux chemins indépendants : l'effet papillon, mis en scène comme une chorégraphie. La courbe B est ensuite **tournée d'environ 90°** pour croiser physiquement la courbe A au centre de la scène. Ce croisement est le *clash*.
+
+### Le hub — un ruban qui *enregistre* un chaos en mutation
+
+À chaque frame, avant que les intégrateurs avancent, une fonction unique intègre l'audio et le mouvement dans les paramètres live, avec lissage et bornes pour rester dans la zone du "beau chaos" :
+
+$$
+\sigma = \mathrm{clamp}\!\left(10 + \Delta\sigma_{\text{audio}} + 3.5\,t_x,\; 6,\; 16\right)
+$$
+$$
+\rho = \mathrm{clamp}\!\left(28 + \Delta\rho_{\text{audio}} + 8.0\,t_y,\; 18,\; 42\right)
+$$
+$$
+\beta = \mathrm{clamp}\!\left(\tfrac{8}{3} + \Delta\beta_{\text{audio}} + 0.35\,\text{twist},\; 1.8,\; 3.4\right)
+$$
+
+```ts
+const sigma = clamp(10 + m.sigma + ms.tiltX * 3.5 * mm.tilt, 6, 16);
+const rho = clamp(28 + m.rho + ms.tiltY * 8.0 * mm.tilt, 18, 42);
+const beta = clamp(8 / 3 + m.beta + ms.twist * 0.35 * mm.twist, 1.8, 3.4);
+this.lorenz.setParams(sigma, rho, beta);
+this.lorenz2?.setParams(sigma, rho, beta);
+```
+
+Le volume et les beats poussent **ρ** (le gros bouton "chaos"), les aigus modifient légèrement **σ**, les beats tapent sur **β**, et votre doigt s'ajoute à tout cela : glisser sur l'image appuie sur σ/ρ et courbe β. Comme les paramètres changent *avant* chaque dépôt, le ruban devient un **enregistrement** : sa tête est le chaos de *maintenant*, sa queue le chaos d'il y a quelques secondes, figé en géométrie.
+
+### Un second usage de Lorenz : les masques de dissolution
+
+Un second intégrateur de Lorenz, complètement séparé, tourne une seule fois au démarrage. Il rend **dix textures de densité 2D** — des portraits "papillon" projetés de l'attracteur — utilisées comme **masques de dissolution** : les images plein écran de fond ne font pas que fondre, elles se *matérialisent le long des courbes de l'attracteur*. Les mêmes mathématiques, pour un tout autre rôle. (Celui-ci utilise un simple Euler semi-implicite sur des dizaines de milliers de pas ; la précision n'a pas d'importance pour un splat statique.)
+
+## Le pipeline graphique : WebGPU à la main
+
+### Setup et la seule limite qui compte
+
+La mise en route est classique : demander un adapter et un device, configurer le canvas avec le format préféré et l'alpha `premultiplied`, écouter les erreurs device-lost et uncaptured (WebKit valide WGSL plus strictement que Chrome ; une erreur de validation silencieuse donne une frame noire sur iOS). Chaque shader est compilé via un petit wrapper qui appelle `getCompilationInfo()` et **lève une erreur au premier message**, pour qu'une coquille apparaisse en texte sur un téléphone plutôt que rien du tout.
+
+Une seule limite optionnelle est demandée : `maxTextureArrayLayers`, poussée vers 1024. Ce nombre fixe le plafond de longueur du ruban, à cause de l'idée centrale ci-dessous.
+
+### L'idée centrale : le ruban *est* l'historique de l'intégrateur
+
+L'intégrateur CPU pose un dépôt à chaque pas fixe de longueur d'arc dans un **ring buffer**. Chaque dépôt contient 12 floats : position, numéro de naissance (qui pilote l'âge), tangente, flag de key-frame et **snapshot audio figé** au moment de la naissance. Chaque **frame caméra** capturée sur un dépôt devient **une couche d'une `texture_2d_array`** ; c'est pour cela que le nombre de couches limite la longueur du ruban. Comme les textures externes WebGPU ne vivent qu'une frame, le renderer copie chaque dépôt immédiatement dans un stockage persistant au lieu de garder une référence caméra live.
+
+Le vertex shader du ruban n'a **aucun vertex buffer**. L'instance `s` lit deux dépôts consécutifs directement depuis un storage buffer en lecture seule et construit un quad face caméra à partir de `vertex_index` : l'axe long suit le vrai segment 3D, l'axe large est la perpendiculaire écran, dimensionnée pour que la tuile ne s'étire jamais.
+
+```wgsl
+let seg = B - A;
+let segPlane = vec2<f32>(dot(seg, cam.right), dot(seg, cam.up));
+let segLen = length(segPlane);
+let dir = select(vec2<f32>(0.0, 1.0), segPlane / segLen, segLen > 1e-5);
+let perp = -dir.y * cam.right + dir.x * cam.up;
+```
+
+Le fragment shader mélange les frames caméra des deux extrémités depuis la texture array, et quand une tuile vieillit elle gagne la signature de l'app : elle **se pixelise**, puis chaque bloc **rétrécit, dérive et tourne** jusqu'à disparaître, avec les trous rejetés :
+
+```wgsl
+let prog = smoothstep(0.85, 1.0, age);
+let rnd = hash22(cellId);
+let drift = (rnd - vec2<f32>(0.5)) * prog * 0.5;
+let ang = (rnd.x - 0.5) * prog * 1.8;
+let cc = cos(ang);
+let ss = sin(ang);
+var lc = fract(baseUv * cells) - vec2<f32>(0.5) - drift;
+lc = vec2<f32>(cc * lc.x - ss * lc.y, ss * lc.x + cc * lc.y);
+let half = 0.5 * (1.0 - prog);
+if (half <= 0.002 || any(abs(lc) > vec2<f32>(half))) {
+  discard;
+}
+```
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/diagram-ring-buffer-ribbon-light-v2.png"
+  darkSrc="/images/2026/lorenz-clash/diagram-ring-buffer-ribbon-light-v2.png"
+  alt="La caméra ou la source synthétique est capturée dans un ring buffer de texture array ; chaque dépôt devient une tuile de ruban, donc le ruban de Lorenz visible est l'historique de l'intégrateur."
+  width={1652}
+  height={952}
+/>
+
+### Caméra coupée ? Le renderer s'en fiche
+
+Une contrainte clé était que la pièce reste vivante — et générative — sans caméra. Le renderer est donc **indépendant de la source** : un `SyntheticSource` procédural alimente exactement les mêmes couches de texture array que la caméra. C'est une chaîne en trois étapes :
+
+1. **Splat** — une texture persistante, légèrement estompée à chaque frame, puis encrée en additif avec un blob doux par dépôt Lorenz vivant. Un autoportrait de l'attracteur, en feedback.
+2. **Colorisation** — le splat est échantillonné à travers un **domain warp** piloté par un **mouvement brownien fractionnaire** à 4 octaves (fBm), puis mappé à travers une **palette cosinus d'Iñigo Quílez**, avec une teinte qui dérive selon le `z` live de Lorenz, le centroïde audio et un oscillateur basse fréquence lent (LFO).
+
+Ici, fBm signifie "empiler plusieurs couches de bruit" : chaque octave est deux fois plus fine et deux fois moins forte que la précédente. Une couche ressemble à un aléa lisse ; quatre couches commencent à évoquer une turbulence naturelle.
+
+```wgsl
+fn fbm(p: vec2<f32>) -> f32 {
+  var s = 0.0;
+  var amp = 0.5;
+  var freq = 1.0;
+  for (var i = 0; i < 4; i = i + 1) {
+    s = s + amp * vnoise(p * freq);
+    freq = freq * 2.0;
+    amp = amp * 0.5;
+  }
+  return s;
+}
+fn pal(tIn: f32, shift: f32, sel: f32) -> vec3<f32> {
+  let t = fract(tIn + shift);
+  var d = vec3<f32>(0.0, 0.33, 0.67);
+  if (sel > 1.5) {
+    d = vec3<f32>(0.0, 0.10, 0.20);
+  } else if (sel > 0.5) {
+    d = vec3<f32>(0.3, 0.20, 0.20);
+  }
+  return vec3<f32>(0.5) + vec3<f32>(0.5) * cos(6.28318 * (t + d));
+}
+```
+
+3. **Blit** — le résultat est copié dans une couche du ring, exactement comme une frame caméra.
+
+Historique du ruban, dissolutions de fond et glows de key-frame continuent tous de fonctionner, sans se soucier de savoir si la matière vient d'un objectif ou du bruit.
+
+<Callout type="info" title="Une note de filiation : la demoscene, dans un onglet">
+  Codé proche du métal, chaque pixel fabriqué par des maths plutôt que par des assets, synchronisé à la musique en temps réel, le tout comme démonstration de ce que le matériel peut faire : c'est l'esprit de la **demoscene**, cette sous-culture des années 1980-90 où des groupes Amiga et PC tiraient des performances audiovisuelles impossibles du silicium nu. Lorenz Clash assume cette filiation : le champ d'étoiles est reconstruit procéduralement (zéro asset), les visuels sans caméra sont du bruit et du feedback purs, et même la couleur vient de la **palette cosinus d'Iñigo Quílez** — IQ étant un vétéran de la demoscene dont l'astuce `a + b·cos(2π(c·t + d))` est devenue un vocabulaire standard du graphisme procédural. Remplacez l'Amiga par un GPU de téléphone et l'assembleur par WGSL : l'esprit reste le même.
+</Callout>
+
+### La frame, passe par passe
+
+Tout se passe dans un seul command encoder, un seul submit. Presque tout le travail visuel repose sur des render pipelines : chaque effet de particules est calculé analytiquement dans un vertex shader sur des cubes instanciés. Le seul compute pass de l'app publiée est une petite sonde de copie caméra iOS qui cherche les bandes de bord noir pur avant de stocker la frame. L'ordre :
+
+1. **Passes de capture** — écrire les frames caméra (ou synthétiques) dans les couches du ring buffer. Doivent passer en premier, puisque la scène les échantillonne.
+2. **Passes de traînée** — un buffer persistant demi-résolution est estompé puis ré-encré, pour une traînée façon fumée.
+3. **Passe scène** (avec depth test, dans une cible offscreen quand le bloom est activé) : dôme d'étoiles → grille de déformation → rubans et formes morphées (courbe A, puis courbe B tournée) → comètes et leurs sillages (wake) → particules de dissolution de queue → crête de tête.
+4. **Bloom** — la chaîne de post-traitement.
+5. **Blit** — présentation.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/diagram-frame-pipeline-light-v2.png"
+  darkSrc="/images/2026/lorenz-clash/diagram-frame-pipeline-light-v2.png"
+  alt="Une frame WebGPU : capture dans le ring buffer de texture array, mise à jour du trail persistant, rendu offscreen de la scène, bloom, puis copie de la texture de présentation possédée vers le canvas et le chemin d'export."
+  width={1672}
+  height={941}
+/>
+
+Petit tour de ce qui vit dans cette passe scène :
+
+- **Voyageurs / comètes** — un cube et une sphère chevauchent chaque courbe sur une spline Catmull-Rom, s'enroulent en spirale dans le plan perpendiculaire à la tangente (en opposition de phase) et laissent un **sillage** hélicoïdal.
+- **Morphing de forme** — une vague de la tête vers la queue transforme le ruban en cubes, puis en sphères, sous forme de fondu *géométrique* plutôt qu'en fondu alpha (la forme entrante grandit depuis la tête pendant que la sortante rétrécit).
+- **Champ d'étoiles** — un dôme procédural reconstruit depuis la base caméra, pour que les étoiles tournent correctement quand la caméra orbite. Zéro asset.
+- **Crête de tête** — des cubes additifs sur le dépôt le plus récent, portés par une onde sinusoïdale réactive à l'audio : le "maintenant" visible du ruban.
+- **Grille de déformation** — un sol en treillis déplacé par fBm, généralement subtil, mais parfois frappé par des fronts d'onde arc-en-ciel qui accélèrent sur des cues rythmiques.
+- **Glow de key-frame** — quand une tuile correspond à une image haute définition (HD) capturée, son dépôt porte un flag et pulse avec un accent de couleur désynchronisé.
+
+Cette grille mérite qu'on la détaille, parce qu'elle n'est pas seulement une ligne d'horizon. C'est l'endroit où le champ de contrôle invisible devient directement visible : un treillis régulier de lignes 24×24 échantillonne un champ de hauteur fBm animé, puis le geste tactile lissé incline cette surface comme un plateau.
+
+```wgsl
+let n = fbm(p.xz * noiseScale + vec2<f32>(t * flow, t * flow * 0.7)) - 0.5;
+world.y = world.y + n * noiseAmp * amp;
+world.y = world.y + (g.field.x * p.x + g.field.y * p.z);
+```
+
+L'explosion arc-en-ciel occasionnelle est un second champ posé au-dessus. Plusieurs crêtes sinusoïdales radiales partent du centre, accélèrent selon `phase²(1 + 2.2phase)`, sont aiguisées par une courbe puissance, puis disparaissent à travers une enveloppe lisse :
+
+```wgsl
+let accel = phase * phase * (1.0 + phase * 2.2) * rainbowSpeed;
+let crestPhase = radial * waves - accel * (waves + 1.5) + seed;
+let crest = pow(0.5 + 0.5 * sin(crestPhase * 6.2831853), sharpness);
+```
+
+Pendant cet événement, le renderer monte aussi l'opacité de la grille vers 100 %, de sorte que le sol devient brièvement une forme d'onde émissive avant de se dissoudre à nouveau dans le treillis bleu discret.
+
+<Callout type="info" title="Retour de debug : huit uniform buffers, parce que les writes dépassent les draws">
+  Les comètes sont dessinées **huit** fois par frame : deux courbes, chacune avec un corps cube, un corps sphère et le sillage de chacun. La version propre réutilise un petit uniform buffer et le réécrit avant chaque draw. Elle rend les huit comètes *identiques* — et la raison est l'ordre de la queue : `queue.writeBuffer` ne s'exécute pas à l'endroit où vous l'appelez, il est mis en file d'attente, et toute la frame est un command encoder avec un **seul `submit`**. Les huit writes s'exécutent donc *avant* que le moindre draw lise quoi que ce soit, et chaque draw lit le **dernier** payload écrit. La correction : un uniform buffer par draw simultané, chacun écrit juste avant son draw call :
+
+  ```ts
+  const cometUniforms = Array.from({ length: 8 }, () =>
+    device.createBuffer({
+      size: 20 * Float32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }),
+  );
+  this.writeCometUniform(0, this.cometA, 0, count, 0, 0, time, sA);
+  pass.setBindGroup(0, this.cometBindGroups[0]);
+  pass.draw(this.cubeVertexCount, 1);
+  this.writeCometUniform(1, this.cometA, 0, count, 0, Math.PI, time, sA);
+  pass.setBindGroup(0, this.cometBindGroups[1]);
+  pass.draw(this.sphereVertexCount, 1);
+  ```
+</Callout>
+
+### La caméra s'auto-cadre
+
+Tout cela ne sert à rien si le point de vue ne tient pas la scène. Par défaut, la caméra orbite lentement avec un champ de vision de 50°, mais elle **s'auto-cadre** aussi : chaque frame, elle prend la bounding box de tous les dépôts vivants (les deux courbes) et recule juste assez pour faire entrer cette sphère englobante dans le **plus serré** des deux axes de champ de vision.
+
+```ts
+const halfV = FOV_Y / 2;
+const halfH = Math.atan(Math.tan(halfV) * aspect);
+// fit into the tighter axis → a tall phone steps back, a wide screen leans in
+const dist = (frameRadius * margin) / Math.sin(Math.min(halfV, halfH));
+```
+
+Un téléphone en portrait recule pour garder tout le clash dans le cadre ; un desktop large se rapproche pour remplir l'image. Le centre et le rayon convergent très lentement vers leurs cibles — facteur de lissage `0.03` — pour que le cadrage *dérive* avec la respiration de l'attracteur au lieu de pomper à chaque oscillation. Et le calcul utilise volontairement le champ de vision **de base** (FOV), donc un pinch-to-zoom (appliqué comme une échelle de FOV, `FOV_Y / zoom`, un vrai téléobjectif) fonctionne toujours *par-dessus* l'auto-cadrage au lieu d'être annulé par lui.
+
+Deux modes **follow** remplacent l'orbite par un trajet sur la courbe. *Head* se place juste derrière le dépôt le plus récent et regarde vers l'avant dans la tangente lissée — chaos en première personne. *Tail* se place à l'extrémité la plus ancienne, en dissolution, et la regarde — sauf que la courbe s'enroule, donc la tangente locale tourne sur elle-même à chaque boucle et ferait pirouetter l'œil. La correction est de ne pas viser selon la tangente mais vers un **vrai dépôt plus loin dans le ruban**, en utilisant la corde qui le relie comme cap stable, pour garder la queue en dissolution cadrée même au cœur d'une boucle.
+
+### Compositing et post-traitement
+
+Le bloom est un ping-pong demi-résolution : un **bright pass** à soft-knee qui préserve la teinte, un **flou box 5×5 passé deux fois** (gaussien peu coûteux et un peu large), puis une **composition additive** par-dessus la scène. Additif volontairement : seuls les éléments lumineux et émissifs (crête de tête, teintes de bord, comètes, glow de key-frame) produisent du bloom ; la matière caméra reste propre, donc le glow se lit comme une lumière localisée plutôt qu'un voile global. Le composite cache aussi les petites astuces optiques de l'app : une **ondulation (ripple)** radiale qui déforme l'échantillon pendant le slow-motion, une seconde **ondulation de pixels** temporisée déclenchée par des cues rythmiques, et des flashes caméra planifiés par Poisson qui abaissent brièvement le seuil et font monter l'intensité.
+
+L'ondulation mérite qu'on s'y arrête, parce que c'est du pur calcul de shader qui ne coûte quasiment rien. Passez le temps au ralenti et la passe composite courbe toute l'image avec une **onde radiale progressive**. Pour chaque pixel, elle prend le vecteur depuis le centre écran $\mathbf{c} = \mathbf{uv} - 0.5$, sa longueur $d = \lVert \mathbf{c} \rVert$, et pousse la coordonnée d'*échantillonnage* vers l'extérieur selon ce rayon avec deux ondes sinus de la distance :
+
+$$
+\mathbf{uv}' = \mathbf{uv} + \frac{\mathbf{c}}{d}\,A\,[\,\sin(kd - 2t) + 0.35\,\sin(0.53kd + 1.35t)\,]
+$$
+
+```wgsl
+let c = uv - vec2<f32>(0.5);
+let d = length(c) + 1e-5;
+let w = (
+  sin(d * bloom.fx.z - bloom.fx.y * 2.0) +
+  sin(d * bloom.fx.z * 0.53 + bloom.fx.y * 1.35) * 0.35
+) * amp;
+uv = uv + (c / d) * w;
+let scene = textureSampleLevel(tex, samp, uv, 0.0).rgb;
+let glow = textureSampleLevel(bloomTex, samp, uv, 0.0).rgb;
+```
+
+Quelques choix le gardent élégant plutôt que gadget :
+
+- Il déforme la coordonnée d'*échantillonnage* — une lentille en inverse mapping — donc pas de géométrie et pas de passe supplémentaire ; des anneaux concentriques partent du centre quand le terme $-2t$ fait glisser le sinus vers l'extérieur, comme des rides dans l'eau.
+- La fréquence spatiale est fixe ($k = 16$, environ un ou deux anneaux visibles) et l'amplitude est minuscule : $A = \text{slowmo} \times (0.012 + 0.01\,\text{beat})$, au plus ~2 % de l'écran. L'effet *suggère* que la réalité se plie sans donner le mal de mer.
+- Il est conditionné à une amplitude non nulle, donc à vitesse normale la branche est sautée et l'effet est littéralement gratuit.
+- La scène **et** le glow sont échantillonnés avec le *même* `uv` déformé, donc le bloom ondule en synchronisation au lieu de se détacher de l'image.
+- La phase $t$ est l'horloge de scène **mise à l'échelle par le warp**, donc l'onde ralentit avec la musique et revient en douceur au relâcher ; l'ondulation appartient au même geste de tape-stop, ce n'est pas une animation séparée.
+
+Cette ondulation de slow-motion est ensuite devenue un effet à part entière. L'**ondulation de pixels** utilise la même passe composite, mais avec un uniform d'événement séparé : quand un roll, une snare ou un kick fort arrive, l'app lance une courte onde radiale avec quantité, durée, fréquence et vitesse randomisées. Le hasard compte. Une ondulation fixe ressemble à une transition toute faite après trois déclenchements ; une plage bornée donne l'impression que la musique envoie des ondes de pression dans la scène. Si la partition est calme, un fallback Poisson sparse peut toujours en déclencher une, donc l'effet reste calé musicalement sans dépendre de l'auto-director.
+
+L'effet qui paraît le plus coûteux est en réalité le plus simple conceptuellement : une **traînée d'exposition**, comme si l'on laissait l'obturateur ouvert pendant quelques secondes. Après le composite final, une toute petite passe de feedback temporel mélange l'image courante avec une copie atténuée de la sortie précédente dans deux textures ping-pong possédées. L'effet apparaît en fondu, se maintient, disparaît en fondu, et ne lit jamais le swapchain live. Il y a deux timings : des impacts courts d'environ **1,5 s**, souvent autour des cuts ou d'événements rythmiques forts, et des traînées longues d'environ **20 s** pour les floats, bridges et breakdowns plus calmes. Les nombres de déclenchements varient avec la longueur du morceau : à quatre minutes, le plafond est **20 courts** et **3 longs**, les morceaux plus courts ou plus longs étant ajustés proportionnellement. Comme les ondulations, c'est piloté par la partition mais indépendant du director caméra : couper l'auto-camera ne doit pas couper la vie visuelle de la musique.
+
+C'est un bon résumé miniature de toute la philosophie de compositing : intégrer l'effet dans la passe qui touche déjà tous les pixels, ou dans une seule passe post possédée quand l'historique temporel est nécessaire, et garder le nombre de couches du renderer sous contrôle.
+
+<Callout type="info" title="Retour de debug : ne jamais lire le swapchain live sur iOS">
+  L'image finale est rendue dans une texture **possédée**, puis blitée vers le canvas. Lire directement `getCurrentTexture()` — l'idée évidente — bloque et corrompt la présentation dans Safari iOS. Le détour par une texture possédée donne aussi à l'export vidéo une surface stable à capturer, sans jamais toucher au swapchain live.
+</Callout>
+
+### La couche audio-réactive
+
+L'audio est un `AnalyserNode` avec une taille de transformée de Fourier rapide (FFT) de 2048, branché **avant** le master gain : couper la musique la rend silencieuse pour vos oreilles mais garde les visuels en mouvement. Chaque frame extrait le niveau en moyenne quadratique (RMS), les basses/médiums/aigus (amplitude linéaire moyenne par bandes de Hz, normalisée sur des percentiles mesurés offline), un **centroïde** spectral log-mappé, et une estimation de **beat** (flux de basse au-dessus d'une moyenne mobile lente — attaque rapide, décroissance lente).
+
+Ces features pilotent trois parties séparées du système :
+
+- **Live et global**, regroupé dans l'uniform caméra partagé — pour piloter maintenant la crête de tête, les teintes de bord, les flashes de bloom et la modulation des paramètres.
+- **Figé par dépôt** — le snapshot gravé dans chaque tuile de ruban à sa naissance. C'est ce qui fait du ruban un enregistrement : chaque tuile garde la **couleur** (centroïde → palette, uniquement sur les bords), la **taille** (basse + beat → croissance) et le **spin** (aigus) de l'instant où elle est née, même quand la musique a avancé.
+- **Temps de transport** — le geste slow-mo produit un `warp` lissé de 1,0 jusqu'à environ 0,35. Ce même nombre ralentit la musique, le scroll de Lorenz, le taux de dépôt, le mouvement des comètes et l'ondulation composite, pour que le tape-stop se lise comme un événement unique au lieu de cinq effets sans lien.
+
+Le mapping est volontairement assez petit pour rester lisible. **Niveau plus beat** poussent **ρ** et la vitesse de scroll, ce qui donne l'impression que l'attracteur respire avec le kick. Les **aigus** modifient légèrement **σ** et ajoutent du spin/shimmer. Le **beat** tape sur **β** et déclenche les flashes de bloom. Le **centroïde** choisit la palette, mais surtout sur les bords pour que la texture caméra reste lisible au centre.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/diagram-audio-live-mapping-light-v2.png"
+  darkSrc="/images/2026/lorenz-clash/diagram-audio-live-mapping-light-v2.png"
+  alt="Le graphe audio live prélève le morceau avant le gain, extrait des features FFT, les mappe vers les uniforms GPU live et les snapshots de dépôt figés, et route le warp slow-mo vers la lecture audio, le temps d'animation, le ripple et le resampling d'export."
+  width={1672}
+  height={941}
+/>
+
+### De la FFT à une partition : structure musicale offline
+
+La FFT live est bonne pour le *maintenant* : volume, brillance, quantité de basse, attaque récente. Elle n'est pas bonne pour savoir *où nous sommes dans le morceau*. Une intro, un breakdown, une section de drive et un bridge flottant peuvent avoir une énergie instantanée similaire pendant quelques secondes, mais ils appellent un langage caméra différent. Une intro veut une orbite large. Une section qui pousse se prête aux plans follow, aux cuts rapides et aux comètes. Un bridge calme est le bon endroit pour une longue traînée d'exposition.
+
+La musique a donc une deuxième couche : une **partition offline** générée une fois avec `librosa`, commitée en JavaScript Object Notation (JSON), et chargée par l'app au runtime. Le script est un script Python `uv` autonome :
+
+```bash
+uv run --python 3.12 scripts/analyze-track-structure.py
+```
+
+Pour chaque `.m4a` embarqué, il resample à **22,05 kHz**, calcule la force d'onset, le tempo et les temps de beat, puis dérive RMS, centroïde spectral, chroma et coefficients cepstraux sur l'échelle Mel (MFCC) sur une grille d'une seconde. Une courbe de nouveauté compare le profil local de features avant et après chaque instant (huit secondes de contexte de chaque côté), les pics deviennent des frontières de section candidates, et chaque section reçoit un rôle grossier : `intro`, `drive`, `groove`, `break`, `bridge`, `float` ou `outro`.
+
+La même passe extrait des cues rythmiques dans des bandes séparées : flux de bande basse pour les **kicks**, flux de bande haute pour les **snares**, flux de bande médium pour les **toms**, et courtes séquences denses de snare pour les **rolls**. Sur les 11 morceaux, le JSON actuel contient **69 sections**, **4 875 beats**, **2 966 kicks**, **2 998 snares**, **1 408 toms** et **115 rolls** — environ **42 minutes** de timings pré-analysés, toujours sans serveur ni machine learning (ML) au runtime.
+
+Le runtime traite alors ce JSON moins comme une "analyse" que comme une partition :
+
+```json
+{
+  "start": 186,
+  "end": 238.379,
+  "role": "drive",
+  "energy": 0.583,
+  "rhythm": 0.222,
+  "brightness": 0.76,
+  "director": { "view": "followA", "shape": "cube", "comet": true }
+}
+```
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/diagram-offline-music-score-light-v1.png"
+  darkSrc="/images/2026/lorenz-clash/diagram-offline-music-score-light-v1.png"
+  alt="Le pipeline de partition musicale offline : les morceaux locaux sont analysés avec un script Python uv et librosa, resamplés à 22,05 kHz, convertis en features, rôles de section et événements rythmiques, commités en JSON, puis utilisés par le director runtime pour déclencher des cues caméra et effets visuels."
+  width={1672}
+  height={941}
+/>
+
+Il y a maintenant deux directors. L'original est toujours là : un détecteur de nouveauté live-FFT classique qui compare un profil court terme à un profil long terme et change quand le son dérive assez loin. Le director structuré est placé à côté, sans être modifié par le détecteur live. Quand la lecture entre dans une nouvelle section analysée, il applique le preset de section ; quand les beats, snares, toms et rolls passent sous la tête de lecture, il émet de petits cues qui peuvent déclencher des **pulses de zoom**, des **sauts rapides de caméra**, des **comètes**, des **vagues de grille**, des **ondulations pixel** et des **traînées d'exposition**. La couleur, la croissance et le shimmer viennent toujours de la FFT live, donc la partition ne fige jamais la performance : elle se contente de donner une carte au système.
+
+Cette séparation compte. Vous pouvez couper le director caméra tout en gardant les effets pilotés par la partition : la musique peut continuer à envoyer des ondulations et des moments d'exposition au renderer sans prendre le contrôle de la vue. Cela évite aussi que l'expérience ressemble à un clip vidéo figé. Les changements de section sont des ancres déterministes, mais les micro-événements conservent des probabilités, des cooldowns et des plages aléatoires, donc le même morceau garde une structure reconnaissable sans rejouer exactement les mêmes cuts à chaque fois.
+
+<Callout type="info" title="Retour de debug : iOS a cassé le slow-mo évident">
+  L'implémentation évidente est `audioElement.playbackRate = warp`. Cela fonctionne jusqu'à ce que cet élément soit routé dans `createMediaElementSource()` sur iOS, où changer la vitesse peut couper ou rebufferiser le son. Le workaround est plus lourd mais stable : décoder le morceau courant à l'avance, basculer vers un `AudioBufferSourceNode` quand `warp < 0.99`, piloter le `playbackRate` de ce node et l'envoyer dans le même analyseur. Revenir à la normale, c'est juste `rate → 1` — pas de seek, pas de redémarrage. L'élément `<audio>` original ne reprend la main qu'au morceau suivant.
+</Callout>
+
+Et une note honnête sur la musique elle-même : chaque morceau est de la **Goa trance originale, générée avec [Suno](https://suno.com)** et encodée en Advanced Audio Coding (AAC) à 192 kbps. Le genre mérite sa place : son kick régulier four-on-the-floor donne au détecteur de beat par flux de basse quelque chose de clair à accrocher, et ses longs builds et drops se mappent naturellement sur ρ qui gonfle puis redescend.
+
+<Callout type="info" title="La bande-son — 11 morceaux, ~42 minutes, tous faits avec Suno">
+  Chaque titre est un lien direct vers son `.m4a` — des prises uniques, chacune de plus de trois minutes :
+
+  | # | Morceau | Durée |
+  | --: | :-- | --: |
+  | 01 | [Chrome Serpent](https://lorenzclash.andrefrelicot.dev/audio/01_chrome_serpent.m4a) | 3:58 |
+  | 02 | [Glacier Drift](https://lorenzclash.andrefrelicot.dev/audio/02_glacier_drift.m4a) | 4:35 |
+  | 03 | [Mandelbrot Mary](https://lorenzclash.andrefrelicot.dev/audio/03_mandelbrot_mary.m4a) | 3:24 |
+  | 04 | [Mandelbrot Mirage](https://lorenzclash.andrefrelicot.dev/audio/04_mandelbrot_mirage.m4a) | 3:55 |
+  | 05 | [Ritual Trace](https://lorenzclash.andrefrelicot.dev/audio/05_ritual_trace.m4a) | 4:07 |
+  | 06 | [Sea Ice Drift](https://lorenzclash.andrefrelicot.dev/audio/06_sea_ice_drift.m4a) | 3:39 |
+  | 07 | [Serpent Coil](https://lorenzclash.andrefrelicot.dev/audio/07_serpent_coil.m4a) | 3:43 |
+  | 08 | [Serpent Helix](https://lorenzclash.andrefrelicot.dev/audio/08_serpent_helix.m4a) | 4:26 |
+  | 09 | [Solar Halo Pulse](https://lorenzclash.andrefrelicot.dev/audio/09_solar_halo_pulse.m4a) | 3:23 |
+  | 10 | [Spirale de Lorenz](https://lorenzclash.andrefrelicot.dev/audio/10_spirale_de_lorenz.m4a) | 3:02 |
+  | 11 | [Tribal Trace](https://lorenzclash.andrefrelicot.dev/audio/11_tribal_trace.m4a) | 3:57 |
+</Callout>
+
+## L'enregistrer : export vidéo local, sans serveur
+
+La pièce est générative et ne se répète jamais ; l'envie suivante est évidente : *garder* un moment. Lorenz Clash enregistre et exporte de la vidéo — un vrai `.mp4`, avec la musique muxée dedans — et, fidèle à la règle du local, **rien ne touche un serveur**. Tout tourne dans le navigateur, sur le téléphone, et c'est exactement là que ça devient intéressant : encoder de la vidéo dans un onglet sans pousser la mémoire dans le ravin.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/diagram-export-pipeline-light-v1.png"
+  darkSrc="/images/2026/lorenz-clash/diagram-export-pipeline-light-v1.png"
+  alt="Le pipeline d'export copie la texture de présentation WebGPU possédée vers un canvas de capture offscreen, encode des chunks H.264, les stocke dans IndexedDB, découpe et encode l'audio AAC, puis muxe les clips sélectionnés dans un MP4 local sans serveur."
+  width={1672}
+  height={941}
+/>
+
+### D'où viennent les frames
+
+La capture réutilise l'astuce de texture possédée du compositing. Une frame enregistrée n'est **jamais** lue depuis le canvas live ; le composite fini — déjà dans le `presentTexture` possédé — est blité dans un `OffscreenCanvas` séparé (son propre contexte WebGPU), puis ce canvas est emballé en `VideoFrame` WebCodecs :
+
+```ts
+// blit the OWNED present texture into an offscreen capture canvas, then snapshot it
+pass.setPipeline(this.blitPipeline);
+pass.setBindGroup(0, this.blitBind);
+pass.draw(3);
+this.device.queue.submit([encoder.finish()]);
+return new VideoFrame(this.captureCanvas, { timestamp: timestampUs, duration: durationUs });
+```
+
+Lire le swapchain live à chaque frame est ce qui fait glitcher Safari iOS ; le chemin d'export ne le fait jamais, et le même canvas possédé sert aussi au chemin de capture PNG.
+
+### Encodage en streaming : garder les chunks, jamais les frames
+
+Un recorder naïf accumule les frames brutes et encode à la fin, mais une minute de frames brutes en 1080p représente des gigaoctets. Ici, chaque frame est envoyée directement à un `VideoEncoder` WebCodecs à 30 fps puis **fermée immédiatement**, donc la RAM ne contient jamais que la sortie *compressée* (quelques Mo par clip) :
+
+```ts
+const frame = this.src.grabCompositeFrame(this.outW, this.outH, tsUs, FRAME_DUR_US); // tsUs: real elapsed µs
+this.encoder.encode(frame, { keyFrame: s.frameIndex === 0 }); // one shared encoder, reset per clip
+frame.close(); // critical: never accumulate raw frames
+```
+
+L'encodeur matériel tourne déjà hors thread, donc pas besoin de Web Worker : le main thread est à peine impliqué. Le choix du codec est une sonde rapide de capacité : H.264 level 4.0 d'abord (mobile), puis 5.0/5.1/5.2 pour les grandes frames desktop/Retina qui dépassent le plafond de macroblocks du level 4.0 ; si aucun encodeur H.264 n'existe, la feature se désactive discrètement. Un *clip* (une "sequence") correspond à une apparition de fond — une image HD qui se dissout puis disparaît — capturée automatiquement, plus des snapshots manuels en un tap, rassemblés pour la curation (voir *Y survivre* pour expliquer pourquoi l'auto-capture se met en pause plutôt que de recycler).
+
+<Callout type="info" title="Retour de debug : les chunks encodés vivent sur disque, sinon mobile OOM">
+  Même compressée, la vidéo s'accumule — environ 1 Mo par seconde — et une longue session de snapshots bloquerait tout dans le heap JavaScript (JS) avant de crasher l'onglet sur un téléphone par out-of-memory (OOM). Les chunks H.264 encodés sont donc déchargés dans **IndexedDB** : la RAM ne garde que des métadonnées légères et une miniature 200 px par clip ; les bytes vivent sur disque. Le store est **scopé à la session** — effacé à chaque lancement — ce qui signifie aussi que la vidéo issue de la caméra ne reste pas sur l'appareil après votre départ. Pas d'IndexedDB (mode privé) ? Fallback en RAM. La pression de stockage vient de `navigator.storage.estimate()` : les clips automatiques arrêtent de s'accumuler au-delà de 60 % d'usage, les snapshots manuels au-delà de 85 %.
+</Callout>
+
+### Exporter : muxer, ne pas réencoder
+
+Comme chaque frame a déjà été encodée *live*, assembler le fichier est peu coûteux : c'est un **mux**, pas un réencodage. [mp4-muxer](https://www.npmjs.com/package/mp4-muxer) assemble les clips en recalant les timestamps pour qu'ils se lisent bout à bout, en tirant les chunks de chaque clip depuis IndexedDB **un clip à la fois** pour que le heap ne se remplisse jamais de toute la bobine :
+
+```ts
+for (const chunk of payload.chunks) {
+  muxer.addVideoChunk(chunk, metaWritten ? undefined : payload.meta, chunk.timestamp + tOffsetUs);
+  metaWritten = true;
+}
+tOffsetUs += seq.durationUs; // next clip starts where this one ended
+```
+
+### La bande-son est la vraie musique
+
+L'audio dans l'export n'est pas un enregistrement de la sortie : c'est le **vrai morceau** qui jouait, re-décodé depuis le `.m4a` local, découpé aux fenêtres de chaque clip et mis bout à bout avec des fondus aux raccords d'environ 10 ms pour éviter les clics. Deux petites batailles ont rendu cela plus difficile qu'il n'y paraît.
+
+<Callout type="info" title="Retour de debug : décoder avec un OfflineAudioContext, jamais un vrai">
+  Décoder le morceau nécessite un `AudioContext`, mais en créer un *vrai* attrape la session audio matérielle, et sur iOS cela **suspend le contexte de la musique live**, rendant l'app silencieuse jusqu'au reload ; chaque export ou prévisualisation tuerait le son. La correction est de décoder via un **`OfflineAudioContext`**, qui rend dans un buffer et ne possède aucune session de sortie, donc reste totalement inerte. Et comme décoder un morceau complet de plusieurs minutes est de loin l'étape la plus lourde, le dernier morceau décodé est mis en cache — mais une seule entrée, parce qu'un morceau stéréo décodé de 8 minutes à 48 kHz pèse ~180 Mo et en garder deux ferait OOM.
+</Callout>
+
+Quand vous tirez les visuels en slow-motion, le son doit ralentir avec eux : chaque frame enregistrée stocke donc son `warp` slow-mo, et l'export **resample la musique selon cette enveloppe**. La tête de lecture avance plus lentement dans les samples exactement aux endroits où la vidéo a été tape-stoppée, avec interpolation linéaire de la position désormais fractionnaire. Dernier piège : les `AudioEncoder` mobiles omettent souvent l'`AudioSpecificConfig` AAC, et sans lui mp4-muxer écrit une boîte `esds` cassée et le fichier joue sans son. Cette config de 2 bytes est donc synthétisée à la main et transmise explicitement au muxer.
+
+Le résultat est un `.mp4` autonome : votre tranche de chaos, avec sa musique, entièrement fabriquée sur le téléphone.
+
+## Y survivre : l'iPad qui manquait de GPU
+
+Tout tournait très bien sur iPhone 13 et iPhone SE, puis crashait sur un **iPad Pro 2018** après quelques minutes. Le réflexe serait de dire "vieil appareil, moins de mémoire", mais cet iPad a les *mêmes* 4 Go que les téléphones, voire plus. Ce qu'il a de différent, c'est un **écran beaucoup plus grand** et, ce jour-là, une caméra tenue en **paysage**. Les deux ont compté, et comprendre pourquoi a été la partie la plus instructive du build.
+
+Le Web Inspector distant de Safari était utile tant que la page vivait, mais pas pour l'échec lui-même : une fois le processus GPU disparu, l'état utile devait déjà être visible sur l'appareil. L'app a donc gagné une **ligne de diagnostic** — imprimée toutes les dix secondes et *inscrite sur l'écran de crash lui-même* — qui rapporte le frame rate, le nombre de clips, le nombre d'encodeurs et le total de bytes de toutes les textures allouées. Une capture du crash devenait un rapport complet.
+
+<Callout type="info" title="Retour de debug : c'était la mémoire GPU, pas la RAM — et iOS ne le dit pas">
+  Le crash était toujours une allocation GPU qui échouait — `beginRenderPass` ou `importExternalTexture` qui ne donne plus rien — jamais un out-of-memory JavaScript. Le **processus GPU** de WebKit a son propre budget, séparé du heap de la page, et un grand écran plus une caméra live le remplissent vite. Pire : **iOS n'expose aucune API mémoire** (`deviceMemory`, `performance.memory`, `measureUserAgentSpecificMemory` sont Chrome-only) et WebGPU ne rapporte aucune mémoire vidéo (VRAM) : on vole à l'aveugle. Et une fois ce processus mort, `requestAdapter()` renvoie `null` : tout le sous-système est perdu, il n'y a pas de récupération en place, seulement un reload.
+</Callout>
+
+Le plus gros levier a été le **ring buffer**. Ses couches sont dimensionnées selon le ratio de la caméra, et une frame paysage contient environ **trois fois** plus de pixels qu'une portrait. Sur l'iPad paysage, le ring seul pesait donc **248 des 288 Mo**. Plafonner le *plus grand* côté de chaque couche au lieu de sa hauteur rend l'empreinte indépendante de l'orientation : 288 Mo sont devenus **125 Mo**, sans toucher aux iPhones portrait déjà petits.
+
+<Callout type="info" title="Retour de debug : un seul encodeur, reset entre les clips">
+  Le recorder créait d'abord un `VideoEncoder` neuf par clip. Sur iOS, cela enchaîne les sessions **VideoToolbox**, et après une douzaine ou deux, la suivante échoue et emporte le processus GPU. La correction : **un seul** encodeur pour toute la session, `reset()` entre les clips. Cela a corrigé discrètement deux autres bugs : réutiliser un encodeur entre clips avec des timestamps qui redémarraient à zéro lui envoyait des sauts de temps *en arrière* (frames corrompues, gelées), et un encodeur partagé n'émet son `decoderConfig` qu'une seule fois, donc chaque clip après le premier était muxé sans config et ne s'ouvrait pas. Un reset propre rend chaque clip indépendant et bien formé.
+</Callout>
+
+La fuite qui fixait le plafond venait de la caméra. `importExternalTexture()` est créé à neuf à la demande, et iOS récupère lentement ces textures externes transitoires. La correction évidente — copier une fois la frame dans une texture que je possède et arrêter d'importer — est exactement ce qui a fonctionné à la fin, mais elle a d'abord cassé de la manière la plus iOS possible.
+
+<Callout type="info" title="Retour de debug : le détecteur de rectangle noir, puis le flux carré">
+  Remplacer `importExternalTexture` par `copyExternalImageToTexture` vers une texture possédée a supprimé la fuite lente sur iPad, puis a rendu la caméra iPhone sous forme d'image étirée avec un rectangle latéral noir pur. Hard-coder un crop corrigeait une orientation d'un téléphone et en cassait une autre. La première vraie percée a été une petite sonde GPU : scanner la frame copiée à pleine résolution, compter les lignes et colonnes de bord noir pur, ignorer les frames de démarrage entièrement noires, prendre trois échantillons, puis cropper et recalculer le ratio visible avant de stocker l'image dans le ruban.
+
+  La correction finale a été encore meilleure : sur Apple mobile, demander la caméra comme **flux carré** (`720×720`, aspect `1`). Lorenz Clash utilise de toute façon la caméra comme matière carrée, et cela pousse WebKit à renvoyer une frame centrée et déjà utilisable. Le détecteur de rectangle noir reste en place comme diagnostic et fallback, mais le happy path logge maintenant `track 720x720 aspect=1.000` et `copyCrop=none`. iOS/iPadOS utilisent ce chemin de copie possédé ; desktop et Android gardent le chemin `externalTexture` plus simple.
+</Callout>
+
+Il y avait aussi un gain simple avant cela : **ne toucher la caméra que sur les frames qui capturent réellement** un dépôt de ruban. Les dépôts arrivent irrégulièrement, donc les frames intermédiaires créaient des textures pour rien. Cela a réduit la fuite pendant que le chemin de copie était encore instable, et cela reste utile parce que cela diminue le travail caméra sur tous les appareils.
+
+L'export, sur un appareil serré, est à la fois victime et déclencheur — et les deux corrections sont la même idée répétée : **réagir, ne pas mesurer** (vous ne pouvez pas mesurer). Sans API mémoire pour dimensionner l'export selon l'appareil, les **défaillances** de l'encodeur deviennent le signal : chaque échec baisse la résolution d'export d'un cran et réessaie. Une machine capable reste à pleine résolution, un GPU serré descend vers une taille soutenable. Et un appareil qui ne tient pas 30 fps pendant la capture perd des images : timestamp par *nombre de frames* exportait une prise de 5 secondes comme un clip plus court et accéléré ; les frames sont maintenant timestampées par **temps réel écoulé**, ce qui garde la durée honnête au vrai rythme de l'appareil.
+
+La dernière correction était une politique. Les clips de fond étaient un *buffer roulant* — évincer le plus ancien au plafond, continuer à encoder — ce qui signifie que l'encodeur matériel tourne **en continu** aussi longtemps que l'app est ouverte. C'est cette charge soutenue qui finit par faire basculer un appareil serré. L'auto-capture se **met donc en pause** au plafond, et une petite interface de curation — garder, jeter, ou "supprimer les non gardés" — libère des slots pour reprendre. Ne pas encoder éternellement pour jeter le résultat.
+
+Résultat : caméra et capture continues sont passées d'un crash à **~5 minutes** à **plus de trente** sur le même iPad, avec une mémoire GPU stable. Le chemin de copie iOS final logge maintenant le flux caméra carré (`track 720x720 aspect=1.000`) et supprime le compteur `importExternalTexture` des longs runs (`camImp=0`, `camCopy` augmente au rythme des dépôts). L'iPad peut toujours chauffer — c'est une tablette de 2018 qui fait tourner WebGPU, caméra et encodage vidéo dans un navigateur — mais le mode d'échec est passé d'une falaise mémoire GPU lente à une pression thermique/performance ordinaire. C'est la différence entre une démo qui meurt et une expérience que je peux publier.
+
+## La publier : une PWA fullscreen
+
+Une **Progressive Web App** (PWA) est un site que le navigateur peut traiter davantage comme une app : il peut être ajouté à l'écran d'accueil, obtenir sa propre icône, se lancer dans une fenêtre standalone ou fullscreen, et mettre assez de choses en cache pour s'ouvrir de façon fiable. Pour Lorenz Clash, l'important n'est pas le mode offline ; c'est **l'immersion**. La pièce doit échapper au chrome du navigateur, surtout sur mobile, pour que le canvas caméra remplisse l'écran comme une app installée.
+
+Cette forme installable vient de deux petites primitives web : un **web app manifest**, qui décrit le nom, les icônes, les couleurs et le mode d'affichage de l'app ; et un **service worker**, qui permet au navigateur de reconnaître que le site a un app shell qu'il peut contrôler. Chrome sur desktop et Android prend en charge tout le flux d'installation depuis l'UI du navigateur. Sur iOS et iPadOS, il faut passer par Safari : ouvrir le site, toucher Partager, puis **Ajouter à l'écran d'accueil**.
+
+J'ai gardé ces deux fichiers explicites plutôt que de les cacher derrière un setup généré : le manifest et le service worker sont des fichiers statiques écrits à la main.
+
+### Le manifest
+
+```json
+{
+  "name": "Lorenz Clash",
+  "short_name": "Lorenz Clash",
+  "description": "A WebGPU Experience you are part of.",
+  "id": "/",
+  "scope": "/",
+  "start_url": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
+    { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon-48x48.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "/favicon-96x96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/favicon-128x128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
+```
+
+`display: "fullscreen"` est le mode le plus dépouillé, avec `standalone` en fallback propre. Le thème et le fond sont le même quasi-noir que la scène, donc l'écran de lancement n'a pas de rupture. Les icônes 192 et 512 sont déclarées deux fois — `any` et `maskable` — pour l'icône adaptative Android.
+
+### Le service worker
+
+Son rôle annoncé est direct : **rendre l'app installable**. Chrome Android ne propose "Installer" (et un lancement standalone) que lorsqu'un service worker avec un handler `fetch` est enregistré en HTTPS. La stratégie de cache est volontairement minimale et safe en dev :
+
+```js
+// navigations: network-first, fall back to the cached shell offline
+if (request.mode === "navigate") {
+  event.respondWith(
+    fetch(request).catch(() => caches.match("/index.html").then((r) => r ?? caches.match("/"))),
+  );
+  return;
+}
+// hashed build assets: cache-first (content-addressed, safe forever)
+if (url.pathname.startsWith("/assets/")) {
+  event.respondWith(
+    caches.match(request).then(
+      (hit) =>
+        hit ??
+        fetch(request).then((res) => {
+          const copy = res.clone();
+          void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          return res;
+        }),
+    ),
+  );
+  return;
+}
+// audio tracks, dev modules, everything else → straight to the network
+```
+
+Les gros fichiers audio ne sont volontairement *pas* mis en cache, et comme seuls les chemins `/assets/` hashés par contenu sont mis en cache, le HMR du serveur de dev n'est jamais intercepté. Le shell est installé avec `allSettled` (pas `addAll`), pour qu'un fichier manquant ne fasse pas échouer toute l'installation.
+
+### Fullscreen sur iOS, là où les cadavres sont enterrés
+
+iOS ignore le champ `display` du manifest, donc le mode standalone vient des anciens metas Apple — `apple-mobile-web-app-capable`, une status bar `black-translucent` — plus `viewport-fit=cover` pour s'étendre sous l'encoche. Mais les deux décisions qui ont vraiment coûté du debug :
+
+```css
+#gpu-canvas {
+  display: block;
+  width: 100vw;
+  height: 100dvh;   /* dynamic viewport — not 100vh */
+  touch-action: none;
+}
+/* Deliberately NOT position: fixed. A fixed GPU canvas gets its own
+   compositing layer that iOS Safari fails to repaint → black canvas. */
+```
+
+<Callout type="info" title="Retour de debug : l'orientation caméra n'est pas une API fiable">
+  Les métadonnées caméra ne sont pas un contrat fiable sur Safari mobile. Avant le chemin de copie à flux carré, iOS pouvait rapporter **des dimensions pixels portrait pour un buffer caméra physiquement paysage** ; sur d'autres flux, largeur et hauteur donnent le ratio mais pas toujours l'orientation finale appliquée par le navigateur. L'app garde donc un booléen **calibré par l'utilisateur**, persisté dans `localStorage` : un toggle "Rotate / Aspect" sur l'écran de démarrage, prévisualisé en WYSIWYG par le même chemin de capture que le renderer utilise. À partir de là, l'app dérive une auto-rotation de 90° et inverse le ratio sur un quart de tour, pour que l'image ne soit étirée sur aucune plateforme.
+
+  ```ts
+  const screenLandscape = window.innerWidth >= window.innerHeight;
+  const auto = bufferLandscape === screenLandscape ? 0 : 1; // disagree → +90°
+  const rotation = (auto + Math.round(this.captureParams.rotation)) & 3;
+  const odd = rotation === 1 || rotation === 3;
+  const bufferAspect = bufferLandscape ? mag : 1 / mag;
+  const aspect = odd ? 1 / bufferAspect : bufferAspect;
+  ```
+</Callout>
+
+Les safe-area insets (`max(<fallback>, env(safe-area-inset-*))`) gardent l'UI flottante loin de l'encoche et de l'indicateur d'accueil. Sur Android, Chrome remonte son propre prompt d'installation une fois les critères remplis ; sur iOS, c'est le chemin manuel *Partager ▸ Ajouter à l'écran d'accueil*. Pas de coaching in-app, pas de `beforeinstallprompt` : l'installation est laissée au navigateur.
+
+### Se faire oublier
+
+Vous démarrez sur un petit écran d'accueil : vous choisissez la caméra et la musique, changez de langue si besoin, puis touchez pour commencer. La prévisualisation caméra est déjà rendue par le même chemin de capture qui alimentera le ruban, donc les corrections d'orientation se font avant le démarrage de l'expérience, sans second prompt de permission.
+
+À l'intérieur, les contrôles restent minimaux pour que la pièce — pas le chrome — possède l'écran :
+
+- **Ils se cachent.** Touchez ou bougez et l'UI apparaît, puis disparaît à nouveau après quelques secondes.
+- **Ils sont classés par le pouce.** Quatre zones diagonales regroupent son, source, vue et capture ; l'action principale est la plus grande et la plus basse, les actions secondaires remontent autour d'elle.
+- **La couleur signifie l'état.** Les boutons restent blancs ; les modes actifs sont montrés par des anneaux, dont l'anneau arc-en-ciel de l'auto-director et l'anneau rouge de progression de capture.
+
+Le sélecteur de langue ne vit que sur l'écran d'accueil, et les icônes très réduites en session sont expliquées par une aide paginée qui reprend le layout des boutons. Juste assez d'échafaudage pour rester utilisable, puis tout se retire.
+
+## Boucler la boucle
+
+Une canicule m'a fait fixer l'air qui monte ; l'air qui monte, c'est la convection ; la convection, c'est ce que Lorenz a réduit à trois équations en 1963 ; ces équations sont du chaos ; et ce chaos, rendu avec une caméra et un GPU de téléphone, s'est révélé magnifique. Déterministe mais imprévisible, borné mais jamais répétitif : l'attracteur est une bonne métaphore d'un été brûlant que vous pouvez sentir sans jamais vraiment le prévoir.
+
+Et quand vous pointez la caméra sur votre propre visage, la métaphore se referme sur vous. Vous faites *partie* du système : vous vous y injectez, vous êtes responsable de la matière qu'il reçoit. Et pourtant il vous échappe, parce que c'est ce que fait le chaos. Ce qui est, plus ou moins, notre relation exacte au climat qui a rendu cet été si chaud : nous sommes dedans, nous le façonnons, et il échappe quand même à notre emprise.
+
+Si vous avez lu jusqu'ici, lancez-le pendant la prochaine canicule — et laissez-le transformer votre propre reflet en miroitement.
+
+<Callout type="tip" title="Liens">
+  <div className="not-prose flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <a
+      href="https://lorenzclash.andrefrelicot.dev/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-center gap-4 rounded-lg border border-foreground/15 p-4 text-foreground transition hover:border-foreground/35 hover:bg-foreground/5"
+    >
+      <img
+        src="/images/2026/lorenz-clash/lorenzclash-logo.svg"
+        alt="Logo Lorenz Clash"
+        width={72}
+        height={63}
+        className="h-14 w-auto shrink-0 transition group-hover:scale-105"
+      />
+      <span className="flex flex-col gap-1">
+        <span className="text-base font-semibold">Ouvrir Lorenz Clash ↗</span>
+        <span className="text-sm text-foreground/70">Lancer l'expérience WebGPU live.</span>
+      </span>
+    </a>
+
+    <div className="flex flex-col gap-2 md:min-w-[16rem] md:border-l md:border-foreground/15 md:pl-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Code source</div>
+      <GitHubLink href="https://github.com/AndreFrelicot/lorenzclash" label="Code source sur GitHub" className="w-fit" />
+    </div>
+  </div>
+</Callout>
