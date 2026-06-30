@@ -1,0 +1,68 @@
+---
+title: "Dartvex: pacotes Dart e Flutter para Convex"
+description: "Dartvex é um ecossistema independente de pacotes Dart e Flutter para Convex: cliente em tempo real, widgets Flutter, geração de código, suporte offline e integração com Better Auth."
+date: 2026-06-19
+tags: [apps, source_code, dartvex, convex, dart, flutter, realtime, packages, pubdev, mobile, offline, codegen]
+en_mdx: dartvex-dart-flutter-packages-for-convex.mdx
+fr_mdx: dartvex-packages-dart-flutter-convex.mdx
+es_mdx: dartvex-paquetes-dart-flutter-para-convex.mdx
+pt_mdx: dartvex-pacotes-dart-flutter-para-convex.mdx
+image: /images/2026/dartvex/dartvex-cover.webp
+---
+
+<ThemeImage
+  lightSrc="/images/2026/dartvex/dartvex-cover.webp"
+  darkSrc="/images/2026/dartvex/dartvex-cover.webp"
+  alt="Capa do Dartvex para os pacotes Dart e Flutter do Convex"
+  width={1600}
+  height={1200}
+  priority={true}
+/>
+
+Dartvex é um conjunto de pacotes Dart e Flutter para usar o [Convex](https://convex.dev) a partir do ecossistema Dart.
+
+O objetivo é simples: tornar o Convex utilizável em projetos Dart e Flutter sem esperar por um SDK oficial. A família de pacotes cobre as principais necessidades de um app real: subscriptions em tempo real, queries, mutations, actions, integração com Flutter, bindings tipados, autenticação e padrões offline-friendly.
+
+Dartvex não é um projeto oficial da Convex. É uma release independente, publicada no pub.dev sob minha conta de publisher verificada.
+
+## Por que o Dartvex existe
+
+A Convex já conta com um forte suporte oficial para os ambientes JavaScript e React. As equipes de Flutter, no entanto, costumam precisar do mesmo tipo de experiência de backend em tempo real a partir do Dart.
+
+Essa demanda fica clara no roteiro público da Convex: o pedido de um [SDK Flutter/Dart oficial](https://ship.convex.dev/requests/js7dcrtm07s6ysfk7t1m1w5tfs849t11) tem muito apoio e pede exatamente isso: um cliente Dart puro, subscriptions em tempo real, autenticação, optimistic updates, padrões offline-friendly e geração de código.
+
+Nesse mesmo pedido, a Convex também indicou que uma terceira implementação oficial da client-side state machine é extremamente improvável. Na prática, isso significa que os desenvolvedores de Flutter e Dart não devem esperar pelo surgimento de um SDK Dart oficial.
+
+O Dartvex existe para preencher essa lacuna: um ecossistema Dart-native para as equipes que querem usar o Convex com Flutter ou Dart hoje.
+
+## O ecossistema de pacotes
+
+A primeira release pública foi publicada em 19 de junho de 2026. O ecossistema atual é dividido em cinco pacotes, para que cada projeto instale apenas as camadas de que precisa.
+
+| Pacote | Função |
+|---|---|
+| [dartvex](https://pub.dev/packages/dartvex) | Cliente Dart principal para Convex: sincronização em tempo real, subscriptions, queries, mutations, actions, autenticação e valores do Convex. |
+| [dartvex_flutter](https://pub.dev/packages/dartvex_flutter) | Camada de integração com Flutter, com configuração no estilo provider e widgets reativos para queries e mutations. |
+| [dartvex_codegen](https://pub.dev/packages/dartvex_codegen) | Gerador de linha de comando que cria bindings Dart com tipagem segura a partir do esquema de um backend Convex. |
+| [dartvex_local](https://pub.dev/packages/dartvex_local) | Extensão com suporte offline, com cache local SQLite e uma fila de mutations para fluxos mobile-first. |
+| [dartvex_auth_better](https://pub.dev/packages/dartvex_auth_better) | Adaptador para usar o Better Auth com o Dartvex e o Convex. |
+
+## Como escolher os pacotes
+
+Para um app Flutter, o ponto de partida habitual é [dartvex_flutter](https://pub.dev/packages/dartvex_flutter). Ele traz a camada de UI e depende do pacote central [dartvex](https://pub.dev/packages/dartvex).
+
+Para uma aplicação Dart pura, uma ferramenta de linha de comando ou um projeto Dart no lado do servidor, [dartvex](https://pub.dev/packages/dartvex) é o pacote base.
+
+Quando o esquema do backend deve se tornar uma API Dart tipada, [dartvex_codegen](https://pub.dev/packages/dartvex_codegen) adiciona a etapa de geração.
+
+Quando o produto precisa continuar funcionando com conectividade instável, [dartvex_local](https://pub.dev/packages/dartvex_local) adiciona a camada local-first.
+
+Quando o projeto usa o Better Auth, [dartvex_auth_better](https://pub.dev/packages/dartvex_auth_better) fornece o adaptador de autenticação.
+
+## Links
+
+<GitHubLink href="https://github.com/AndreFrelicot/dartvex" label="Dartvex no GitHub" />
+
+<PubDevLink href="https://pub.dev/publishers/andrefrelicot.dev/packages" label="Pacotes Dartvex no pub.dev" />
+
+- Pedido da Convex: [Official Flutter/Dart SDK](https://ship.convex.dev/requests/js7dcrtm07s6ysfk7t1m1w5tfs849t11)
