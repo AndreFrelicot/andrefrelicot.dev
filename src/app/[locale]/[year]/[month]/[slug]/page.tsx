@@ -2,7 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
 import { CodeCopyListener } from "@/components/mdx/code-copy-listener";
 import { mdxComponents } from "@/components/mdx";
@@ -21,7 +23,9 @@ import {
   readPostBySlug,
   refreshTranslationIndex,
 } from "@/lib/mdx";
+import { codeThemeDark } from "@/lib/code-theme";
 import { rehypeCodeHeaders } from "@/lib/rehype-code-headers";
+import "katex/dist/katex.min.css";
 
 export const dynamic = "error";
 
@@ -284,17 +288,18 @@ export default async function PostPage({ params }: { params: PageParams }) {
             blockJS: false,
             blockDangerousJS: true,
             mdxOptions: {
-              remarkPlugins: [remarkGfm, remarkSmartypants],
+              remarkPlugins: [remarkGfm, remarkSmartypants, remarkMath],
               rehypePlugins: [
                 [
                   rehypePrettyCode,
                   {
                     theme: {
                       light: "github-light",
-                      dark: "github-dark",
+                      dark: codeThemeDark,
                     },
                   },
                 ],
+                rehypeKatex,
                 rehypeCodeHeaders,
               ],
             },

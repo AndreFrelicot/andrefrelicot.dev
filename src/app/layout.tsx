@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { getValidLocale } from "@/lib/mdx";
 
 const brandSans = Space_Grotesk({
   variable: "--font-brand-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const brandMono = JetBrains_Mono({
-  variable: "--font-brand-mono",
   subsets: ["latin"],
   display: "swap",
 });
@@ -36,9 +31,7 @@ export const metadata: Metadata = {
       { url: "/favicon.ico" },
       { url: "/favicon-256.png", sizes: "256x256", type: "image/png" },
     ],
-    apple: [
-      { url: "/favicon-256.png", sizes: "256x256", type: "image/png" },
-    ],
+    apple: [{ url: "/favicon-256.png", sizes: "256x256", type: "image/png" }],
   },
 };
 
@@ -55,16 +48,12 @@ export default async function RootLayout({
   const locale = getValidLocale(resolved?.locale);
   return (
     <html lang={locale} suppressHydrationWarning>
-      <head>
-        <script
-          defer
+      <body className={`${brandSans.variable} antialiased`}>
+        <Script
           src="https://cloud.umami.is/script.js"
           data-website-id="682271ce-8738-436c-a03d-0b285b3e8341"
-        ></script>
-      </head>
-      <body
-        className={`${brandSans.variable} ${brandMono.variable} antialiased`}
-      >
+          strategy="afterInteractive"
+        />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {children}
         </ThemeProvider>

@@ -31,10 +31,8 @@ function walk(node: HastNode) {
   if (!node || !("children" in node) || !Array.isArray(node.children)) return;
 
   node.children.forEach((child) => {
-    if (isElement(child)) {
-      if (isCodeFigure(child)) {
-        enhanceCodeFigure(child);
-      }
+    if (isElement(child) && isCodeFigure(child)) {
+      enhanceCodeFigure(child);
     }
     walk(child as HastNode);
   });
@@ -51,8 +49,21 @@ function isCodeFigure(node: HastElement) {
   );
 }
 
+/**
+ * Builds a single title bar per code block: the `title="…"` filename when one
+ * is set (verbatim), otherwise the lowercased language. The original
+ * rehype-pretty-code title element is removed so there is never a double bar.
+ */
 function enhanceCodeFigure(figure: HastElement) {
   if (!Array.isArray(figure.children)) return;
+
+  if (
+    figure.children.findIndex(
+      (child) => isElement(child) && child.tagName === "pre",
+    ) === -1
+  ) {
+    return;
+  }
 
   const titleIndex = figure.children.findIndex(
     (child) =>
@@ -60,18 +71,21 @@ function enhanceCodeFigure(figure: HastElement) {
       Boolean(child.properties?.["data-rehype-pretty-code-title"]),
   );
 
+  let label: string | undefined;
+
+  if (titleIndex !== -1) {
+    label = textContent(figure.children[titleIndex]).trim() || undefined;
+    figure.children.splice(titleIndex, 1);
+  } else {
+    const pre = figure.children.find(
+      (child) => isElement(child) && child.tagName === "pre",
+    ) as HastElement | undefined;
+    const language = pre?.properties?.["data-language"];
+    label = typeof language === "string" ? language.toLowerCase() : undefined;
+  }
+
   const preIndex = figure.children.findIndex(
     (child) => isElement(child) && child.tagName === "pre",
-  );
-
-  if (preIndex === -1) return;
-
-  const pre = figure.children[preIndex] as HastElement;
-  const preProps = pre.properties as Record<string, unknown> | undefined;
-  const language = normalizeLanguage(
-    typeof preProps?.["data-language"] === "string"
-      ? (preProps["data-language"] as string)
-      : undefined,
   );
 
   const header: HastElement = {
@@ -80,21 +94,20 @@ function enhanceCodeFigure(figure: HastElement) {
     properties: {
       className: ["code-block-header"],
     },
-    children: buildHeaderChildren(language),
+    children: buildHeaderChildren(label),
   };
 
-  const insertionIndex = titleIndex === -1 ? preIndex : titleIndex + 1;
-  figure.children.splice(insertionIndex, 0, header);
+  figure.children.splice(preIndex, 0, header);
 }
 
-function buildHeaderChildren(language?: string): HastElement[] {
-  const label: HastElement = {
+function buildHeaderChildren(label?: string): HastElement[] {
+  const labelEl: HastElement = {
     type: "element",
     tagName: "span",
     properties: {
       className: ["code-block-label"],
     },
-  children: language ? [createText(language)] : [],
+    children: label ? [createText(label)] : [],
   };
 
   const button: HastElement = {
@@ -109,13 +122,15 @@ function buildHeaderChildren(language?: string): HastElement[] {
     children: [createText("Copy code")],
   };
 
-  return language ? [label, button] : [button];
+  return [labelEl, button];
 }
 
-function normalizeLanguage(lang?: string) {
-  if (!lang) return undefined;
-  if (lang.length <= 3) return lang.toUpperCase();
-  return lang;
+function textContent(node: HastNode): string {
+  if (node.type === "text") return node.value;
+  if ("children" in node && Array.isArray(node.children)) {
+    return node.children.map(textContent).join("");
+  }
+  return "";
 }
 
 function createText(value: string): HastText {
