@@ -1,19 +1,155 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-This Next.js blog ships as a statically generated site sourced from MDX posts. Localized routes live under `src/app/[locale]`, with `(blog)` serving articles and `(portfolio)/apps` listing portfolio entries. Shared components belong in `src/components`, while `src/lib` provides MDX parsing, search helpers, and other server utilities. Author content resides in `src/content/<locale>` as `.mdx` files; portfolio entries live in `src/apps/<locale>`. Curated homepage links are managed via `src/data/links/<locale>.json`. Assets settle under `public`. Build scripts, including `scripts/build-search-index.ts`, automate locale-specific blog search index creation before exports.
+Personal devlog/portfolio site (andrefrelicot.dev): a Next.js 16 static blog generator with multi-language MDX content and full static export. TypeScript, Tailwind CSS 4, App Router.
 
-## Build, Test, and Development Commands
-Run `pnpm dev` for the Turbopack dev server at `http://localhost:3000`. `pnpm build` performs the production compile and runs `prebuild` first to regenerate the search index so static pages stay in sync with MDX content. Use `pnpm start` to serve the compiled output locally. `pnpm lint` executes ESLint across the repo. For full static output, run `pnpm export` (build + `next export`) to produce the `out/` directory.
+## Project Structure
+
+- `src/app/[locale]/` — localized routes: homepage (`page.tsx`), client search UI (`search-client.tsx`), and articles at `[year]/[month]/[slug]/page.tsx` (the entire MDX render pipeline is wired in that page).
+- `src/components/` — shared components; MDX components live in `src/components/mdx/index.tsx`.
+- `src/lib/` — server utilities: MDX parsing + translation index (`mdx.ts`), post URLs (`post-path.ts`), custom Shiki code theme (`code-theme.ts`), code-block title bars (`rehype-code-headers.ts`), search helpers.
+- `src/content/<locale>/<year>/<slug>.mdx` — articles. **Anything under `src/content/` publishes — there is no draft flag.** Drafts and plans belong in top-level `docs/`.
+- `src/data/links/<locale>.json` — curated homepage links.
+- `public/` — assets; `search-index.<locale>.json` files are generated, not hand-edited.
+- `scripts/` — prebuild scripts: `generate-social-images.mjs`, `build-search-index.ts`.
+
+## Build & Development Commands
+
+The repo uses **pnpm** (`pnpm-lock.yaml` is authoritative; a stray `package-lock.json` exists — ignore it, don't run npm installs).
+
+- `pnpm dev` — Turbopack dev server at `http://localhost:3000`.
+- `pnpm build` — production build. Runs `prebuild` first (social images + per-locale search indices). With `output: "export"` and `trailingSlash: true` in `next.config.ts`, the build emits the full static site into `out/`.
+- `pnpm lint` — ESLint across the repo.
+- `pnpm start` — serve the compiled output locally.
+
+(The `pnpm export` script still calls the removed `next export` command — `pnpm build` alone already produces `out/`.)
+
+## Multi-language Content System
+
+- Locales: `en` (canonical), `fr`, `pt`, `es`.
+- English posts are the canonical references; translations are linked via frontmatter keys `en_mdx` / `fr_mdx` / `pt_mdx` / `es_mdx` (each version lists all four).
+- Translation resolution lives in `src/lib/mdx.ts`: `getCanonicalSlug(locale, slug)`, `getLocalizedSlug(canonicalSlug, locale)`, `getAllPostsWithFallback(locale)`, `listCanonicalSlugs()`, and `refreshTranslationIndex()` — call the latter before build operations or when changing translation mappings.
+- A missing translation automatically falls back to English.
+- Post URLs are date-based: `/{locale}/{year}/{month}/{slug}`, constructed by `buildPostPath()` in `src/lib/post-path.ts`.
+
+### Post Frontmatter
+
+```yaml
+---
+title: Post Title
+description: Post description
+date: YYYY-MM-DD
+tags: [tag1, tag2]
+image: /images/path.webp   # absolute path, starting with /
+en_mdx: slug.mdx           # canonical reference
+fr_mdx: slug-fr.mdx        # French translation (same or different slug)
+pt_mdx: slug-pt.mdx        # Portuguese translation
+es_mdx: slug-es.mdx        # Spanish translation
+---
+```
+
+Social images prefer `.jpg`/`.jpeg`/`.png` over `.webp` for OpenGraph compatibility.
+
+## MDX Pipeline
+
+- Components (registered in `src/components/mdx/index.tsx`): `Callout`, `ZoomableThemeImage`, `GitHubLink`, `AppStoreLink`, `PlayStoreLink`, `PubDevLink`, `YouTubeEmbed`, `ScreenshotGallery`, `ThreeCube`, `OsibitsLogo`, `AppExpressSourceBanner`.
+- `Callout` has exactly three types — `info` (blue), `tip` (emerald), `warning` (amber). Use `warning` sparingly (a rare genuine caution, not for technical asides).
+- Plugins (wired in the article `page.tsx`): `remark-gfm`, `remark-smartypants`, `remark-math`; `rehype-pretty-code`, `rehype-katex` (KaTeX CSS imported there too), custom `rehypeCodeHeaders`.
+- Code highlighting: Shiki via `rehype-pretty-code` — dark theme is the custom `ink-noir` (`src/lib/code-theme.ts`), light is `github-light`. Each code block gets a title bar showing the filename (`title=`) or the language, plus a copy button.
+- Path alias: `@/*` → `./src/*` (`tsconfig.json`).
+
+## Search
+
+Fuse.js with pre-built indices at `public/search-index.<locale>.json`, generated by `scripts/build-search-index.ts` during `prebuild`. After adding or renaming posts, rerun `pnpm build` (or `pnpm prebuild`) so the indices stay in sync; commit the regenerated JSON with the content change.
 
 ## Coding Style & Naming Conventions
-All runtime code is TypeScript. Default to server components unless interactivity requires `"use client"`. Use two-space indentation and prefer named exports. React components follow PascalCase (`ThemeToggle`), helpers use camelCase, and MDX slugs stay kebab-case (`edge-cdn-strategies.mdx`). Front matter dates must be `YYYY-MM-DD`. Tailwind classes should remain grouped logically (layout → spacing → color) to match existing patterns. Run `pnpm lint` before committing; no other auto-formatters are configured.
+
+All runtime code is TypeScript. Default to server components unless interactivity requires `"use client"`. Use two-space indentation and prefer named exports. React components follow PascalCase (`ThemeToggle`), helpers use camelCase, and MDX slugs stay kebab-case. Front matter dates must be `YYYY-MM-DD`. Tailwind classes should remain grouped logically (layout → spacing → color) to match existing patterns. Run `pnpm lint` before committing; no other auto-formatters are configured.
 
 ## Testing Guidelines
-There is no automated test suite yet—treat linting and manual verification as required gates. After editing MDX, preview the page to confirm the generated reading time, metadata, and code highlighting. If you introduce tests, prefer Vitest or Testing Library, co-locate files as `<name>.test.ts(x)`, and document coverage expectations in the pull request.
 
-## Commit & Pull Request Guidelines
-Commit history favors short, present-tense summaries (`fix menubar color`). Group related changes per commit. Pull requests should explain the user-visible outcome, link any issues, and include screenshots or recordings for UI changes. Confirm `pnpm lint`, `pnpm build`, and any added tests succeed, and mention if the search index script or MDX slugs were updated.
+There is no automated test suite yet — treat linting, a green `pnpm build`, and manual verification as required gates. After editing MDX, preview the page to confirm the generated reading time, metadata, math rendering, and code highlighting. If you introduce tests, prefer Vitest or Testing Library, co-locate files as `<name>.test.ts(x)`, and document coverage expectations in the pull request.
 
-## Content & Search Index Tips
-Keep headings unique inside each MDX file so anchor links remain stable. When adding or renaming posts, rerun `pnpm build` (or `pnpm prebuild`) to refresh the per-locale blog search indexes consumed by the client. Portfolio apps do not feed the search index but must mirror the slug and locale folder structure used by blog posts.
+## Pull Requests
+
+Pull requests should explain the user-visible outcome, link any issues, and include screenshots or recordings for UI changes. Confirm `pnpm lint`, `pnpm build`, and any added tests succeed, and mention if the search index script or MDX slugs were updated. Commit conventions are defined in **Git & Commits** below.
+
+## Behavioral Guidelines
+
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+### 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" -> "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" -> "Write a test that reproduces it, then make it pass"
+- "Refactor X" -> "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+1. [Step] -> verify: [check]
+2. [Step] -> verify: [check]
+3. [Step] -> verify: [check]
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Git & Commits
+
+- When asked to commit, create one commit per logical fix or feature.
+- Do not create global/session commits that bundle unrelated work.
+- Stage only the files that belong to the specific fix or feature being committed.
+- Prefer conventional commit prefixes in the subject:
+  - `(fix)` for bug fixes
+  - `(feat)` for user-visible features
+  - `(chore)` for maintenance or tooling changes
+  - `(docs)` for documentation-only changes
+  - `(test)` for test-only changes
+  - `(refactor)` for behavior-preserving code restructuring
+  - `(perf)` for performance improvements
+  - `(build)` for build system or dependency changes
+  - `(ci)` for CI configuration changes
+- If a task contains multiple fixes/features, commit each one separately with the appropriate prefix.
