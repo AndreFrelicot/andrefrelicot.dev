@@ -27,7 +27,7 @@ Ce miroitement, c'est de la **convection** : un fluide chauffé par le dessous, 
 
 J'en ai donc fait un jouet. **Lorenz Clash** est une expérience audiovisuelle générative WebGPU pour le web mobile — et une expérience dont vous faites *partie* : vous y entrez par la caméra frontale — l'objectif selfie d'un téléphone, la webcam d'un ordinateur —, et votre image devient une matière découpée, étirée et dissoute le long de la trajectoire 3D de l'attracteur de Lorenz, cette courbe née des mathématiques de la chaleur. Une app née d'une canicule, bâtie sur les équations de la chaleur. La symétrie était trop belle pour la laisser passer.
 
-Cet article est une plongée technique : les **mathématiques** derrière le chaos, le **pipeline de rendu WebGPU** et son langage de shader, **WGSL** (WebGPU Shading Language), l'**analyse de structure musicale** qui permet à l'expérience de couper et respirer avec un morceau, l'**export vidéo sans serveur** qui enregistre tout localement, la **lutte pour survivre sur une tablette limitée en mémoire**, et la plomberie **Progressive Web App** (PWA) qui permet une installation fullscreen sur iOS et Android. Ce n'est pas une visite ligne par ligne du code source (elle fera l'objet d'un article séparé) ; ce sont les idées, les décisions de design et les batailles.
+Cet article est une plongée technique : les **mathématiques** derrière le chaos, le **pipeline de rendu WebGPU** et son langage de shader, **WGSL** (WebGPU Shading Language), l'**analyse de structure musicale** qui permet à l'expérience de couper et respirer avec un morceau, l'**export vidéo sans serveur** qui enregistre tout localement, la **lutte pour survivre sur une tablette limitée en mémoire**, et la plomberie **Progressive Web App** (PWA) qui permet une installation fullscreen sur iOS et Android. Ce n'est pas une visite ligne par ligne du code source (elle fera l'objet d'un article séparé) ; ce sont les idées, les décisions de design et les war stories.
 
 <Callout type="tip" title="Essayer / lire le code">
   <div className="not-prose flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -82,9 +82,9 @@ Un peu d'histoire, parce que cela donne du goût au reste.
 
 **Edward Norton Lorenz** (1917–2008) était météorologue et mathématicien au MIT. À partir des équations de Barry Saltzman pour la convection thermique, il a réduit le problème à **trois équations différentielles ordinaires couplées** et publié [*Deterministic Nonperiodic Flow*](https://journals.ametsoc.org/view/journals/atsc/20/2/1520-0469_1963_020_0130_dnf_2_0_co_2.xml) en 1963 — l'un des articles les plus cités du domaine.
 
-La légende est vraie : un an plus tôt, en relançant une simulation météo sur un Royal McBee LGP-30, Lorenz a ressaisi une valeur sous la forme `0.506` au lieu de la valeur stockée `0.506127`. La prévision a divergé complètement. Une erreur d'arrondi à la quatrième décimale avait réécrit la météo. C'est la **dépendance sensible aux conditions initiales** — plus tard surnommée **effet papillon**, d'après sa conférence de 1972 *"Le battement d'ailes d'un papillon au Brésil peut-il déclencher une tornade au Texas ?"* (l'attracteur ressemble en plus à un papillon, ce qui n'a jamais nui au storytelling).
+La légende est vraie : deux ans plus tôt, en relançant une simulation météo sur un Royal McBee LGP-30, Lorenz a ressaisi une valeur sous la forme `0.506` au lieu de la valeur stockée `0.506127`. La prévision a divergé complètement. Une erreur d'arrondi à la quatrième décimale avait réécrit la météo. C'est la **dépendance sensible aux conditions initiales** — plus tard surnommée **effet papillon**, d'après sa conférence de 1972 *"Le battement d'ailes d'un papillon au Brésil peut-il déclencher une tornade au Texas ?"* (l'attracteur ressemble en plus à un papillon, ce qui n'a jamais nui au storytelling).
 
-Ce qui rend l'attracteur de Lorenz *étrange* : sa trajectoire est **bornée** (elle ne s'échappe jamais), **jamais périodique** (elle ne se répète jamais), **sans auto-intersection**, et elle vit sur une **fractale** de dimension non entière (Hausdorff) ≈ 2,06. Le système est **dissipatif** : les volumes de l'espace des phases se contractent à un taux constant, la divergence du champ étant une constante négative. Et pourtant les trajectoires sont chaotiques : tout s'effondre sur une fractale de volume nul, pendant que deux chemins voisins s'éloignent exponentiellement. Ce taux d'éloignement a un nombre : le plus grand **exposant de Lyapunov**, environ **0,906** aux paramètres canoniques. Il mesure exactement la vitesse à laquelle l'effet papillon s'amplifie : une erreur minuscule double en gros toutes les quelques unités de temps, jusqu'à rendre toute prévision impossible.
+Ce qui rend l'attracteur de Lorenz *étrange* : sa trajectoire est **bornée** (elle ne s'échappe jamais), **jamais périodique** (elle ne se répète jamais), **sans auto-intersection**, et elle vit sur une **fractale** de dimension non entière (Hausdorff) ≈ 2,06. Le système est **dissipatif** : les volumes de l'espace des phases se contractent à un taux constant, la divergence du champ étant une constante négative. Et pourtant les trajectoires sont chaotiques : tout s'effondre sur une fractale de volume nul, pendant que deux chemins voisins s'éloignent exponentiellement. Ce taux d'éloignement a un nombre : le plus grand **exposant de Lyapunov**, environ **0,906** aux paramètres canoniques. Il mesure exactement la vitesse à laquelle l'effet papillon s'amplifie : une erreur minuscule double environ tous les trois quarts d'unité de temps, jusqu'à rendre toute prévision impossible.
 
 <Callout type="info" title="Les paramètres sont de la physique, pas des nombres magiques">
   Dans le modèle de convection, les trois constantes ont un sens concret :
@@ -150,7 +150,7 @@ function field(p: Vec3, params: LorenzParams): Vec3 {
 }
 ```
 
-La tête de courbe marche alors sur l'attracteur à cadence régulière, quelle que soit sa position, et un dépôt posé à chaque pas fixe de longueur d'arc produit un ruban de tuiles parfaitement régulières. La vitesse devient un simple multiplicateur par-dessus, au lieu d'être une propriété cachée de la géométrie.
+La tête de courbe marche alors sur l'attracteur à cadence régulière, quelle que soit sa position, et un dépôt posé à chaque pas fixe de longueur d'arc produit un ruban de tuiles parfaitement régulières. La vitesse devient un simple multiplicateur par-dessus, au lieu d'être une propriété de la géométrie.
 
 <ZoomableThemeImage
   lightSrc="/images/2026/lorenz-clash/diagram-normalized-field-light-v1.png"
@@ -310,7 +310,7 @@ Tout se passe dans un seul command encoder, un seul submit. Presque tout le trav
 <ZoomableThemeImage
   lightSrc="/images/2026/lorenz-clash/diagram-frame-pipeline-light-v7.png"
   darkSrc="/images/2026/lorenz-clash/diagram-frame-pipeline-light-v7.png"
-  alt="Une frame WebGPU : capture dans le ring buffer de texture array, mise à jour du trail persistant, rendu offscreen de la scène, bloom, puis copie de la texture de présentation possédée vers le canvas et le chemin d'export."
+  alt="Une frame WebGPU : capture dans le ring buffer de texture array, mise à jour de la traînée persistante, rendu offscreen de la scène, bloom, puis copie de la texture de présentation possédée vers le canvas et le chemin d'export."
   width={1650}
   height={941}
 />
@@ -342,7 +342,7 @@ let crest = pow(0.5 + 0.5 * sin(crestPhase * 6.2831853), sharpness);
 
 Pendant cet événement, le renderer monte aussi l'opacité de la grille vers 100 %, de sorte que le sol devient brièvement une forme d'onde émissive avant de se dissoudre à nouveau dans le treillis bleu discret.
 
-<Callout type="info" title="Retour de debug : huit uniform buffers, parce que les writes dépassent les draws">
+<Callout type="info" title="War story : huit uniform buffers, parce que les writes dépassent les draws">
   Les comètes sont dessinées **huit** fois par frame : deux courbes, chacune avec un corps cube, un corps sphère et le sillage de chacun. La version propre réutilise un petit uniform buffer et le réécrit avant chaque draw. Elle rend les huit comètes *identiques* — et la raison est l'ordre de la queue : `queue.writeBuffer` ne s'exécute pas à l'endroit où vous l'appelez, il est mis en file d'attente, et toute la frame est un command encoder avec un **seul `submit`**. Les huit writes s'exécutent donc *avant* que le moindre draw lise quoi que ce soit, et chaque draw lit le **dernier** payload écrit. La correction : un uniform buffer par draw simultané, chacun écrit juste avant son draw call :
 
   ```ts
@@ -374,7 +374,7 @@ const dist = (frameRadius * margin) / Math.sin(Math.min(halfV, halfH));
 
 Un téléphone en portrait recule pour garder tout le clash dans le cadre ; un desktop large se rapproche pour remplir l'image. Le centre et le rayon convergent très lentement vers leurs cibles — facteur de lissage `0.03` — pour que le cadrage *dérive* avec la respiration de l'attracteur au lieu de pomper à chaque oscillation. Et le calcul utilise volontairement le champ de vision **de base** (FOV), donc un pinch-to-zoom (appliqué comme une échelle de FOV, `FOV_Y / zoom`, un vrai téléobjectif) fonctionne toujours *par-dessus* l'auto-cadrage au lieu d'être annulé par lui.
 
-Deux modes **follow** remplacent l'orbite par un trajet sur la courbe. *Head* se place juste derrière le dépôt le plus récent et regarde vers l'avant dans la tangente lissée — chaos en première personne. *Tail* se place à l'extrémité la plus ancienne, en dissolution, et la regarde — sauf que la courbe s'enroule, donc la tangente locale tourne sur elle-même à chaque boucle et ferait pirouetter l'œil. La correction est de ne pas viser selon la tangente mais vers un **vrai dépôt plus loin dans le ruban**, en utilisant la corde qui le relie comme cap stable, pour garder la queue en dissolution cadrée même au cœur d'une boucle.
+Deux modes **follow** remplacent l'orbite par un trajet sur la courbe. *Head* se place juste derrière le dépôt le plus récent et regarde vers l'avant dans la tangente lissée — chaos en première personne. *Tail* se place à l'extrémité la plus ancienne, en dissolution, et la regarde — sauf que la courbe s'enroule, donc la tangente locale fait un tour complet à chaque boucle et ferait pirouetter l'œil. La correction est de ne pas viser selon la tangente mais vers un **vrai dépôt plus loin dans le ruban**, en utilisant la corde qui le relie comme cap stable, pour garder la queue en dissolution cadrée même au cœur d'une boucle.
 
 ### Compositing et post-traitement
 
@@ -406,13 +406,13 @@ Quelques choix le gardent élégant plutôt que gadget :
 - La scène **et** le glow sont échantillonnés avec le *même* `uv` déformé, donc le bloom ondule en synchronisation au lieu de se détacher de l'image.
 - La phase $t$ est l'horloge de scène **mise à l'échelle par le warp**, donc l'onde ralentit avec la musique et revient en douceur au relâcher ; l'ondulation appartient au même geste de tape-stop, ce n'est pas une animation séparée.
 
-Cette ondulation de slow-motion est ensuite devenue un effet à part entière. L'**ondulation de pixels** utilise la même passe composite, mais avec un uniform d'événement séparé : quand un roll, une snare ou un kick fort arrive, l'app lance une courte onde radiale avec quantité, durée, fréquence et vitesse randomisées. Le hasard compte. Une ondulation fixe ressemble à une transition toute faite après trois déclenchements ; une plage bornée donne l'impression que la musique envoie des ondes de pression dans la scène. Si la partition est calme, un fallback Poisson sparse peut toujours en déclencher une, donc l'effet reste calé musicalement sans dépendre de l'auto-director.
+Cette ondulation de slow-motion est ensuite devenue un effet à part entière. L'**ondulation de pixels** utilise la même passe composite, mais avec un uniform d'événement séparé : quand un roll, une snare ou un kick fort arrive, l'app lance une courte onde radiale avec quantité, durée, fréquence et vitesse randomisées. Le hasard compte. Une ondulation fixe ressemble à une transition toute faite après trois déclenchements ; une plage bornée donne l'impression que la musique envoie des ondes de pression dans la scène. Si la partition est calme, un fallback Poisson clairsemé peut toujours en déclencher une, donc l'effet reste calé musicalement sans dépendre de l'auto-director.
 
 L'effet qui paraît le plus coûteux est en réalité le plus simple conceptuellement : une **traînée d'exposition**, comme si l'on laissait l'obturateur ouvert pendant quelques secondes. Après le composite final, une toute petite passe de feedback temporel mélange l'image courante avec une copie atténuée de la sortie précédente dans deux textures ping-pong possédées. L'effet apparaît en fondu, se maintient, disparaît en fondu, et ne lit jamais le swapchain live. Il y a deux timings : des impacts courts d'environ **1,5 s**, souvent autour des cuts ou d'événements rythmiques forts, et des traînées longues d'environ **20 s** pour les floats, bridges et breakdowns plus calmes. Les nombres de déclenchements varient avec la longueur du morceau : à quatre minutes, le plafond est **20 courts** et **3 longs**, les morceaux plus courts ou plus longs étant ajustés proportionnellement. Comme les ondulations, c'est piloté par la partition mais indépendant du director caméra : couper l'auto-camera ne doit pas couper la vie visuelle de la musique.
 
 C'est un bon résumé miniature de toute la philosophie de compositing : intégrer l'effet dans la passe qui touche déjà tous les pixels, ou dans une seule passe post possédée quand l'historique temporel est nécessaire, et garder le nombre de couches du renderer sous contrôle.
 
-<Callout type="info" title="Retour de debug : ne jamais lire le swapchain live sur iOS">
+<Callout type="info" title="War story : ne jamais lire le swapchain live sur iOS">
   L'image finale est rendue dans une texture **possédée**, puis blitée vers le canvas. Lire directement `getCurrentTexture()` — l'idée évidente — bloque et corrompt la présentation dans Safari iOS. Le détour par une texture possédée donne aussi à l'export vidéo une surface stable à capturer, sans jamais toucher au swapchain live.
 </Callout>
 
@@ -431,7 +431,7 @@ Le mapping est volontairement assez petit pour rester lisible. **Niveau plus bea
 <ZoomableThemeImage
   lightSrc="/images/2026/lorenz-clash/diagram-audio-live-mapping-light-v2.png"
   darkSrc="/images/2026/lorenz-clash/diagram-audio-live-mapping-light-v2.png"
-  alt="Le graphe audio live prélève le morceau avant le gain, extrait des features FFT, les mappe vers les uniforms GPU live et les snapshots de dépôt figés, et route le warp slow-mo vers la lecture audio, le temps d'animation, le ripple et le resampling d'export."
+  alt="Le graphe audio live prélève le morceau avant le gain, extrait des features FFT, les mappe vers les uniforms GPU live et les snapshots de dépôt figés, et route le warp slow-mo vers la lecture audio, le temps d'animation, l'ondulation et le resampling d'export."
   width={1672}
   height={941}
 />
@@ -472,11 +472,11 @@ Le runtime traite alors ce JSON moins comme une "analyse" que comme une partitio
   height={941}
 />
 
-Il y a maintenant deux directors. L'original est toujours là : un détecteur de nouveauté live-FFT classique qui compare un profil court terme à un profil long terme et change quand le son dérive assez loin. Le director structuré est placé à côté, sans être modifié par le détecteur live. Quand la lecture entre dans une nouvelle section analysée, il applique le preset de section ; quand les beats, snares, toms et rolls passent sous la tête de lecture, il émet de petits cues qui peuvent déclencher des **pulses de zoom**, des **sauts rapides de caméra**, des **comètes**, des **vagues de grille**, des **ondulations pixel** et des **traînées d'exposition**. La couleur, la croissance et le shimmer viennent toujours de la FFT live, donc la partition ne fige jamais la performance : elle se contente de donner une carte au système.
+Il y a maintenant deux directors. L'original est toujours là : un détecteur de nouveauté live-FFT classique qui compare un profil court terme à un profil long terme et change quand le son dérive assez loin. Le director structuré est placé à côté, sans être modifié par le détecteur live. Quand la lecture entre dans une nouvelle section analysée, il applique le preset de section ; quand les beats, snares, toms et rolls passent sous la tête de lecture, il émet de petits cues qui peuvent déclencher des **pulses de zoom**, des **sauts rapides de caméra**, des **comètes**, des **vagues de grille**, des **ondulations de pixels** et des **traînées d'exposition**. La couleur, la croissance et le shimmer viennent toujours de la FFT live, donc la partition ne fige jamais la performance : elle se contente de donner une carte au système.
 
 Cette séparation compte. Vous pouvez couper le director caméra tout en gardant les effets pilotés par la partition : la musique peut continuer à envoyer des ondulations et des moments d'exposition au renderer sans prendre le contrôle de la vue. Cela évite aussi que l'expérience ressemble à un clip vidéo figé. Les changements de section sont des ancres déterministes, mais les micro-événements conservent des probabilités, des cooldowns et des plages aléatoires, donc le même morceau garde une structure reconnaissable sans rejouer exactement les mêmes cuts à chaque fois.
 
-<Callout type="info" title="Retour de debug : iOS a cassé le slow-mo évident">
+<Callout type="info" title="War story : iOS a cassé le slow-mo évident">
   L'implémentation évidente est `audioElement.playbackRate = warp`. Cela fonctionne jusqu'à ce que cet élément soit routé dans `createMediaElementSource()` sur iOS, où changer la vitesse peut couper ou rebufferiser le son. Le workaround est plus lourd mais stable : décoder le morceau courant à l'avance, basculer vers un `AudioBufferSourceNode` quand `warp < 0.99`, piloter le `playbackRate` de ce node et l'envoyer dans le même analyseur. Revenir à la normale, c'est juste `rate → 1` — pas de seek, pas de redémarrage. L'élément `<audio>` original ne reprend la main qu'au morceau suivant.
 </Callout>
 
@@ -537,10 +537,10 @@ this.encoder.encode(frame, { keyFrame: s.frameIndex === 0 }); // one shared enco
 frame.close(); // critical: never accumulate raw frames
 ```
 
-L'encodeur matériel tourne déjà hors thread, donc pas besoin de Web Worker : le main thread est à peine impliqué. Le choix du codec est une sonde rapide de capacité : H.264 level 4.0 d'abord (mobile), puis 5.0/5.1/5.2 pour les grandes frames desktop/Retina qui dépassent le plafond de macroblocks du level 4.0 ; si aucun encodeur H.264 n'existe, la feature se désactive discrètement. Un *clip* (une "sequence") correspond à une apparition de fond — une image HD qui se dissout puis disparaît — capturée automatiquement, plus des snapshots manuels en un tap, rassemblés pour la curation (voir *Y survivre* pour expliquer pourquoi l'auto-capture se met en pause plutôt que de recycler).
+L'encodeur matériel tourne déjà hors thread, donc pas besoin de Web Worker : le main thread est à peine impliqué. Le choix du codec est une sonde rapide de capacité : H.264 level 4.0 d'abord (mobile), puis 5.0/5.1/5.2 pour les grandes frames desktop/Retina qui dépassent le plafond de macroblocks du level 4.0 ; si aucun encodeur H.264 n'existe, la feature se désactive discrètement. Un *clip* (une "sequence") correspond à une apparition de fond — une image HD qui se matérialise en fondu, puis se dissout — capturée automatiquement, plus des snapshots manuels en un tap, rassemblés pour la curation (voir *Y survivre* pour expliquer pourquoi l'auto-capture se met en pause plutôt que de recycler).
 
-<Callout type="info" title="Retour de debug : les chunks encodés vivent sur disque, sinon mobile OOM">
-  Même compressée, la vidéo s'accumule — environ 1 Mo par seconde — et une longue session de snapshots bloquerait tout dans le heap JavaScript (JS) avant de crasher l'onglet sur un téléphone par out-of-memory (OOM). Les chunks H.264 encodés sont donc déchargés dans **IndexedDB** : la RAM ne garde que des métadonnées légères et une miniature 200 px par clip ; les bytes vivent sur disque. Le store est **scopé à la session** — effacé à chaque lancement — ce qui signifie aussi que la vidéo issue de la caméra ne reste pas sur l'appareil après votre départ. Pas d'IndexedDB (mode privé) ? Fallback en RAM. La pression de stockage vient de `navigator.storage.estimate()` : les clips automatiques arrêtent de s'accumuler au-delà de 60 % d'usage, les snapshots manuels au-delà de 85 %.
+<Callout type="info" title="War story : les chunks encodés vivent sur disque, sinon mobile OOM">
+  Même compressée, la vidéo s'accumule — environ 1 Mo par seconde — et une longue session de snapshots bloquerait tout dans le heap JavaScript (JS) avant de crasher l'onglet sur un téléphone par out-of-memory (OOM). Les chunks H.264 encodés sont donc déchargés dans **IndexedDB** : la RAM ne garde que des métadonnées légères et une miniature 200 px par clip ; les octets vivent sur disque. Le store est **scopé à la session** — effacé à chaque lancement — ce qui signifie aussi que la vidéo issue de la caméra ne reste pas sur l'appareil après votre départ. Pas d'IndexedDB (mode privé) ? Fallback en RAM. La pression de stockage vient de `navigator.storage.estimate()` : les clips automatiques arrêtent de s'accumuler au-delà de 60 % d'usage, les snapshots manuels au-delà de 85 %.
 </Callout>
 
 ### Exporter : muxer, ne pas réencoder
@@ -557,13 +557,13 @@ tOffsetUs += seq.durationUs; // next clip starts where this one ended
 
 ### La bande-son est la vraie musique
 
-L'audio dans l'export n'est pas un enregistrement de la sortie : c'est le **vrai morceau** qui jouait, re-décodé depuis le `.m4a` local, découpé aux fenêtres de chaque clip et mis bout à bout avec des fondus aux raccords d'environ 10 ms pour éviter les clics. Deux petites batailles ont rendu cela plus difficile qu'il n'y paraît.
+L'audio dans l'export n'est pas un enregistrement de la sortie : c'est le **vrai morceau** qui jouait, re-décodé depuis le `.m4a` local, découpé aux fenêtres de chaque clip et mis bout à bout avec des fondus aux raccords d'environ 10 ms pour éviter les clics. Deux petites war stories ont rendu cela plus difficile qu'il n'y paraît.
 
-<Callout type="info" title="Retour de debug : décoder avec un OfflineAudioContext, jamais un vrai">
+<Callout type="info" title="War story : décoder avec un OfflineAudioContext, jamais un vrai">
   Décoder le morceau nécessite un `AudioContext`, mais en créer un *vrai* attrape la session audio matérielle, et sur iOS cela **suspend le contexte de la musique live**, rendant l'app silencieuse jusqu'au reload ; chaque export ou prévisualisation tuerait le son. La correction est de décoder via un **`OfflineAudioContext`**, qui rend dans un buffer et ne possède aucune session de sortie, donc reste totalement inerte. Et comme décoder un morceau complet de plusieurs minutes est de loin l'étape la plus lourde, le dernier morceau décodé est mis en cache — mais une seule entrée, parce qu'un morceau stéréo décodé de 8 minutes à 48 kHz pèse ~180 Mo et en garder deux ferait OOM.
 </Callout>
 
-Quand vous tirez les visuels en slow-motion, le son doit ralentir avec eux : chaque frame enregistrée stocke donc son `warp` slow-mo, et l'export **resample la musique selon cette enveloppe**. La tête de lecture avance plus lentement dans les samples exactement aux endroits où la vidéo a été tape-stoppée, avec interpolation linéaire de la position désormais fractionnaire. Dernier piège : les `AudioEncoder` mobiles omettent souvent l'`AudioSpecificConfig` AAC, et sans lui mp4-muxer écrit une boîte `esds` cassée et le fichier joue sans son. Cette config de 2 bytes est donc synthétisée à la main et transmise explicitement au muxer.
+Quand vous tirez les visuels en slow-motion, le son doit ralentir avec eux : chaque frame enregistrée stocke donc son `warp` slow-mo, et l'export **resample la musique selon cette enveloppe**. La tête de lecture avance plus lentement dans les samples exactement aux endroits où la vidéo a été tape-stoppée, avec interpolation linéaire de la position désormais fractionnaire. Dernier piège : les `AudioEncoder` mobiles omettent souvent l'`AudioSpecificConfig` AAC, et sans lui mp4-muxer écrit une boîte `esds` cassée et le fichier joue sans son. Cette config de 2 octets est donc synthétisée à la main et transmise explicitement au muxer.
 
 Le résultat est un `.mp4` autonome : votre tranche de chaos, avec sa musique, entièrement fabriquée sur le téléphone.
 
@@ -571,21 +571,21 @@ Le résultat est un `.mp4` autonome : votre tranche de chaos, avec sa musique, e
 
 Tout tournait très bien sur iPhone 13 et iPhone SE, puis crashait sur un **iPad Pro 2018** après quelques minutes. Le réflexe serait de dire "vieil appareil, moins de mémoire", mais cet iPad a les *mêmes* 4 Go que les téléphones, voire plus. Ce qu'il a de différent, c'est un **écran beaucoup plus grand** et, ce jour-là, une caméra tenue en **paysage**. Les deux ont compté, et comprendre pourquoi a été la partie la plus instructive du build.
 
-Le Web Inspector distant de Safari était utile tant que la page vivait, mais pas pour l'échec lui-même : une fois le processus GPU disparu, l'état utile devait déjà être visible sur l'appareil. L'app a donc gagné une **ligne de diagnostic** — imprimée toutes les dix secondes et *inscrite sur l'écran de crash lui-même* — qui rapporte le frame rate, le nombre de clips, le nombre d'encodeurs et le total de bytes de toutes les textures allouées. Une capture du crash devenait un rapport complet.
+Le Web Inspector distant de Safari était utile tant que la page vivait, mais pas pour l'échec lui-même : une fois le processus GPU disparu, l'état utile devait déjà être visible sur l'appareil. L'app a donc gagné une **ligne de diagnostic** — imprimée toutes les dix secondes et *inscrite sur l'écran de crash lui-même* — qui rapporte le frame rate, le nombre de clips, le nombre d'encodeurs et le total d'octets de toutes les textures allouées. Une capture du crash devenait un rapport complet.
 
-<Callout type="info" title="Retour de debug : c'était la mémoire GPU, pas la RAM — et iOS ne le dit pas">
-  Le crash était toujours une allocation GPU qui échouait — `beginRenderPass` ou `importExternalTexture` qui ne donne plus rien — jamais un out-of-memory JavaScript. Le **processus GPU** de WebKit a son propre budget, séparé du heap de la page, et un grand écran plus une caméra live le remplissent vite. Pire : **iOS n'expose aucune API mémoire** (`deviceMemory`, `performance.memory`, `measureUserAgentSpecificMemory` sont Chrome-only) et WebGPU ne rapporte aucune mémoire vidéo (VRAM) : on vole à l'aveugle. Et une fois ce processus mort, `requestAdapter()` renvoie `null` : tout le sous-système est perdu, il n'y a pas de récupération en place, seulement un reload.
+<Callout type="info" title="War story : c'était la mémoire GPU, pas la RAM — et iOS ne le dit pas">
+  Le crash était toujours une allocation GPU qui échouait — `beginRenderPass` ou `importExternalTexture` qui ne donne plus rien — jamais un out-of-memory JavaScript. Le **processus GPU** de WebKit a son propre budget, séparé du heap de la page, et un grand écran plus une caméra live le remplissent vite. Pire : **iOS n'expose aucune API mémoire** (`deviceMemory`, `performance.memory`, `measureUserAgentSpecificMemory` sont Chrome-only) et WebGPU ne rapporte aucune mémoire vidéo (VRAM) : on vole à l'aveugle. Et une fois ce processus mort, `requestAdapter()` renvoie `null` : tout le sous-système est perdu, impossible de récupérer sans recharger la page.
 </Callout>
 
 Le plus gros levier a été le **ring buffer**. Ses couches sont dimensionnées selon le ratio de la caméra, et une frame paysage contient environ **trois fois** plus de pixels qu'une portrait. Sur l'iPad paysage, le ring seul pesait donc **248 des 288 Mo**. Plafonner le *plus grand* côté de chaque couche au lieu de sa hauteur rend l'empreinte indépendante de l'orientation : 288 Mo sont devenus **125 Mo**, sans toucher aux iPhones portrait déjà petits.
 
-<Callout type="info" title="Retour de debug : un seul encodeur, reset entre les clips">
+<Callout type="info" title="War story : un seul encodeur, reset entre les clips">
   Le recorder créait d'abord un `VideoEncoder` neuf par clip. Sur iOS, cela enchaîne les sessions **VideoToolbox**, et après une douzaine ou deux, la suivante échoue et emporte le processus GPU. La correction : **un seul** encodeur pour toute la session, `reset()` entre les clips. Cela a corrigé discrètement deux autres bugs : réutiliser un encodeur entre clips avec des timestamps qui redémarraient à zéro lui envoyait des sauts de temps *en arrière* (frames corrompues, gelées), et un encodeur partagé n'émet son `decoderConfig` qu'une seule fois, donc chaque clip après le premier était muxé sans config et ne s'ouvrait pas. Un reset propre rend chaque clip indépendant et bien formé.
 </Callout>
 
 La fuite qui fixait le plafond venait de la caméra. `importExternalTexture()` est créé à neuf à la demande, et iOS récupère lentement ces textures externes transitoires. La correction évidente — copier une fois la frame dans une texture que je possède et arrêter d'importer — est exactement ce qui a fonctionné à la fin, mais elle a d'abord cassé de la manière la plus iOS possible.
 
-<Callout type="info" title="Retour de debug : le détecteur de rectangle noir, puis le flux carré">
+<Callout type="info" title="War story : le détecteur de rectangle noir, puis le flux carré">
   Remplacer `importExternalTexture` par `copyExternalImageToTexture` vers une texture possédée a supprimé la fuite lente sur iPad, puis a rendu la caméra iPhone sous forme d'image étirée avec un rectangle latéral noir pur. Hard-coder un crop corrigeait une orientation d'un téléphone et en cassait une autre. La première vraie percée a été une petite sonde GPU : scanner la frame copiée à pleine résolution, compter les lignes et colonnes de bord noir pur, ignorer les frames de démarrage entièrement noires, prendre trois échantillons, puis cropper et recalculer le ratio visible avant de stocker l'image dans le ruban.
 
   La correction finale a été encore meilleure : sur Apple mobile, demander la caméra comme **flux carré** (`720×720`, aspect `1`). Lorenz Clash utilise de toute façon la caméra comme matière carrée, et cela pousse WebKit à renvoyer une frame centrée et déjà utilisable. Le détecteur de rectangle noir reste en place comme diagnostic et fallback, mais le happy path logge maintenant `track 720x720 aspect=1.000` et `copyCrop=none`. iOS/iPadOS utilisent ce chemin de copie possédé ; desktop et Android gardent le chemin `externalTexture` plus simple.
@@ -593,9 +593,9 @@ La fuite qui fixait le plafond venait de la caméra. `importExternalTexture()` e
 
 Il y avait aussi un gain simple avant cela : **ne toucher la caméra que sur les frames qui capturent réellement** un dépôt de ruban. Les dépôts arrivent irrégulièrement, donc les frames intermédiaires créaient des textures pour rien. Cela a réduit la fuite pendant que le chemin de copie était encore instable, et cela reste utile parce que cela diminue le travail caméra sur tous les appareils.
 
-L'export, sur un appareil serré, est à la fois victime et déclencheur — et les deux corrections sont la même idée répétée : **réagir, ne pas mesurer** (vous ne pouvez pas mesurer). Sans API mémoire pour dimensionner l'export selon l'appareil, les **défaillances** de l'encodeur deviennent le signal : chaque échec baisse la résolution d'export d'un cran et réessaie. Une machine capable reste à pleine résolution, un GPU serré descend vers une taille soutenable. Et un appareil qui ne tient pas 30 fps pendant la capture perd des images : timestamp par *nombre de frames* exportait une prise de 5 secondes comme un clip plus court et accéléré ; les frames sont maintenant timestampées par **temps réel écoulé**, ce qui garde la durée honnête au vrai rythme de l'appareil.
+L'export, sur un appareil contraint en mémoire, est à la fois victime et déclencheur — et les deux corrections sont la même idée répétée : **réagir, ne pas mesurer** (vous ne pouvez pas mesurer). Sans API mémoire pour dimensionner l'export selon l'appareil, les **défaillances** de l'encodeur deviennent le signal : chaque échec baisse la résolution d'export d'un cran et réessaie. Une machine capable reste à pleine résolution, un GPU à court de mémoire descend vers une taille soutenable. Et un appareil qui ne tient pas 30 fps pendant la capture perd des images : timestamp par *nombre de frames* exportait une prise de 5 secondes comme un clip plus court et accéléré ; les frames sont maintenant timestampées par **temps réel écoulé**, ce qui garde la durée honnête au vrai rythme de l'appareil.
 
-La dernière correction était une politique. Les clips de fond étaient un *buffer roulant* — évincer le plus ancien au plafond, continuer à encoder — ce qui signifie que l'encodeur matériel tourne **en continu** aussi longtemps que l'app est ouverte. C'est cette charge soutenue qui finit par faire basculer un appareil serré. L'auto-capture se **met donc en pause** au plafond, et une petite interface de curation — garder, jeter, ou "supprimer les non gardés" — libère des slots pour reprendre. Ne pas encoder éternellement pour jeter le résultat.
+La dernière correction était une politique. Les clips de fond étaient un *buffer roulant* — évincer le plus ancien au plafond, continuer à encoder — ce qui signifie que l'encodeur matériel tourne **en continu** aussi longtemps que l'app est ouverte. C'est cette charge soutenue qui finit par faire basculer un appareil contraint. L'auto-capture se **met donc en pause** au plafond, et une petite interface de curation — garder, jeter, ou "supprimer les non gardés" — libère des slots pour reprendre. Ne pas encoder éternellement pour jeter le résultat.
 
 Résultat : caméra et capture continues sont passées d'un crash à **~5 minutes** à **plus de trente** sur le même iPad, avec une mémoire GPU stable. Le chemin de copie iOS final logge maintenant le flux caméra carré (`track 720x720 aspect=1.000`) et supprime le compteur `importExternalTexture` des longs runs (`camImp=0`, `camCopy` augmente au rythme des dépôts). L'iPad peut toujours chauffer — c'est une tablette de 2018 qui fait tourner WebGPU, caméra et encodage vidéo dans un navigateur — mais le mode d'échec est passé d'une falaise mémoire GPU lente à une pression thermique/performance ordinaire. C'est la différence entre une démo qui meurt et une expérience que je peux publier.
 
@@ -642,7 +642,7 @@ J'ai gardé ces deux fichiers explicites plutôt que de les cacher derrière un 
 
 ### Le service worker
 
-Son rôle annoncé est direct : **rendre l'app installable**. Chrome Android ne propose "Installer" (et un lancement standalone) que lorsqu'un service worker avec un handler `fetch` est enregistré en HTTPS. La stratégie de cache est volontairement minimale et safe en dev :
+Son rôle annoncé est direct : **rendre l'app installable**. Chrome Android ne propose "Installer" (et un lancement standalone) que lorsqu'un service worker avec un handler `fetch` est enregistré en HTTPS. La stratégie de cache est volontairement minimale et sans risque en dev :
 
 ```js
 // navigations: network-first, fall back to the cached shell offline
@@ -672,7 +672,7 @@ if (url.pathname.startsWith("/assets/")) {
 
 Les gros fichiers audio ne sont volontairement *pas* mis en cache, et comme seuls les chemins `/assets/` hashés par contenu sont mis en cache, le HMR du serveur de dev n'est jamais intercepté. Le shell est installé avec `allSettled` (pas `addAll`), pour qu'un fichier manquant ne fasse pas échouer toute l'installation.
 
-### Fullscreen sur iOS, là où les cadavres sont enterrés
+### Fullscreen sur iOS, les vraies galères
 
 iOS ignore le champ `display` du manifest, donc le mode standalone vient des anciens metas Apple — `apple-mobile-web-app-capable`, une status bar `black-translucent` — plus `viewport-fit=cover` pour s'étendre sous l'encoche. Mais les deux décisions qui ont vraiment coûté du debug :
 
@@ -687,7 +687,7 @@ iOS ignore le champ `display` du manifest, donc le mode standalone vient des anc
    compositing layer that iOS Safari fails to repaint → black canvas. */
 ```
 
-<Callout type="info" title="Retour de debug : l'orientation caméra n'est pas une API fiable">
+<Callout type="info" title="War story : l'orientation caméra n'est pas une API fiable">
   Les métadonnées caméra ne sont pas un contrat fiable sur Safari mobile. Avant le chemin de copie à flux carré, iOS pouvait rapporter **des dimensions pixels portrait pour un buffer caméra physiquement paysage** ; sur d'autres flux, largeur et hauteur donnent le ratio mais pas toujours l'orientation finale appliquée par le navigateur. L'app garde donc un booléen **calibré par l'utilisateur**, persisté dans `localStorage` : un toggle "Rotate / Aspect" sur l'écran de démarrage, prévisualisé en WYSIWYG par le même chemin de capture que le renderer utilise. À partir de là, l'app dérive une auto-rotation de 90° et inverse le ratio sur un quart de tour, pour que l'image ne soit étirée sur aucune plateforme.
 
   ```ts
@@ -712,7 +712,7 @@ Vous démarrez sur un petit écran d'accueil : vous choisissez la caméra et la 
 - **Ils sont classés par le pouce.** Quatre zones diagonales regroupent son, source, vue et capture ; l'action principale est la plus grande et la plus basse, les actions secondaires remontent autour d'elle.
 - **La couleur signifie l'état.** Les boutons restent blancs ; les modes actifs sont montrés par des anneaux, dont l'anneau arc-en-ciel de l'auto-director et l'anneau rouge de progression de capture.
 
-Le sélecteur de langue ne vit que sur l'écran d'accueil, et les icônes très réduites en session sont expliquées par une aide paginée qui reprend le layout des boutons. Juste assez d'échafaudage pour rester utilisable, puis tout se retire.
+Le sélecteur de langue ne vit que sur l'écran d'accueil, et les rares icônes en session sont expliquées par une aide paginée qui reprend le layout des boutons. Juste assez d'échafaudage pour rester utilisable, puis tout se retire.
 
 ## Boucler la boucle
 
