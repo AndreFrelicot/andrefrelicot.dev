@@ -1,0 +1,237 @@
+---
+title: "Porter Paper Shaders vers Swift/Metal et Flutter"
+description: "Retour sur le portage de 29 shaders WebGL vers Swift/Metal et Flutter : contrat commun, différences de langages shader, golden renders, presets et petites mathématiques utiles."
+date: 2026-07-06
+tags: [apps, source_code, shaders, glsl, msl, metal, swift, flutter, dart, graphics, pubdev, swiftpm, generative-art]
+en_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
+fr_mdx: porter-paper-shaders-swift-metal-flutter.mdx
+pt_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
+es_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
+image: /images/2026/paper-shaders/paper-shaders-showcase-grid.jpg
+---
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/paper-shaders/paper-shaders-showcase-grid.jpg"
+  darkSrc="/images/2026/paper-shaders/paper-shaders-showcase-grid.jpg"
+  alt="Mosaïque de rendus Paper Shaders générés depuis les presets par défaut"
+  width={1728}
+  height={1440}
+  priority={true}
+/>
+
+Paper Shaders est une collection de shaders fragmentaires WebGL conçue pour produire des fonds visuels, des textures, des trames, des gradients et des effets génératifs avec une API très simple côté web.
+
+Le projet original, paper-design/shaders, est publié sous licence **Apache 2.0**. Les ports Swift/Metal et Flutter restent des travaux indépendants, avec attribution explicite au projet source.
+
+Le projet d'origine est web-first : GLSL, React, canvas, textures, images, presets. Mon objectif était différent : garder le même catalogue visuel, mais le rendre utilisable dans des applications natives SwiftUI et Flutter, avec des packages publiables et des apps de démonstration qui permettent de tester tous les paramètres.
+
+Le résultat tient en deux ports :
+
+- **PaperShaders** pour Swift/Metal, avec un coeur MetalKit et une couche SwiftUI.
+- **paper_shaders** pour Flutter, avec des runtime shaders et une API Dart typée.
+
+Ce n'est pas seulement un exercice de traduction syntaxique. Un shader qui "compile" n'est pas forcément un shader qui rend pareil. Le vrai sujet a été de construire un contrat commun entre trois mondes : WebGL, Metal et Flutter.
+
+## Le contrat commun
+
+La partie la plus importante du portage n'est pas la ligne de code shader la plus exotique. C'est le contrat qui précède le shader.
+
+Chaque effet doit recevoir les mêmes familles de paramètres :
+
+- un espace de coordonnées stable ;
+- un mode de sizing : `cover`, `contain`, `fit`, `none` ;
+- une échelle, une rotation, une origine et des offsets ;
+- un `frame` déterministe ;
+- une vitesse ;
+- des couleurs, images ou textures de bruit selon le shader ;
+- des presets nommés.
+
+Ce contrat est ce qui rend les ports comparables. Si `simplex-noise` ou `spiral` ne reçoivent pas exactement le même espace UV, la même origine et la même notion de temps, la discussion sur la fidélité du shader arrive trop tard : on ne compare déjà plus le même système.
+
+Dans le web original, une partie de cette logique est naturellement portée par le canvas, le vertex shader et l'environnement WebGL. Dans Swift/Metal et Flutter, il faut décider où placer cette responsabilité. Le choix retenu est volontairement explicite : le sizing et les uniforms font partie de l'API publique, et les presets exposent le même modèle mental d'une plateforme à l'autre.
+
+```swift title="Swift"
+SimplexNoiseView(
+  params: .init(
+    colors: [
+      SIMD4<Float>(1, 0.48, 0, 1),
+      SIMD4<Float>(0.98, 1, 0.92, 1),
+      SIMD4<Float>(0.2, 0.05, 0.51, 1),
+    ],
+    stepsPerColor: 2,
+    softness: 0.12
+  ),
+  sizing: .init(fit: .cover, scale: 1)
+)
+```
+
+```dart title="Dart"
+SimplexNoiseView(
+  params: SimplexNoiseParams(
+    colors: [
+      Color(0xffff7b00),
+      Color(0xfff9ffeb),
+      Color(0xff320d82),
+    ],
+    stepsPerColor: 2,
+    softness: 0.12,
+  ),
+  sizing: const ShaderSizing(fit: ShaderFit.cover, scale: 1),
+)
+```
+
+Le code d'initialisation est important. Un preset visuel n'est pas seulement un JSON de valeurs : dans une app réelle, on veut pouvoir copier un snippet Swift ou Dart, le coller dans le projet, et retrouver le même rendu.
+
+## Trois langages, pas trois rendus
+
+Le WebGL original utilise GLSL. Le port Swift utilise Metal Shading Language. Flutter utilise aussi du GLSL en entrée, mais dans les limites des runtime shaders Flutter, compilés par la toolchain Flutter/Impeller.
+
+Sur le papier, les langages se ressemblent suffisamment pour donner une fausse impression de simplicité. En pratique, les détails comptent :
+
+| Sujet | WebGL / GLSL | Metal / MSL | Flutter runtime shader |
+|---|---|---|---|
+| Coordonnées fragment | `gl_FragCoord` | coordonnées passées au fragment | `FlutterFragCoord()` |
+| Modulo flottant | `mod` | `fmod` + helpers | `mod` GLSL |
+| Angles | `atan(y, x)` | `atan2(y, x)` | `atan(y, x)` |
+| Bool uniforms | accepté | types Metal | souvent encodés en float |
+| Tableaux uniformes | `vec4 colors[10]` | buffers typés | offsets stricts côté Dart |
+| Textures | samplers WebGL | textures Metal | samplers Flutter, sans tout l'écosystème WebGL |
+
+La difficulté n'est pas de trouver l'équivalent d'une fonction. Elle est de préserver les conventions implicites : orientation, pixel ratio, interpolation, précision, ordre des uniforms, samplers, et comportement aux limites.
+
+Le port Flutter a un avantage : une grande partie du GLSL original reste réutilisable. Mais il impose une contrainte forte : chaque uniform a une position exacte dans le buffer attendu par Flutter. Une erreur d'ordre ne casse pas forcément la compilation ; elle peut simplement transformer une couleur en scale, un booléen en seuil, ou un offset en vitesse.
+
+Le port Metal est plus explicite. On gagne des types et une intégration native, mais on paie la traduction GLSL vers MSL shader par shader.
+
+## Les petites maths qui rendent les effets portables
+
+Je ne vais pas détailler les 29 shaders un par un. Ce serait vite un catalogue. Ce qui est plus intéressant, ce sont les familles de maths qui reviennent partout et qui expliquent pourquoi le même effet peut rester portable.
+
+### 1. L'espace UV
+
+La plupart des shaders commencent par une idée simple : transformer le pixel courant en coordonnées normalisées.
+
+```glsl
+vec2 uv = fragCoord / resolution;
+vec2 p = uv - 0.5;
+```
+
+À partir de là, on peut déplacer l'origine, appliquer une échelle, tourner le repère, puis envoyer ces coordonnées dans une fonction visuelle. C'est le socle commun.
+
+La rotation, par exemple, n'est pas un effet shader mystérieux : c'est une matrice 2D.
+
+```glsl
+mat2 rotate(float a) {
+  float c = cos(a);
+  float s = sin(a);
+  return mat2(c, -s, s, c);
+}
+```
+
+Si cette transformation n'est pas identique entre les plateformes, le shader peut être parfaitement traduit et pourtant produire une image décalée, inversée ou étirée.
+
+### 2. Les coordonnées polaires
+
+Les effets comme `spiral`, `swirl`, certains gradients radiaux et plusieurs distorsions reposent sur le passage de `(x, y)` à `(angle, rayon)`.
+
+```glsl
+float angle = atan(p.y, p.x);
+float radius = length(p);
+float bands = sin(angle + radius * frequency);
+```
+
+C'est une transformation très compacte, mais elle est sensible. Au centre, le rayon approche zéro ; l'angle devient instable ; les petites différences de précision ou d'anti-aliasing deviennent visibles. C'est exactement le genre de shader où un port peut sembler correct à première vue, puis révéler une croix, un bord dentelé ou une oscillation étrange sur certains backends.
+
+### 3. Le bruit
+
+Les shaders de texture papier, grain, fumée ou gradient organique utilisent le bruit comme une source de variation contrôlée.
+
+Le bruit n'est pas seulement là pour "salir" l'image. Il casse la perfection numérique. Une surface trop régulière paraît artificielle ; un peu de bruit la rend plus proche d'une matière, d'une encre ou d'un papier.
+
+Dans ce portage, c'est aussi une contrainte pratique : certains shaders utilisent une texture de bruit embarquée. Le même PNG doit être chargé avec les mêmes conventions de sampling, sinon le rendu dérive. Une texture 128×128 répétée, filtrée ou échantillonnée différemment peut suffire à changer le caractère d'un shader.
+
+### 4. La quantification
+
+Les familles `halftone`, `dithering` et certaines cartes de chaleur font l'inverse du bruit continu : elles forcent le rendu dans des niveaux discrets.
+
+```glsl
+float stepped = floor(value * steps) / steps;
+```
+
+Cette opération paraît brutale, et c'est justement son intérêt. Une image devient une trame, une couleur devient un palier, un gradient devient une série de bandes. C'est aussi le genre d'effet qui révèle immédiatement les différences d'arrondi entre plateformes.
+
+### 5. Les dérivées GPU
+
+La partie la plus subtile du portage a probablement été l'anti-aliasing par dérivées.
+
+En GLSL, `fwidth(x)` estime la variation de `x` sur un groupe de pixels voisins. C'est très pratique pour adoucir un bord :
+
+```glsl
+float edge = smoothstep(threshold - fwidth(v), threshold + fwidth(v), v);
+```
+
+Mais `fwidth` est une fonction liée à l'exécution GPU. Elle dépend de la façon dont le backend organise les fragments et calcule les dérivées. Pour un rendu interactif, c'est généralement ce qu'on veut. Pour un test de parité par image golden, c'est plus compliqué : deux plateformes peuvent être visuellement très proches, mais produire des pixels légèrement différents sur les bords.
+
+Le compromis retenu pour les tests a été de remplacer certains usages par une dérivée déterministe contrôlée quand la parité l'exige. Ce n'est pas une réécriture artistique du shader ; c'est une façon de distinguer le comportement que l'on veut tester de l'implémentation GPU locale.
+
+## Tester des shaders avec des images golden
+
+Le `frame` déterministe change tout. Si un shader dépend uniquement de ses uniforms, de ses textures et d'un numéro de frame, on peut le rendre hors écran et comparer le PNG obtenu à une image de référence.
+
+Le workflow ressemble à ceci :
+
+```text
+GLSL source -> manifest -> port Swift/Metal
+                    \-> port Flutter
+
+golden PNG web -> renderer natif -> comparaison perceptuelle
+```
+
+Chaque preset devient un cas de test visuel. Ce n'est pas parfait : une comparaison d'image ne prouve pas qu'un shader est mathématiquement identique. Mais elle attrape les erreurs qui comptent vraiment pour ce type de package :
+
+- mauvais ordre d'uniforms ;
+- couleur inversée ;
+- rotation ou origine incorrecte ;
+- texture manquante ;
+- erreur de sampling ;
+- anti-aliasing trop différent ;
+- frame ou vitesse non déterministe.
+
+Au final, les tests visuels sont devenus aussi importants que les tests unitaires classiques. Pour une bibliothèque de shaders, la vérité est dans l'image.
+
+## Les apps de démonstration
+
+Les packages ne sont pas seulement accompagnés d'un README. Ils ont chacun une app showcase.
+
+L'app SwiftUI et l'app Flutter permettent de parcourir tous les shaders, de changer de preset, de modifier les uniforms, de tester les sliders, les couleurs, le sizing, et de copier du code d'initialisation.
+
+Ce dernier point est volontaire. Un showcase qui montre un rendu est utile ; un showcase qui donne le code exact pour reproduire le rendu est beaucoup plus utile.
+
+La liste des shaders utilise des thumbnails statiques générés depuis les presets par défaut. J'ai choisi des assets pré-rendus plutôt qu'un rendu live de toutes les cellules : c'est plus stable, plus rapide, et suffisant pour une navigation. Les animations restent réservées à la vue active.
+
+## Publication
+
+Le travail de portage est maintenant au stade de finition publication :
+
+- documentation des APIs Swift et Dart ;
+- CI GitHub Actions pour les packages Swift et Flutter ;
+- dry-run pub.dev sans warning et score `pana` maximal côté Flutter ;
+- archive SwiftPM propre et build de l'app exemple côté Swift ;
+- apps exemple utilisables sur iOS, macOS et Android ;
+- assets de README et de pages package ;
+- dépôts propres à préparer avant les releases finales.
+
+Les liens définitifs vers les registres de packages seront ajoutés au moment de la publication.
+
+<div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
+  <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
+  <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-flutter" label="paper_shaders Flutter" />
+</div>
+
+## Ce que je retiens
+
+Le portage d'un shader n'est pas seulement une traduction de syntaxe. C'est une opération de conservation : conserver un espace de coordonnées, une notion de temps, une texture, un arrondi, un seuil, une intention visuelle.
+
+Les différences entre GLSL, MSL et Flutter ne sont pas insurmontables. Elles deviennent surtout visibles quand on exige de la parité, pas seulement une approximation jolie.
+
+C'est là que le projet est intéressant : une petite bibliothèque graphique devient un laboratoire très concret sur la portabilité du rendu. Les maths restent modestes, mais elles sont partout : dans les coordonnées, les rotations, le bruit, la quantification et les dérivées. Et c'est précisément parce qu'elles sont simples qu'elles doivent être parfaitement alignées.
