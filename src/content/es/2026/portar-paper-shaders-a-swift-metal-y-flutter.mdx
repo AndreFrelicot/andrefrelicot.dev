@@ -244,12 +244,12 @@ El `frame` determinista lo cambia todo. Si un shader depende solo de sus uniform
 
 El flujo de trabajo se ve así:
 
-```text
-fuente GLSL -> manifest -> port Swift/Metal
-                    \-> port Flutter
-
-PNG golden web -> renderer nativo -> comparación perceptual
-```
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/shader-port-parity-workflow.webp"
+  alt="Diagrama del flujo de port de GLSL a Swift/Metal y Flutter, seguido por la comparación visual con PNG golden web"
+  width={1672}
+  height={941}
+/>
 
 Cada preset se convierte en un caso de test visual — 120 renders golden en todo el catálogo. No es perfecto: comparar imágenes no demuestra que un shader sea matemáticamente idéntico. Pero detecta los errores que de verdad importan en este tipo de paquete:
 
@@ -302,6 +302,7 @@ Ambos ports están publicados como paquetes open source, cada uno con CI de GitH
 - **PaperShaders** para Swift se instala como dependencia SwiftPM desde las releases etiquetadas en GitHub.
 
 <div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
+  <PubDevLink href="https://pub.dev/packages/paper_shaders" label="paper_shaders en pub.dev" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-flutter" label="paper_shaders Flutter" />
 </div>
