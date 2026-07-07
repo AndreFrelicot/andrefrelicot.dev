@@ -21,7 +21,7 @@ image: /images/2026/paper-shaders/paper-shaders-showcase-grid.jpg
 
 Paper Shaders is a collection of WebGL fragment shaders designed to produce visual backgrounds, textures, halftone patterns, gradients, and generative effects through a small web API.
 
-The original project, [paper-design/shaders](https://github.com/paper-design/shaders), is published under the **Apache 2.0** license. The Swift/Metal and Flutter ports are independent ports, with explicit attribution to the source project.
+The original project, [paper-design/shaders](https://github.com/paper-design/shaders), is published under the **Apache 2.0** license.
 
 The original project is web-first: GLSL, React, canvas, textures, images, and presets. My goal was different: keep the same visual catalog, but make it usable in native SwiftUI and Flutter apps through publishable packages and demo apps that expose every parameter.
 
@@ -39,7 +39,7 @@ The most important part of the port is not the strangest shader function. It is 
 Every effect must receive the same families of parameters:
 
 - a stable coordinate space;
-- sizing modes such as `cover`, `contain`, `fit`, and `none`;
+- sizing modes such as `cover`, `contain`, and `none`;
 - scale, rotation, origin, and offsets;
 - a deterministic `frame`;
 - speed;
@@ -53,32 +53,26 @@ On the web, part of that logic naturally lives in the canvas, the vertex shader,
 ```swift
 SimplexNoiseView(
   params: .init(
-    colors: [
-      SIMD4<Float>(1, 0.48, 0, 1),
-      SIMD4<Float>(0.98, 1, 0.92, 1),
-      SIMD4<Float>(0.2, 0.05, 0.51, 1),
-    ],
+    colors: ["#FF7B00", "#F9FFEB", "#330D82"],
     stepsPerColor: 2,
-    softness: 0.12
-  ),
-  sizing: .init(fit: .cover, scale: 1)
+    softness: 0.12,
+    sizing: ShaderSizingParams(fit: .cover, scale: 1)
+  )
 )
 ```
 
 ```dart
-SimplexNoiseView(
+const SimplexNoiseView(
   params: SimplexNoiseParams(
-    colors: [
-      Color(0xffff7b00),
-      Color(0xfff9ffeb),
-      Color(0xff320d82),
-    ],
+    colors: ['#FF7B00', '#F9FFEB', '#330D82'],
     stepsPerColor: 2,
     softness: 0.12,
+    sizing: ShaderSizing(fit: ShaderFit.cover, scale: 1),
   ),
-  sizing: const ShaderSizing(fit: ShaderFit.cover, scale: 1),
 )
 ```
+
+Colors are plain hex strings on every platform, exactly as in the upstream React API: the same three strings produce the same render in React, SwiftUI, and Flutter, with no per-platform color conversion to get wrong.
 
 Initialization code matters. A visual preset is not only a JSON blob: in a real app, you want to copy a Swift or Dart snippet, paste it into the project, and get the same render.
 
@@ -103,9 +97,79 @@ The Flutter port has one advantage: a large portion of the original GLSL remains
 
 The Metal port is more explicit. You get types and native integration, but you pay for a shader-by-shader translation from GLSL to MSL.
 
+## The Catalog in Six Families
+
+Rather than a shader-by-shader walkthrough, here is the whole catalog grouped by visual family. Every image below is a golden render from the parity suite — each shader's default preset, exactly as the tests see it.
+
+**Gradients** — `mesh-gradient`, `static-mesh-gradient`, `static-radial-gradient`, `grain-gradient`: soft color fields, from an animated color mesh to a radial ramp, plus a version roughened by film-like grain.
+
+Mathematically, a mesh gradient is not a gradient but Shepard interpolation: every pixel averages the color points weighted by inverse distance, `w = 1/(d^3.5 + eps)`, while the points drift along `sin`/`cos` paths. Nothing is drawn — the softness is the average itself. `static-radial-gradient` is the most analytic of the family: it solves a ray–circle intersection (one quadratic per pixel) to produce an off-center radial falloff, and `grain-gradient` quantizes a shape field into a color ramp before roughening it with simplex grain.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-gradients.webp"
+  alt="Gradients — mesh-gradient, static-mesh-gradient, static-radial-gradient, grain-gradient"
+  width={1568}
+  height={392}
+/>
+
+**Organic noise** — `simplex-noise`, `perlin-noise`, `neuro-noise`, `smoke-ring`, `gem-smoke`, `warp`: continuous noise put to work — banded contours, speckled fields, glowing filaments, smoke, and marbled distortion.
+
+Three kinds of "noise" coexist here. True simplex (the classic Ashima implementation, two octaves scrolling in opposite directions), true 3D Perlin (corner gradients, quintic interpolation `t^3(t(6t-15)+10)`) stacked as fbm — *fractional Brownian motion*, the same noise summed again at increasing frequency and decreasing amplitude, up to 8 octaves here — and fake: `neuro-noise` is not noise at all but a 15-iteration loop that rotates the frame by one radian per step and accumulates `sin`/`cos`; the interference pattern makes the filaments. The other big idea in the family is domain warping: `warp` distorts the coordinates themselves (`uv.x += s/i * cos(t + 1.5*i*uv.y)`, up to 20 iterations) before drawing plain stripes, and `smoke-ring` computes its fbm in polar coordinates to ripple the radius of a ring. Noise used as a value gives clouds; noise used as a displacement gives marble.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-noise.webp"
+  alt="Organic noise — simplex-noise, perlin-noise, neuro-noise, smoke-ring, gem-smoke, warp"
+  width={1176}
+  height={784}
+/>
+
+**Polar effects** — `spiral`, `swirl`, `god-rays`: pure `(angle, radius)` territory — concentric spirals, twisted color bands, and rays fanning out from a point.
+
+The whole family fits in one formula: `fract(a*angle + b*f(radius))` after the polar transform. `spiral` takes `f(r) = pow(r, density)` — density tightens the arms; `swirl` takes a negative power, `pow(r, -twist)`, which twists N angular bands into a pinwheel; `god-rays` replaces the radial term with value noise sampled along the angle — noise in the angle is rays. The center is the sensitive spot: as the radius approaches zero the angle becomes unstable, and the `atan` discontinuity at ±π has to be hidden (`god-rays` blends two noise variants across the seam).
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-polar.webp"
+  alt="Polar effects — spiral, swirl, god-rays"
+  width={1176}
+  height={392}
+/>
+
+**Patterns and geometry** — `dot-grid`, `dot-orbit`, `voronoi`, `metaballs`, `color-panels`, `waves`, `pulsing-border`: repetition and cells — dot lattices, orbiting particles, Voronoi mosaics, merging metaballs, stacked translucent panels, zigzag waves, and a glowing border.
+
+Here space is partitioned before anything is drawn: `floor`/`fract` cut the plane into cells (`dot-grid`), a 3×3 Voronoi loop finds the nearest cell center (`dot-orbit`), and `voronoi` runs a second pass with Inigo Quilez's border metric — the distance to the bisector between neighboring cells — to get clean edges. Each cell receives a hash that varies size, opacity, or color: repetition without uniformity. `metaballs` is a scalar field — a sum of `pow(1 - d/2, p)` falloffs, one per ball — thresholded at 0.4: the blobs merge because the fields add up before the threshold. And `color-panels` hides a real perspective projection, `z = y/(sin(a) - y*cos(a))`, inside a 2D fragment shader.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-patterns.webp"
+  alt="Patterns and geometry — dot-grid, dot-orbit, voronoi, metaballs, color-panels, waves, pulsing-border"
+  width={1568}
+  height={784}
+/>
+
+**Halftone and dithering** — `halftone-dots`, `halftone-cmyk`, `dithering`, `image-dithering`, `heatmap`: the quantization family — a continuous input, procedural or a user image, forced into dots, CMYK separations, dither patterns, or heat levels.
+
+This is quantization against a threshold that is structured in space. `halftone-dots` turns luminance (Rec. 709 weights: `0.2126*R + 0.7152*G + 0.0722*B`) into a dot radius on a grid; `halftone-cmyk` separates the image into inks (`K = 1 - max(R, G, B)`) and screens each channel at its own angle — 15°, 75°, 0°, 45°, the actual print screen angles, which is where the rosettes come from. The two dithering shaders compare the signal against hardcoded 2×2, 4×4, and 8×8 Bayer matrices — `step(0.5, value + threshold - 0.5)`, one bit per pixel. `heatmap` closes the family: a heat scalar runs through a multi-stop color ramp — the lookup table (LUT) of thermal cameras. In every case the eye does the integration: dot size or dot density reads as tone again.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-halftone.webp"
+  alt="Halftone and dithering — halftone-dots, halftone-cmyk, dithering, image-dithering, heatmap"
+  width={1176}
+  height={784}
+/>
+
+**Materials** — `paper-texture`, `fluted-glass`, `liquid-metal`, `water`: simulated surfaces, usually applied over a user image — paper, ribbed glass, liquid chrome, and water.
+
+No real optics here — only UV displacement and simulated lighting. `fluted-glass` refracts by laterally shifting where the image is sampled, following a periodic per-flute profile (cubic, quadratic, or sine); `water` layers a low-frequency simplex (the waves) with a 6-iteration caustic accumulator, both displacing the UV, and the caustic squared becomes the highlight; `paper-texture` stacks noises (fibers as the gradient magnitude of an fbm, folds as distances to random points, drops as Worley cells), derives a normal by finite differences, and lights it with a plain Lambertian dot product; `liquid-metal` builds its chrome from a `fract()` stripe ramp whose red and blue channels are phase-shifted — chromatic dispersion as a subtraction. The question each pixel answers is never "where does the light go", but "which pixel of the image do I read, and how bright".
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-materials.webp"
+  alt="Materials — paper-texture, fluted-glass, liquid-metal, water"
+  width={1568}
+  height={392}
+/>
+
 ## The Small Math Behind Portability
 
-I will not detail all 29 shaders one by one. That would become a catalog. The more useful angle is the set of mathematical families that show up again and again, and explain why the same effect can remain portable.
+Rather than going back through the shaders one by one, the more useful angle is the small set of mathematical families that power all six groups above, and explain why the same effect can remain portable.
 
 ### 1. UV Space
 
@@ -172,9 +236,7 @@ float edge = smoothstep(threshold - fwidth(v), threshold + fwidth(v), v);
 
 But `fwidth` is tied to GPU execution. It depends on how the backend groups fragments and computes derivatives. For interactive rendering, that is usually what you want. For golden image parity, it is more complicated: two platforms can be visually very close while producing slightly different pixels along edges.
 
-The compromise for tests was to replace some uses with a controlled deterministic derivative when parity required it. This is not an artistic rewrite of the shader. It is a way to separate the behavior being tested from the local GPU implementation detail.
-
-The same distinction appeared on the performance side. For Swift/Metal golden renders, I kept MSL compilation in a precise mode with precise floating-point functions, because fast math quickly changes `sin`/`cos`-based noise. For the interactive showcase, the opposite default is better: fast math makes much more sense, especially for shaders like `neuro-noise` that accumulate a lot of trigonometry per pixel. Test parity and interactive feel do not have exactly the same constraints.
+The compromise for tests was to replace some uses with a controlled deterministic derivative when parity required it. Flutter made part of that decision for me: its test runner rejects `fwidth(float)` outright, along with dynamic uniform-array indexing. This is not an artistic rewrite of the shader. It is a way to separate the behavior being tested from the local GPU implementation detail.
 
 ## Testing Shaders With Golden Images
 
@@ -189,7 +251,7 @@ GLSL source -> manifest -> Swift/Metal port
 web golden PNG -> native renderer -> perceptual comparison
 ```
 
-Each preset becomes a visual test case. This is not perfect: image comparison does not prove that a shader is mathematically identical. But it catches the mistakes that matter for this kind of package:
+Each preset becomes a visual test case — 120 golden renders across the catalog. This is not perfect: image comparison does not prove that a shader is mathematically identical. But it catches the mistakes that matter for this kind of package:
 
 - wrong uniform order;
 - inverted color;
@@ -201,6 +263,27 @@ Each preset becomes a visual test case. This is not perfect: image comparison do
 
 For a shader library, the image is the contract.
 
+## The Performance Cost of Precise Math
+
+The first fullscreen runs of the Metal port on real devices were humbling: shaders that animate smoothly in a browser tab were dropping frames as native views. The GPU was not the problem. My parity setup was.
+
+To keep golden renders aligned with WebGL, the Metal pipeline compiles with safe math and precise floating-point functions. Fast math lets the compiler contract and reassociate float operations and substitute approximate `sin`/`cos` — enough to decorrelate hash-based noise from the reference; `perlin-noise` octaves visibly drift. So precise mode is exactly what parity tests need. It is also significantly slower on shaders like `neuro-noise` that accumulate a lot of trigonometry per pixel — and a fullscreen Retina view pushes far more pixels than a typical browser canvas.
+
+The package now treats parity and interactivity as two different rendering modes:
+
+```swift
+// Golden parity: precise float functions, fixed resolution.
+ShaderRenderOptions.fixed
+
+// Interactive: fast math, plus an internal resolution that
+// adapts until the view sustains the target frame rate.
+ShaderRenderOptions.adaptive(targetFrameRate: 60)
+```
+
+Fast math is the biggest lever; pixel count is the other one. The pixel budget mirrors upstream: a minimum pixel ratio and a cap on total rendered pixels. On top of that, adaptive mode runs a small feedback loop: frame durations are smoothed with an exponential moving average; when the smoothed value exceeds the target by more than about 12%, the internal resolution steps down; once there is comfortable headroom, it slowly steps back up, never below a configurable floor. Fragment-bound shaders scale almost linearly with pixel count, so a small resolution drop — usually invisible on an animated background — buys the frame rate back.
+
+Each view can also report live render metrics (frames per second, drawable size, effective pixel ratio, adaptive scale, math mode), which the demo app displays as an overlay. And to keep the comparison honest, the workbench grew a standalone fullscreen web page that runs the upstream WebGL shaders on the same devices and reports FPS, canvas size, and device pixel ratio. Same shader, same preset, same screen — the only way to know whether the native port is actually slower, or simply rendering more pixels.
+
 ## Demo Apps
 
 The packages are not backed only by README files. Each port has a showcase app.
@@ -211,19 +294,12 @@ That last detail is intentional. A showcase that displays a render is useful; a 
 
 Shader lists use static thumbnails generated from default presets. I chose pre-rendered assets instead of live rendering every cell: it is more stable, faster, and enough for navigation. Animation stays reserved for the active shader view.
 
-## Publication
+## Packages
 
-The project is now in publication polish:
+Both ports are published as open source packages, each with GitHub Actions CI, golden parity checks, and a demo app:
 
-- Swift and Dart API documentation;
-- GitHub Actions CI for both the Swift and Flutter packages;
-- a warning-free pub.dev dry run and maximal `pana` score for Flutter;
-- a clean SwiftPM source archive and Swift demo app build;
-- example apps for iOS, macOS, and Android;
-- README and package page assets;
-- clean repositories to prepare before the final releases.
-
-Final package registry links will be added when the releases are published.
+- **paper_shaders** for Flutter is available on [pub.dev](https://pub.dev/packages/paper_shaders);
+- **PaperShaders** for Swift installs as a SwiftPM dependency from the tagged GitHub releases.
 
 <div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
