@@ -50,7 +50,7 @@ Ce contrat est ce qui rend les ports comparables. Si `simplex-noise` ou `spiral`
 
 Dans le web original, une partie de cette logique est naturellement portée par le canvas, le vertex shader et l'environnement WebGL. Dans Swift/Metal et Flutter, il faut décider où placer cette responsabilité. Le choix retenu est volontairement explicite : le sizing et les uniforms font partie de l'API publique, et les presets exposent le même modèle mental d'une plateforme à l'autre.
 
-```swift title="Swift"
+```swift
 SimplexNoiseView(
   params: .init(
     colors: [
@@ -65,7 +65,7 @@ SimplexNoiseView(
 )
 ```
 
-```dart title="Dart"
+```dart
 SimplexNoiseView(
   params: SimplexNoiseParams(
     colors: [
@@ -174,6 +174,8 @@ Mais `fwidth` est une fonction liée à l'exécution GPU. Elle dépend de la fa�
 
 Le compromis retenu pour les tests a été de remplacer certains usages par une dérivée déterministe contrôlée quand la parité l'exige. Ce n'est pas une réécriture artistique du shader ; c'est une façon de distinguer le comportement que l'on veut tester de l'implémentation GPU locale.
 
+Le même principe s'est retrouvé côté performance. Pour les rendus golden Swift/Metal, j'ai gardé une compilation MSL en mode précis, avec les fonctions flottantes précises, parce que le fast math change assez vite les bruits fondés sur `sin`/`cos`. Pour le showcase interactif, c'est l'inverse : le mode rapide est le bon défaut, surtout sur des shaders comme `neuro-noise` qui accumulent beaucoup de trigonométrie par pixel. La parité de test et la sensation en interaction n'ont pas exactement les mêmes contraintes.
+
 ## Tester des shaders avec des images golden
 
 Le `frame` déterministe change tout. Si un shader dépend uniquement de ses uniforms, de ses textures et d'un numéro de frame, on peut le rendre hors écran et comparer le PNG obtenu à une image de référence.
@@ -224,7 +226,6 @@ Le travail de portage est maintenant au stade de finition publication :
 Les liens définitifs vers les registres de packages seront ajoutés au moment de la publication.
 
 <div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
-  <GitHubLink href="https://github.com/paper-design/shaders" label="Projet original paper-design/shaders" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-flutter" label="paper_shaders Flutter" />
 </div>

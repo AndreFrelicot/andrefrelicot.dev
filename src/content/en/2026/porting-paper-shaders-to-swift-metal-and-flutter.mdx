@@ -50,7 +50,7 @@ That contract makes the ports comparable. If `simplex-noise` or `spiral` do not 
 
 On the web, part of that logic naturally lives in the canvas, the vertex shader, and the WebGL environment. In Swift/Metal and Flutter, that responsibility has to be placed deliberately. The chosen approach is explicit: sizing and uniforms are part of the public API, and presets expose the same mental model across platforms.
 
-```swift title="Swift"
+```swift
 SimplexNoiseView(
   params: .init(
     colors: [
@@ -65,7 +65,7 @@ SimplexNoiseView(
 )
 ```
 
-```dart title="Dart"
+```dart
 SimplexNoiseView(
   params: SimplexNoiseParams(
     colors: [
@@ -174,6 +174,8 @@ But `fwidth` is tied to GPU execution. It depends on how the backend groups frag
 
 The compromise for tests was to replace some uses with a controlled deterministic derivative when parity required it. This is not an artistic rewrite of the shader. It is a way to separate the behavior being tested from the local GPU implementation detail.
 
+The same distinction appeared on the performance side. For Swift/Metal golden renders, I kept MSL compilation in a precise mode with precise floating-point functions, because fast math quickly changes `sin`/`cos`-based noise. For the interactive showcase, the opposite default is better: fast math makes much more sense, especially for shaders like `neuro-noise` that accumulate a lot of trigonometry per pixel. Test parity and interactive feel do not have exactly the same constraints.
+
 ## Testing Shaders With Golden Images
 
 The deterministic `frame` changes everything. If a shader depends only on uniforms, textures, and a frame number, it can be rendered offscreen and compared against a reference PNG.
@@ -224,7 +226,6 @@ The project is now in publication polish:
 Final package registry links will be added when the releases are published.
 
 <div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
-  <GitHubLink href="https://github.com/paper-design/shaders" label="Original project paper-design/shaders" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-flutter" label="paper_shaders Flutter" />
 </div>
