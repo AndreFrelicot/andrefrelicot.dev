@@ -1,0 +1,315 @@
+---
+title: "Portar Paper Shaders a Swift/Metal y Flutter"
+description: "Una mirada al port de 29 shaders WebGL a Swift/Metal y Flutter: uniforms compartidos, diferencias entre lenguajes de shader, renders golden, presets y las pequeñas matemáticas que hacen posible la paridad visual."
+date: 2026-07-06
+tags: [apps, source_code, shaders, glsl, msl, metal, swift, flutter, dart, graphics, pubdev, swiftpm, generative-art]
+en_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
+fr_mdx: porter-paper-shaders-swift-metal-flutter.mdx
+pt_mdx: portando-paper-shaders-para-swift-metal-e-flutter.mdx
+es_mdx: portar-paper-shaders-a-swift-metal-y-flutter.mdx
+image: /images/2026/paper-shaders/paper-shaders-showcase-grid.jpg
+---
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/paper-shaders/paper-shaders-showcase-grid.jpg"
+  darkSrc="/images/2026/paper-shaders/paper-shaders-showcase-grid.jpg"
+  alt="Una cuadrícula de renders de Paper Shaders generados desde los presets por defecto"
+  width={1728}
+  height={1440}
+  priority={true}
+/>
+
+Paper Shaders es una colección de fragment shaders WebGL diseñada para producir fondos visuales, texturas, patrones de halftone, gradientes y efectos generativos a través de una pequeña API web.
+
+El proyecto original, [paper-design/shaders](https://github.com/paper-design/shaders), está publicado bajo la licencia **Apache 2.0**.
+
+El proyecto original es web-first: GLSL, React, canvas, texturas, imágenes y presets. Mi objetivo era distinto: conservar el mismo catálogo visual, pero hacerlo utilizable en aplicaciones nativas SwiftUI y Flutter, con paquetes publicables y apps de demostración que exponen todos los parámetros.
+
+El resultado se divide en dos ports:
+
+- **PaperShaders** para Swift/Metal, con un núcleo MetalKit y una capa SwiftUI.
+- **paper_shaders** para Flutter, con runtime shaders de Flutter y una API Dart tipada.
+
+No es solo un ejercicio de traducción sintáctica. Un shader que compila no es necesariamente un shader que produce la misma imagen. El verdadero trabajo fue construir un contrato compartido entre tres runtimes: WebGL, Metal y Flutter.
+
+## El contrato compartido
+
+La parte más importante del port no es la función de shader más exótica. Es el contrato que rodea al shader.
+
+Cada efecto debe recibir las mismas familias de parámetros:
+
+- un espacio de coordenadas estable;
+- modos de sizing como `cover`, `contain` y `none`;
+- escala, rotación, origen y offsets;
+- un `frame` determinista;
+- una velocidad;
+- colores, imágenes o texturas de ruido según el shader;
+- presets con nombre.
+
+Ese contrato es lo que hace comparables los ports. Si `simplex-noise` o `spiral` no reciben el mismo espacio UV, el mismo origen y la misma noción de tiempo, la discusión sobre la fidelidad del shader llega demasiado tarde: los sistemas ya son diferentes.
+
+En la web, parte de esa lógica vive de forma natural en el canvas, el vertex shader y el entorno WebGL. En Swift/Metal y Flutter, esa responsabilidad hay que colocarla deliberadamente. El enfoque elegido es explícito: el sizing y los uniforms forman parte de la API pública, y los presets exponen el mismo modelo mental en todas las plataformas.
+
+```swift
+SimplexNoiseView(
+  params: .init(
+    colors: ["#FF7B00", "#F9FFEB", "#330D82"],
+    stepsPerColor: 2,
+    softness: 0.12,
+    sizing: ShaderSizingParams(fit: .cover, scale: 1)
+  )
+)
+```
+
+```dart
+const SimplexNoiseView(
+  params: SimplexNoiseParams(
+    colors: ['#FF7B00', '#F9FFEB', '#330D82'],
+    stepsPerColor: 2,
+    softness: 0.12,
+    sizing: ShaderSizing(fit: ShaderFit.cover, scale: 1),
+  ),
+)
+```
+
+Los colores son simples cadenas hexadecimales en todas las plataformas, exactamente como en la API React original: las mismas tres cadenas producen el mismo render en React, SwiftUI y Flutter, sin ninguna conversión de color específica de cada plataforma que pueda salir mal.
+
+El código de inicialización importa. Un preset visual no es solo un JSON de valores: en una app real, quieres copiar un snippet Swift o Dart, pegarlo en el proyecto y obtener el mismo render.
+
+## Tres lenguajes, no tres renders
+
+La implementación WebGL original usa GLSL. El port Swift usa Metal Shading Language. Flutter también acepta GLSL como entrada, pero dentro de las restricciones de los runtime shaders de Flutter, compilados por la toolchain Flutter/Impeller.
+
+Sobre el papel, los lenguajes se parecen lo suficiente como para dar una falsa impresión de simplicidad. En la práctica, los detalles importan:
+
+| Tema | WebGL / GLSL | Metal / MSL | Runtime shader de Flutter |
+|---|---|---|---|
+| Coordenadas de fragmento | `gl_FragCoord` | coordenadas pasadas al fragmento | `FlutterFragCoord()` |
+| Módulo flotante | `mod` | `fmod` + helpers | `mod` GLSL |
+| Ángulos | `atan(y, x)` | `atan2(y, x)` | `atan(y, x)` |
+| Uniforms booleanos | aceptados | tipos Metal | a menudo codificados como floats |
+| Arrays de uniforms | `vec4 colors[10]` | buffers tipados | offsets estrictos en Dart |
+| Texturas | samplers WebGL | texturas Metal | samplers de Flutter, sin todo el ecosistema WebGL |
+
+Lo difícil no es encontrar la función equivalente. Es preservar las convenciones implícitas: orientación, pixel ratio, interpolación, precisión, orden de los uniforms, samplers y comportamiento en los bordes.
+
+El port de Flutter tiene una ventaja: gran parte del GLSL original sigue siendo reutilizable. Pero también impone una restricción estricta: cada uniform tiene una posición exacta en el buffer que Flutter espera. Un offset incorrecto no siempre rompe la compilación; puede convertir un color en una escala, un booleano en un umbral o un offset en una velocidad.
+
+El port de Metal es más explícito. Ganas tipos e integración nativa, pero pagas la traducción de GLSL a MSL shader por shader.
+
+## El catálogo en seis familias
+
+En lugar de un recorrido shader por shader, aquí está el catálogo completo agrupado por familia visual. Cada imagen de abajo es un render golden de la suite de paridad: el preset por defecto de cada shader, exactamente como lo ven los tests.
+
+**Gradientes** — `mesh-gradient`, `static-mesh-gradient`, `static-radial-gradient`, `grain-gradient`: campos de color suaves, del mesh de colores animado al degradado radial, más una versión texturizada con grano de película.
+
+Matemáticamente, un mesh gradient no es un degradado sino una interpolación de Shepard: cada píxel promedia los puntos de color ponderados por el inverso de la distancia, `w = 1/(d^3.5 + eps)`, mientras los puntos derivan por trayectorias en `sin`/`cos`. No se dibuja nada: la suavidad es el propio promedio. `static-radial-gradient` es el más analítico de la familia: resuelve una intersección rayo-círculo (una ecuación cuadrática por píxel) para producir un falloff radial descentrado, y `grain-gradient` cuantiza un campo de forma en una rampa de colores antes de darle textura con grano simplex.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-gradients.webp"
+  alt="Gradientes — mesh-gradient, static-mesh-gradient, static-radial-gradient, grain-gradient"
+  width={1568}
+  height={392}
+/>
+
+**Ruido orgánico** — `simplex-noise`, `perlin-noise`, `neuro-noise`, `smoke-ring`, `gem-smoke`, `warp`: el ruido continuo puesto a trabajar — contornos en bandas, campos moteados, filamentos brillantes, humo y distorsión marmolada.
+
+Aquí conviven tres clases de "ruido". Simplex verdadero (la clásica implementación de Ashima, dos octavas desplazándose en sentidos opuestos), Perlin 3D verdadero (gradientes en las esquinas, interpolación quíntica `t^3(t(6t-15)+10)`) apilado como fbm — *fractional Brownian motion*, el mismo ruido sumado de nuevo a frecuencia creciente y amplitud decreciente, aquí hasta 8 octavas — y falso: `neuro-noise` no es ruido en absoluto, sino un bucle de 15 iteraciones que rota el sistema de referencia un radián por paso y acumula `sin`/`cos`; el patrón de interferencia dibuja los filamentos. La otra gran idea de la familia es el domain warping: `warp` deforma las propias coordenadas (`uv.x += s/i * cos(t + 1.5*i*uv.y)`, hasta 20 iteraciones) antes de dibujar simples franjas, y `smoke-ring` calcula su fbm en coordenadas polares para ondular el radio de un anillo. El ruido usado como valor da nubes; usado como desplazamiento, da mármol.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-noise.webp"
+  alt="Ruido orgánico — simplex-noise, perlin-noise, neuro-noise, smoke-ring, gem-smoke, warp"
+  width={1176}
+  height={784}
+/>
+
+**Efectos polares** — `spiral`, `swirl`, `god-rays`: territorio puro del par `(ángulo, radio)` — espirales concéntricas, bandas de color retorcidas y rayos que se abren desde un punto.
+
+Toda la familia cabe en una fórmula: `fract(a*angle + b*f(radius))` después del paso a coordenadas polares. `spiral` toma `f(r) = pow(r, density)` — la densidad aprieta los brazos; `swirl` toma una potencia negativa, `pow(r, -twist)`, que retuerce N bandas angulares en un molinete; `god-rays` sustituye el término radial por value noise muestreado a lo largo del ángulo — ruido en el ángulo son rayos. El centro es el punto sensible: cuando el radio tiende a cero, el ángulo se vuelve inestable, y la discontinuidad de `atan` en ±π hay que ocultarla (`god-rays` funde dos variantes de ruido a ambos lados de la costura).
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-polar.webp"
+  alt="Efectos polares — spiral, swirl, god-rays"
+  width={1176}
+  height={392}
+/>
+
+**Patrones y geometría** — `dot-grid`, `dot-orbit`, `voronoi`, `metaballs`, `color-panels`, `waves`, `pulsing-border`: repetición y celdas — retículas de puntos, partículas en órbita, mosaicos de Voronoi, metaballs que se fusionan, paneles translúcidos apilados, ondas en zigzag y un borde luminoso.
+
+Aquí el espacio se particiona antes de dibujar nada: `floor`/`fract` cortan el plano en celdas (`dot-grid`), un bucle de Voronoi 3×3 encuentra el centro de celda más cercano (`dot-orbit`), y `voronoi` hace una segunda pasada con la métrica de borde de Inigo Quilez — la distancia a la bisectriz entre celdas vecinas — para obtener aristas limpias. Cada celda recibe un hash que hace variar tamaño, opacidad o color: repetición sin uniformidad. `metaballs` es un campo escalar — una suma de falloffs `pow(1 - d/2, p)`, uno por bola — al que se aplica un umbral en 0.4: las formas se funden porque los campos se suman antes del umbral. Y `color-panels` esconde una proyección en perspectiva real, `z = y/(sin(a) - y*cos(a))`, dentro de un fragment shader 2D.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-patterns.webp"
+  alt="Patrones y geometría — dot-grid, dot-orbit, voronoi, metaballs, color-panels, waves, pulsing-border"
+  width={1568}
+  height={784}
+/>
+
+**Halftone y dithering** — `halftone-dots`, `halftone-cmyk`, `dithering`, `image-dithering`, `heatmap`: la familia de la cuantización — una entrada continua, procedural o una imagen del usuario, forzada a puntos, separaciones CMYK, tramas de dithering o niveles de calor.
+
+Es cuantización contra un umbral estructurado en el espacio. `halftone-dots` convierte la luminancia (pesos Rec. 709: `0.2126*R + 0.7152*G + 0.0722*B`) en el radio de un punto sobre una retícula; `halftone-cmyk` separa la imagen en tintas (`K = 1 - max(R, G, B)`) y trama cada canal con su propio ángulo — 15°, 75°, 0°, 45°, los ángulos de trama reales de la imprenta, de ahí vienen las rosetas. Los dos shaders de dithering comparan la señal con matrices de Bayer de 2×2, 4×4 y 8×8 incrustadas como constantes — `step(0.5, value + threshold - 0.5)`, un bit por píxel. `heatmap` cierra la familia: un escalar de calor recorre una rampa de color de múltiples paradas — la tabla de consulta (LUT) de las cámaras térmicas. En todos los casos es el ojo el que hace la integración: el tamaño o la densidad de los puntos vuelve a leerse como tono.
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-halftone.webp"
+  alt="Halftone y dithering — halftone-dots, halftone-cmyk, dithering, image-dithering, heatmap"
+  width={1176}
+  height={784}
+/>
+
+**Materiales** — `paper-texture`, `fluted-glass`, `liquid-metal`, `water`: superficies simuladas, casi siempre aplicadas sobre una imagen del usuario — papel, vidrio estriado, cromo líquido y agua.
+
+Aquí no hay óptica real: solo desplazamiento de UV e iluminación simulada. `fluted-glass` refracta desplazando lateralmente el punto donde se muestrea la imagen, siguiendo un perfil periódico por estría (cúbico, cuadrático o senoidal); `water` superpone un simplex de baja frecuencia (las olas) y un acumulador de cáusticas de 6 iteraciones, ambos desplazando el UV, y el cuadrado de la cáustica se convierte en el brillo; `paper-texture` apila ruidos (las fibras como la magnitud del gradiente de un fbm, los pliegues como distancias a puntos aleatorios, las gotas como celdas de Worley), deriva una normal por diferencias finitas y la ilumina con un simple producto escalar lambertiano; `liquid-metal` fabrica su cromo con una rampa de bandas en `fract()` cuyos canales rojo y azul están desfasados — la dispersión cromática reducida a una resta. La pregunta que responde cada píxel nunca es "adónde va la luz", sino "qué píxel de la imagen leo, y con qué brillo".
+
+<ZoomableThemeImage
+  src="/images/2026/paper-shaders/families/family-materials.webp"
+  alt="Materiales — paper-texture, fluted-glass, liquid-metal, water"
+  width={1568}
+  height={392}
+/>
+
+## Las pequeñas matemáticas detrás de la portabilidad
+
+En lugar de volver a repasar los shaders uno a uno, el ángulo más útil es el pequeño conjunto de familias matemáticas que impulsan los seis grupos de arriba y explican por qué el mismo efecto puede seguir siendo portable.
+
+### 1. El espacio UV
+
+La mayoría de los shaders empiezan convirtiendo el píxel actual en coordenadas normalizadas.
+
+```glsl
+vec2 uv = fragCoord / resolution;
+vec2 p = uv - 0.5;
+```
+
+A partir de ahí, el shader puede mover el origen, aplicar una escala, rotar la base y pasar esas coordenadas a una función visual. Esa es la base común.
+
+La rotación, por ejemplo, no es magia misteriosa de shaders: es una matriz 2D.
+
+```glsl
+mat2 rotate(float a) {
+  float c = cos(a);
+  float s = sin(a);
+  return mat2(c, -s, s, c);
+}
+```
+
+Si esta transformación no es idéntica entre plataformas, el shader puede estar perfectamente traducido y aun así producir una imagen desplazada, invertida o estirada.
+
+### 2. Coordenadas polares
+
+Efectos como `spiral`, `swirl`, los degradados radiales y varias distorsiones dependen de convertir `(x, y)` en `(ángulo, radio)`.
+
+```glsl
+float angle = atan(p.y, p.x);
+float radius = length(p);
+float bands = sin(angle + radius * frequency);
+```
+
+Es una transformación compacta, pero sensible. Cerca del centro, el radio tiende a cero; el ángulo se vuelve inestable; las pequeñas diferencias de precisión o de anti-aliasing se hacen visibles. Es exactamente el tipo de shader en el que un port puede parecer correcto a primera vista y luego revelar un patrón en cruz, un borde dentado o una oscilación extraña en un backend concreto.
+
+### 3. El ruido
+
+Las texturas de papel, el grano, el humo y los degradados orgánicos usan el ruido como una fuente controlada de variación.
+
+El ruido no está solo para ensuciar la imagen. Rompe la perfección numérica. Una superficie demasiado regular parece artificial; un poco de ruido la acerca al papel, a la tinta o al material.
+
+En este port, el ruido es además una restricción práctica: algunos shaders usan una textura de ruido embebida. El mismo PNG debe cargarse con las mismas convenciones de muestreo, o el render deriva. Una textura de 128×128 repetida, filtrada o muestreada de forma distinta puede bastar para cambiar el carácter de un shader.
+
+### 4. La cuantización
+
+Las familias `halftone`, `dithering` y heatmap hacen lo contrario del ruido continuo: fuerzan el render a niveles discretos.
+
+```glsl
+float stepped = floor(value * steps) / steps;
+```
+
+La operación es deliberadamente brusca. Una imagen se convierte en una trama, un color en un nivel y un degradado en una serie de bandas. Es también el tipo de efecto que expone de inmediato las diferencias de redondeo entre plataformas.
+
+### 5. Las derivadas de GPU
+
+La parte más sutil del port fue probablemente el anti-aliasing basado en derivadas.
+
+En GLSL, `fwidth(x)` estima cuánto cambia `x` entre píxeles vecinos. Es muy útil para suavizar un borde:
+
+```glsl
+float edge = smoothstep(threshold - fwidth(v), threshold + fwidth(v), v);
+```
+
+Pero `fwidth` está ligada a la ejecución en la GPU. Depende de cómo el backend agrupa los fragmentos y calcula las derivadas. Para el renderizado interactivo, suele ser lo que quieres. Para la paridad con imágenes golden es más complicado: dos plataformas pueden estar visualmente muy cerca y producir píxeles ligeramente distintos en los bordes.
+
+El compromiso para los tests fue sustituir algunos usos por una derivada determinista controlada cuando la paridad lo exigía. Flutter tomó parte de esa decisión por mí: su runner de tests rechaza `fwidth(float)` de plano, junto con la indexación dinámica de arrays de uniforms. No es una reescritura artística del shader. Es una forma de separar el comportamiento que se quiere testear del detalle de implementación local de la GPU.
+
+## Testear shaders con imágenes golden
+
+El `frame` determinista lo cambia todo. Si un shader depende solo de sus uniforms, sus texturas y un número de frame, se puede renderizar fuera de pantalla y comparar con un PNG de referencia.
+
+El flujo de trabajo se ve así:
+
+```text
+fuente GLSL -> manifest -> port Swift/Metal
+                    \-> port Flutter
+
+PNG golden web -> renderer nativo -> comparación perceptual
+```
+
+Cada preset se convierte en un caso de test visual — 120 renders golden en todo el catálogo. No es perfecto: comparar imágenes no demuestra que un shader sea matemáticamente idéntico. Pero detecta los errores que de verdad importan en este tipo de paquete:
+
+- orden incorrecto de los uniforms;
+- color invertido;
+- rotación u origen incorrectos;
+- textura ausente;
+- error de muestreo;
+- deriva del anti-aliasing;
+- frame o velocidad no deterministas.
+
+Para una biblioteca de shaders, la imagen es el contrato.
+
+## El costo en rendimiento del modo preciso
+
+Las primeras ejecuciones a pantalla completa del port de Metal en dispositivos reales fueron una lección de humildad: shaders perfectamente fluidos en una pestaña del navegador perdían frames como vistas nativas. La GPU no era el problema. Mi configuración de paridad, sí.
+
+Para mantener los renders golden alineados con WebGL, el pipeline de Metal compila con safe math y funciones de punto flotante precisas. El fast math permite al compilador contraer y reasociar operaciones de punto flotante y sustituir `sin`/`cos` por aproximaciones — suficiente para descorrelacionar de la referencia el ruido basado en hash; las octavas de `perlin-noise` derivan visiblemente. El modo preciso es, entonces, exactamente lo que necesitan los tests de paridad. Pero también es considerablemente más lento en shaders como `neuro-noise`, que acumulan mucha trigonometría por píxel — y una vista Retina a pantalla completa mueve muchos más píxeles que un canvas de navegador típico.
+
+El paquete trata ahora la paridad y la interactividad como dos modos de renderizado distintos:
+
+```swift
+// Paridad golden: funciones de punto flotante precisas, resolución fija.
+ShaderRenderOptions.fixed
+
+// Interactivo: fast math, más una resolución interna que
+// se adapta hasta sostener la tasa de frames objetivo.
+ShaderRenderOptions.adaptive(targetFrameRate: 60)
+```
+
+El fast math es la palanca más grande; el número de píxeles es la otra. El presupuesto de píxeles replica el del proyecto original: un pixel ratio mínimo y un tope de píxeles renderizados en total. Encima de eso, el modo adaptativo ejecuta un pequeño bucle de retroalimentación: las duraciones de frame se suavizan con una media móvil exponencial; cuando el valor suavizado supera el objetivo en más de un 12 % aproximadamente, la resolución interna baja un escalón; en cuanto vuelve a haber margen cómodo, sube lentamente, sin caer nunca por debajo de un piso configurable. Los shaders limitados por el fragmento escalan casi linealmente con el número de píxeles: una pequeña bajada de resolución — normalmente invisible en un fondo animado — recupera la tasa de frames.
+
+Cada vista puede además reportar métricas de render en vivo (frames por segundo, tamaño del drawable, pixel ratio efectivo, escala adaptativa, modo matemático), que la app de demostración muestra como overlay. Y para mantener la comparación honesta, el workbench ganó una página web independiente a pantalla completa que ejecuta los shaders WebGL originales en los mismos dispositivos y reporta FPS, tamaño del canvas y device pixel ratio. Mismo shader, mismo preset, misma pantalla: la única forma de saber si el port nativo es realmente más lento o simplemente está renderizando más píxeles.
+
+## Apps de demostración
+
+Los paquetes no están respaldados solo por archivos README. Cada port tiene una app showcase.
+
+Las apps SwiftUI y Flutter permiten recorrer todos los shaders, cambiar de preset, editar los uniforms, probar sliders, colores y sizing, y copiar el código de inicialización.
+
+Ese último detalle es intencional. Un showcase que muestra un render es útil; un showcase que te da el código exacto para reproducirlo es mucho más útil.
+
+Las listas de shaders usan miniaturas estáticas generadas desde los presets por defecto. Elegí assets prerenderizados en lugar de renderizar en vivo cada celda: es más estable, más rápido y suficiente para navegar. La animación queda reservada a la vista del shader activo.
+
+## Los paquetes
+
+Ambos ports están publicados como paquetes open source, cada uno con CI de GitHub Actions, checks de paridad golden y una app de demostración:
+
+- **paper_shaders** para Flutter está disponible en [pub.dev](https://pub.dev/packages/paper_shaders);
+- **PaperShaders** para Swift se instala como dependencia SwiftPM desde las releases etiquetadas en GitHub.
+
+<div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
+  <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
+  <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-flutter" label="paper_shaders Flutter" />
+</div>
+
+## Lo que me llevo
+
+Portar un shader no es solo traducir sintaxis. Es un problema de conservación: conservar un espacio de coordenadas, una noción de tiempo, una textura, un comportamiento de redondeo, un umbral y una intención visual.
+
+Las diferencias entre GLSL, MSL y Flutter son manejables. Se vuelven visibles sobre todo cuando exiges paridad, no solo una aproximación que se vea bien.
+
+Ahí es donde el proyecto se pone interesante: una pequeña biblioteca gráfica se convierte en un laboratorio muy concreto de portabilidad del render. Las matemáticas siguen siendo modestas, pero están en todas partes: en las coordenadas, las rotaciones, el ruido, la cuantización y las derivadas. Y precisamente porque son simples, hay que alinearlas con cuidado.

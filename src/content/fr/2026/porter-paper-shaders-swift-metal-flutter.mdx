@@ -5,8 +5,8 @@ date: 2026-07-06
 tags: [apps, source_code, shaders, glsl, msl, metal, swift, flutter, dart, graphics, pubdev, swiftpm, generative-art]
 en_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
 fr_mdx: porter-paper-shaders-swift-metal-flutter.mdx
-pt_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
-es_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
+pt_mdx: portando-paper-shaders-para-swift-metal-e-flutter.mdx
+es_mdx: portar-paper-shaders-a-swift-metal-y-flutter.mdx
 image: /images/2026/paper-shaders/paper-shaders-showcase-grid.jpg
 ---
 
@@ -125,7 +125,7 @@ Trois sortes de « bruit » cohabitent ici. Du vrai simplex (l'implémentation A
 
 **Effets polaires** — `spiral`, `swirl`, `god-rays` : le territoire du couple `(angle, rayon)` — spirales concentriques, bandes de couleur torsadées et rayons projetés depuis un point.
 
-Toute la famille tient dans une formule : `fract(a*angle + b*f(rayon))` après le passage en polaire. `spiral` prend `f(r) = pow(r, densite)` — la densité resserre les bras ; `swirl` prend une puissance négative, `pow(r, -twist)`, qui tord N bandes angulaires en moulinet ; `god-rays` remplace le terme radial par du bruit échantillonné le long de l'angle — du bruit dans l'angle, ce sont des rayons. Le centre est le point sensible : quand le rayon tend vers zéro l'angle devient instable, et la discontinuité de `atan` à ±π doit être masquée (`god-rays` fond deux variantes de bruit de part et d'autre de la couture).
+Toute la famille tient dans une formule : `fract(a*angle + b*f(radius))` après le passage en polaire. `spiral` prend `f(r) = pow(r, density)` — la densité resserre les bras ; `swirl` prend une puissance négative, `pow(r, -twist)`, qui tord N bandes angulaires en moulinet ; `god-rays` remplace le terme radial par du bruit échantillonné le long de l'angle — du bruit dans l'angle, ce sont des rayons. Le centre est le point sensible : quand le rayon tend vers zéro l'angle devient instable, et la discontinuité de `atan` à ±π doit être masquée (`god-rays` fond deux variantes de bruit de part et d'autre de la couture).
 
 <ZoomableThemeImage
   src="/images/2026/paper-shaders/families/family-polar.webp"
@@ -147,7 +147,7 @@ Ici, on partitionne l'espace avant de dessiner : `floor`/`fract` découpent le p
 
 **Halftone et dithering** — `halftone-dots`, `halftone-cmyk`, `dithering`, `image-dithering`, `heatmap` : la famille de la quantification — une entrée continue, procédurale ou une image utilisateur, forcée en points, en séparations CMJN, en trames de dithering ou en niveaux de chaleur.
 
-C'est de la quantification contre un seuil structuré dans l'espace. `halftone-dots` transforme la luminance (pondération Rec. 709 : `0.2126*R + 0.7152*G + 0.0722*B`) en rayon de point sur une grille ; `halftone-cmyk` sépare l'image en encres (`K = 1 - max(R, G, B)`) et trame chaque canal à son propre angle — 15°, 75°, 0°, 45°, les vrais angles de trame de l'imprimerie, d'où viennent les rosettes. Les deux shaders de dithering comparent le signal à des matrices de Bayer 2×2, 4×4 et 8×8 codées en dur — `step(0.5, valeur + seuil - 0.5)`, un bit par pixel. `heatmap` referme la famille : un scalaire de chaleur traverse une rampe multi-couleurs — la table de correspondance (LUT) des caméras thermiques. Dans tous les cas, c'est l'œil qui fait l'intégration : la taille ou la densité des points redevient du ton.
+C'est de la quantification contre un seuil structuré dans l'espace. `halftone-dots` transforme la luminance (pondération Rec. 709 : `0.2126*R + 0.7152*G + 0.0722*B`) en rayon de point sur une grille ; `halftone-cmyk` sépare l'image en encres (`K = 1 - max(R, G, B)`) et trame chaque canal à son propre angle — 15°, 75°, 0°, 45°, les vrais angles de trame de l'imprimerie, d'où viennent les rosettes. Les deux shaders de dithering comparent le signal à des matrices de Bayer 2×2, 4×4 et 8×8 codées en dur — `step(0.5, value + threshold - 0.5)`, un bit par pixel. `heatmap` referme la famille : un scalaire de chaleur traverse une rampe multi-couleurs — la table de correspondance (LUT) des caméras thermiques. Dans tous les cas, c'est l'œil qui fait l'intégration : la taille ou la densité des points redevient du ton.
 
 <ZoomableThemeImage
   src="/images/2026/paper-shaders/families/family-halftone.webp"
