@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
   allowedDevOrigins: ["192.168.1.122", "192.168.1.*"],
+  // Pin the workspace root to this project. A stray pnpm-workspace.yaml in the
+  // parent directory otherwise makes Next.js infer the wrong root and fail to
+  // resolve dependencies like tailwindcss.
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default withMDX(nextConfig);
