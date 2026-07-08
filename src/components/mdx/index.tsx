@@ -8,6 +8,7 @@ import { PlayStoreLink } from "./play-store-link";
 import { PubDevLink } from "./pub-dev-link";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import { ThreeCube } from "./three-cube";
+import { VideoEmbed } from "./video-embed";
 import { YouTubeEmbed } from "./youtube-embed";
 import { ZoomableThemeImage } from "./zoomable-theme-image";
 
@@ -29,6 +30,7 @@ export const mdxComponents = {
   PubDevLink,
   ScreenshotGallery,
   ThreeCube,
+  VideoEmbed,
   // Article images are zoomable everywhere: ThemeImage routes to the
   // ZoomableThemeImage so the shared full-screen viewer applies to all posts.
   ThemeImage: ZoomableThemeImage,
