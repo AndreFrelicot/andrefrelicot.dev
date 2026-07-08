@@ -2,6 +2,7 @@
 title: "Lorenz Clash: building a WebGPU experience you're part of"
 description: "How a heat wave became a WebGPU camera experience: Lorenz math, shader rendering, music-aware effects, local video export, and fullscreen web-app shipping."
 date: 2026-06-26
+modified: 2026-07-08
 tags: [apps, source_code, webgpu, wgsl, shaders, lorenz-attractor, chaos-theory, generative-art, pwa, graphics, typescript, audio, webcodecs]
 en_mdx: lorenz-clash-a-webgpu-experience-you-are-part-of.mdx
 fr_mdx: lorenz-clash-experience-webgpu-dont-vous-faites-partie.mdx
@@ -58,6 +59,12 @@ This article is the deep dive: the **math** behind the chaos, the **WebGPU rende
     </div>
   </div>
 </Callout>
+
+<YouTubeEmbed
+  videoId="2sM0_nSosyQ"
+  title="Lorenz Clash demo"
+  caption="Lorenz Clash running live: the camera feed sliced and dissolved along the Lorenz attractor."
+/>
 
 ## An experience you are part of
 
@@ -604,6 +611,14 @@ The result: continuous camera-and-capture went from a crash at **~5 minutes** to
 A **Progressive Web App** (PWA) is a website that the browser can treat more like an app: it can be added to the home screen, get its own icon, launch in a standalone or fullscreen window, and cache enough of itself to open reliably. For Lorenz Clash, the important part is not offline mode; it is **immersion**. The piece needs to escape the browser chrome, especially on mobile, so the camera canvas can fill the screen like an installed app.
 
 That installable shape comes from two small web primitives: a **web app manifest**, which describes the app's name, icons, colors and display mode; and a **service worker**, which lets the browser recognise that the site has an app shell it can control. Chrome on desktop and Android supports the full install flow from the browser UI. On iOS and iPadOS, install it from Safari: open the site, tap Share, then **Add to Home Screen**.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/install-safari-ipad-add-to-home-screen.png"
+  darkSrc="/images/2026/lorenz-clash/install-safari-ipad-add-to-home-screen.png"
+  alt="Installing Lorenz Clash on iPad: Safari's Share menu opens the Add to Home Screen dialog, previewing the app icon and name with Open as Web App enabled for a fullscreen launch."
+  width={2732}
+  height={2048}
+/>
 
 I kept those two files explicit rather than hiding them behind a generated setup: the manifest and the service worker are hand-written static files.
 

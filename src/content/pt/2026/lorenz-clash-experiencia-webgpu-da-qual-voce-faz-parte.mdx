@@ -2,6 +2,7 @@
 title: "Lorenz Clash: criando uma experiência WebGPU da qual você faz parte"
 description: "Como uma onda de calor virou uma experiência de câmera WebGPU: matemática de Lorenz, renderização com shaders, efeitos guiados pela música, exportação local de vídeo e PWA fullscreen."
 date: 2026-06-26
+modified: 2026-07-08
 tags: [apps, source_code, webgpu, wgsl, shaders, lorenz-attractor, chaos-theory, generative-art, pwa, graphics, typescript, audio, webcodecs]
 en_mdx: lorenz-clash-a-webgpu-experience-you-are-part-of.mdx
 fr_mdx: lorenz-clash-experience-webgpu-dont-vous-faites-partie.mdx
@@ -58,6 +59,12 @@ Funciona bem em dispositivos móveis, mas se destaca na tela grande com uma webc
     </div>
   </div>
 </Callout>
+
+<YouTubeEmbed
+  videoId="2sM0_nSosyQ"
+  title="Demonstração do Lorenz Clash"
+  caption="Lorenz Clash ao vivo: o fluxo da câmera fatiado e dissolvido ao longo do atrator de Lorenz."
+/>
 
 ## Uma experiência da qual você faz parte
 
@@ -604,6 +611,14 @@ Resultado: a câmera e a captura contínuas passaram de travamentos em **~5 minu
 Um **Progressive Web App** (PWA) é um site que o navegador pode tratar mais como um aplicativo: ele pode ser adicionado à tela inicial, obter seu próprio ícone, iniciar em uma janela independente ou em tela cheia e armazenar em cache partes suficientes para abrir de forma confiável. Para Lorenz Clash, o importante não é o modo offline; é **imersão**. A peça deve escapar do chrome do navegador, principalmente no mobile, para que o canvas da câmera preencha a tela como um app instalado.
 
 Essa forma instalável vem de duas pequenas primitivas da web: um **manifesto do aplicativo da web**, que descreve o nome, os ícones, as cores e o modo de exibição do aplicativo; e um **service worker**, que permite ao navegador reconhecer que o site possui um shell de aplicativo que pode controlar. O Chrome no desktop e no Android oferece suporte a todo o fluxo de instalação da IU do navegador. No iOS e iPadOS, você precisa passar pelo Safari: abra o site, toque em Compartilhar e em **Adicionar à tela inicial**.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/lorenz-clash/install-safari-ipad-add-to-home-screen.png"
+  darkSrc="/images/2026/lorenz-clash/install-safari-ipad-add-to-home-screen.png"
+  alt="Instalação do Lorenz Clash no iPad: o menu Compartilhar do Safari abre a caixa de diálogo Adicionar à tela inicial, com o ícone e o nome do app e a opção Abrir como app da web ativada, para uma inicialização em tela cheia."
+  width={2732}
+  height={2048}
+/>
 
 Mantive esses dois arquivos explícitos em vez de escondê-los atrás de uma configuração gerada: o manifesto e o service worker são arquivos estáticos escritos à mão.
 
