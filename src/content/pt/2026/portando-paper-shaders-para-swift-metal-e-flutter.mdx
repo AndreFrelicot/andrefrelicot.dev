@@ -1,8 +1,8 @@
 ---
-title: "Portando Paper Shaders para Swift/Metal e Flutter"
-description: "Um olhar sobre o port de 29 shaders WebGL para Swift/Metal e Flutter: uniforms compartilhados, diferenças entre linguagens de shader, renders golden, presets e a pequena matemática que torna a paridade visual possível."
+title: "Portando Paper Shaders para Swift/Metal, Flutter e Android/AGSL"
+description: "Um olhar sobre o port de 29 shaders WebGL para Swift/Metal, Flutter e Android nativo: uniforms compartilhados, diferenças entre linguagens de shader, renders golden, presets e a pequena matemática que torna a paridade visual possível."
 date: 2026-07-06
-tags: [apps, source_code, shaders, glsl, msl, metal, swift, flutter, dart, graphics, pubdev, swiftpm, generative-art]
+tags: [apps, source_code, shaders, glsl, msl, agsl, metal, swift, flutter, dart, android, kotlin, jetpack-compose, graphics, pubdev, swiftpm, generative-art]
 en_mdx: porting-paper-shaders-to-swift-metal-and-flutter.mdx
 fr_mdx: porter-paper-shaders-swift-metal-flutter.mdx
 pt_mdx: portando-paper-shaders-para-swift-metal-e-flutter.mdx
@@ -35,14 +35,15 @@ Paper Shaders é uma coleção de fragment shaders WebGL projetada para produzir
 
 O projeto original, [paper-design/shaders](https://github.com/paper-design/shaders), é publicado sob a licença **Apache 2.0**.
 
-O projeto original é web-first: GLSL, React, canvas, texturas, imagens e presets. Meu objetivo era diferente: manter o mesmo catálogo visual, mas torná-lo utilizável em aplicativos nativos SwiftUI e Flutter, com pacotes publicáveis e apps de demonstração que expõem todos os parâmetros.
+O projeto original é web-first: GLSL, React, canvas, texturas, imagens e presets. Meu objetivo era diferente: manter o mesmo catálogo visual, mas torná-lo utilizável em aplicativos nativos SwiftUI, Flutter e Jetpack Compose, com bibliotecas reutilizáveis e apps de demonstração que expõem todos os parâmetros.
 
-O resultado se divide em dois ports:
+O resultado se divide em três ports:
 
 - **PaperShaders** para Swift/Metal, com um núcleo MetalKit e uma camada SwiftUI.
 - **paper_shaders** para Flutter, com runtime shaders do Flutter e uma API Dart tipada.
+- **paper-shaders-android** para Jetpack Compose, com `RuntimeShader`, AGSL e uma API Kotlin tipada.
 
-Não é apenas um exercício de tradução sintática. Um shader que compila não é necessariamente um shader que produz a mesma imagem. O verdadeiro trabalho foi construir um contrato compartilhado entre três runtimes: WebGL, Metal e Flutter.
+Não é apenas um exercício de tradução sintática. Um shader que compila não é necessariamente um shader que produz a mesma imagem. O verdadeiro trabalho foi construir um contrato compartilhado entre quatro runtimes: WebGL, Metal, Flutter e Android/Skia.
 
 ## O contrato compartilhado
 
@@ -60,7 +61,7 @@ Cada efeito precisa receber as mesmas famílias de parâmetros:
 
 Esse contrato é o que torna os ports comparáveis. Se `simplex-noise` ou `spiral` não recebem o mesmo espaço UV, a mesma origem e a mesma noção de tempo, a discussão sobre a fidelidade do shader começa tarde demais: os sistemas já são diferentes.
 
-Na web, parte dessa lógica vive naturalmente no canvas, no vertex shader e no ambiente WebGL. Em Swift/Metal e Flutter, essa responsabilidade precisa ser posicionada deliberadamente. A abordagem escolhida é explícita: o sizing e os uniforms fazem parte da API pública, e os presets expõem o mesmo modelo mental em todas as plataformas.
+Na web, parte dessa lógica vive naturalmente no canvas, no vertex shader e no ambiente WebGL. Em Swift/Metal, Flutter e Android, essa responsabilidade precisa ser posicionada deliberadamente. A abordagem escolhida é explícita: o sizing e os uniforms fazem parte da API pública, e os presets expõem o mesmo modelo mental em todas as plataformas.
 
 ```swift
 SimplexNoiseView(
@@ -84,30 +85,46 @@ const SimplexNoiseView(
 )
 ```
 
-As cores são simples strings hexadecimais em todas as plataformas, exatamente como na API React original: as mesmas três strings produzem o mesmo render em React, SwiftUI e Flutter, sem nenhuma conversão de cor específica de plataforma para dar errado.
+```kotlin
+SimplexNoiseView(
+    params = SimplexNoiseParams(
+        colors = listOf("#FF7B00", "#F9FFEB", "#330D82"),
+        stepsPerColor = 2f,
+        softness = 0.12f,
+        sizing = ShaderSizing.pattern(scale = 1f),
+    ),
+    modifier = Modifier.fillMaxSize(),
+)
+```
 
-O código de inicialização importa. Um preset visual não é só um JSON de valores: em um app real, você quer copiar um snippet Swift ou Dart, colar no projeto e obter o mesmo render.
+As cores são simples strings hexadecimais em todas as plataformas, exatamente como na API React original: as mesmas três strings produzem o mesmo render em React, SwiftUI, Flutter e Compose, sem nenhuma conversão de cor específica de plataforma para dar errado.
 
-## Três linguagens, não três aparências
+O código de inicialização importa. Um preset visual não é só um JSON de valores: em um app real, você quer copiar um snippet Swift, Dart ou Kotlin, colar no projeto e obter o mesmo render.
 
-A implementação WebGL original usa GLSL. O port Swift usa Metal Shading Language. O Flutter também aceita GLSL como entrada, mas dentro das restrições dos runtime shaders do Flutter, compilados pela toolchain Flutter/Impeller.
+## Quatro linguagens, não quatro aparências
+
+A implementação WebGL original usa GLSL. O port Swift usa Metal Shading Language. O Flutter aceita GLSL como entrada dentro das restrições de sua toolchain Impeller. O Android usa AGSL, uma linguagem semelhante a GLSL executada pelo Skia por meio de `RuntimeShader`.
 
 No papel, as linguagens se parecem o bastante para dar uma falsa impressão de simplicidade. Na prática, os detalhes importam:
 
-| Tema | WebGL / GLSL | Metal / MSL | Runtime shader do Flutter |
-|---|---|---|---|
-| Coordenadas de fragmento | `gl_FragCoord` | coordenadas passadas ao fragmento | `FlutterFragCoord()` |
-| Módulo em ponto flutuante | `mod` | `fmod` + helpers | `mod` GLSL |
-| Ângulos | `atan(y, x)` | `atan2(y, x)` | `atan(y, x)` |
-| Uniforms booleanos | aceitos | tipos Metal | muitas vezes codificados como floats |
-| Arrays de uniforms | `vec4 colors[10]` | buffers tipados | offsets estritos no Dart |
-| Texturas | samplers WebGL | texturas Metal | samplers do Flutter, sem todo o ecossistema WebGL |
+| Tema | WebGL / GLSL | Metal / MSL | Runtime shader do Flutter | Android / AGSL |
+|---|---|---|---|---|
+| Coordenadas de fragmento | `gl_FragCoord` | coordenadas passadas ao fragmento | `FlutterFragCoord()` | argumento local `fragCoord` |
+| Módulo em ponto flutuante | `mod` | `fmod` + helpers | `mod` GLSL | `mod` AGSL |
+| Ângulos | `atan(y, x)` | `atan2(y, x)` | `atan(y, x)` | `atan(y, x)` |
+| Uniforms booleanos | aceitos | tipos Metal | muitas vezes codificados como floats | codificados como floats |
+| Arrays de uniforms | `vec4 colors[10]` | buffers tipados | offsets estritos no Dart | uniforms fixos e helpers de indexação |
+| Texturas | samplers WebGL | texturas Metal | samplers do Flutter | child shaders amostrados com `.eval()` |
 
 O difícil não é encontrar a função equivalente. É preservar as convenções implícitas: orientação, pixel ratio, interpolação, precisão, ordem dos uniforms, samplers e comportamento nas bordas.
 
 O port Flutter tem uma vantagem: boa parte do GLSL original continua reutilizável. Mas ele também impõe uma restrição rígida: cada uniform tem uma posição exata no buffer que o Flutter espera. Um offset errado nem sempre quebra a compilação; ele pode transformar uma cor em escala, um booleano em limiar ou um offset em velocidade.
 
 O port Metal é mais explícito. Você ganha tipos e integração nativa, mas paga a tradução de GLSL para MSL shader por shader.
+
+O AGSL fica no meio do caminho. Sua sintaxe continua próxima de GLSL, mas não é OpenGL ES nem um pipeline Vulkan completo. É uma linguagem do tipo fragment shader integrada ao pipeline Skia do Android, disponível via `RuntimeShader` a partir do Android 13 / API 33. O Compose a desenha em um `Canvas` com um shader brush, enquanto a lógica de sizing do vertex shader original é incorporada à fonte do fragmento.
+
+As texturas exigem atenção especial no Android. As imagens e a textura de ruído se tornam child `BitmapShader`; as coordenadas de `.eval()` são pixels, não UVs normalizados, e o AGSL espera cores de saída pré-multiplicadas. Esses erros compilam normalmente, mas alteram visivelmente o resultado.
 
 ## O catálogo em seis famílias
 
@@ -258,7 +275,7 @@ O fluxo de trabalho é assim:
 
 <ZoomableThemeImage
   src="/images/2026/paper-shaders/shader-port-parity-workflow.webp"
-  alt="Diagrama do fluxo de port de GLSL para Swift/Metal e Flutter, seguido pela comparação visual com PNGs golden web"
+  alt="Diagrama do fluxo de port de GLSL para Swift/Metal, Flutter e Android/AGSL, seguido pela comparação visual com PNGs golden web"
   width={1672}
   height={941}
 />
@@ -274,6 +291,8 @@ Cada preset vira um caso de teste visual — 120 renders golden em todo o catál
 - frame ou velocidade não determinísticos.
 
 Para uma biblioteca de shaders, a imagem é o contrato.
+
+A suíte Android renderiza os mesmos casos determinísticos em um Pixel 7 Pro. Os 29 shaders passam no comparador compartilhado, com tolerâncias estreitas por shader para derivadas de GPU, amostragem de texturas e funções de ruído quando a identidade exata dos bytes não é portável.
 
 ## O custo em desempenho do modo preciso
 
@@ -296,11 +315,13 @@ O fast math é a maior alavanca; o número de pixels é a outra. O orçamento de
 
 Cada view também pode reportar métricas de render ao vivo (frames por segundo, tamanho do drawable, pixel ratio efetivo, escala adaptativa, modo matemático), que o app de demonstração exibe como overlay. E para manter a comparação honesta, o workbench ganhou uma página web independente em tela cheia que roda os shaders WebGL originais nos mesmos dispositivos e reporta FPS, tamanho do canvas e device pixel ratio. Mesmo shader, mesmo preset, mesma tela: a única forma de saber se o port nativo é realmente mais lento ou se está apenas renderizando mais pixels.
 
+O Android não expõe um switch público equivalente de fast math para AGSL. Por isso, o port mantém os cálculos em precisão `float`/`vec` e usa a resolução interna adaptativa como principal alavanca de desempenho. Ele também separa efeitos animados de shaders estáticos: estes não agendam nenhum ticker e só são recalculados quando um uniform, o tamanho ou a imagem de entrada muda. A mesma otimização de renderização estática agora é compartilhada pelos ports Swift e Flutter.
+
 ## Apps de demonstração
 
-Os pacotes não são sustentados apenas por arquivos README. Cada port tem um app showcase.
+As bibliotecas não são sustentadas apenas por arquivos README. Cada port tem um app showcase.
 
-Os apps SwiftUI e Flutter permitem navegar por todos os shaders, trocar de preset, editar os uniforms, testar sliders, cores e sizing, e copiar o código de inicialização.
+Os apps SwiftUI, Flutter e Android/Compose permitem navegar por todos os shaders, trocar de preset, editar os uniforms, testar sliders, cores e sizing, e copiar o código de inicialização. O layout Android se adapta a telefones compactos e janelas de tablet, e mostra as mesmas métricas de FPS e resolução de renderização que o outro showcase nativo.
 
 Esse último detalhe é intencional. Um showcase que exibe um render é útil; um showcase que te dá o código exato para reproduzi-lo é muito mais útil.
 
@@ -308,21 +329,23 @@ As listas de shaders usam miniaturas estáticas geradas a partir dos presets pad
 
 ## Os pacotes
 
-Os dois ports estão publicados como pacotes open source, cada um com CI no GitHub Actions, checagens de paridade golden e um app de demonstração:
+Os três ports estão publicados como bibliotecas open source, cada um com CI no GitHub Actions, checagens de paridade golden e um app de demonstração:
 
 - **paper_shaders** para Flutter está disponível no [pub.dev](https://pub.dev/packages/paper_shaders);
-- **PaperShaders** para Swift se instala como dependência SwiftPM a partir das releases com tag no GitHub.
+- **PaperShaders** para Swift se instala como dependência SwiftPM a partir das releases com tag no GitHub;
+- **paper-shaders-android** é distribuído atualmente como fonte com tag no GitHub e pode ser incluído como módulo Gradle local, sem exigir o Maven Central.
 
 <div className="not-prose flex flex-col gap-3 sm:flex-row sm:items-center">
   <PubDevLink href="https://pub.dev/packages/paper_shaders" label="paper_shaders no pub.dev" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-swift" label="PaperShaders Swift/Metal" />
   <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-flutter" label="paper_shaders Flutter" />
+  <GitHubLink href="https://github.com/AndreFrelicot/paper-shaders-android" label="Paper Shaders Android/AGSL" />
 </div>
 
 ## O que eu levo disso
 
 Portar um shader não é só traduzir sintaxe. É um problema de conservação: conservar um espaço de coordenadas, uma noção de tempo, uma textura, um comportamento de arredondamento, um limiar e uma intenção visual.
 
-As diferenças entre GLSL, MSL e Flutter são administráveis. Elas ficam visíveis sobretudo quando você exige paridade, e não apenas uma aproximação bonita.
+As diferenças entre GLSL, MSL, o GLSL runtime do Flutter e AGSL são administráveis. Elas ficam visíveis sobretudo quando você exige paridade, e não apenas uma aproximação bonita.
 
 É aí que o projeto fica interessante: uma pequena biblioteca gráfica vira um laboratório prático de portabilidade de render. A matemática continua modesta, mas está em toda parte: nas coordenadas, nas rotações, no ruído, na quantização e nas derivadas. E é justamente porque ela é simples que precisa ser alinhada com cuidado.
