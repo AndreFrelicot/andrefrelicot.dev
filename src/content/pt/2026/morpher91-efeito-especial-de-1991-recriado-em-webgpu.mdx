@@ -1,0 +1,704 @@
+---
+title: "Morpher91: o efeito especial de 1991, recriado em WebGPU no seu navegador"
+description: "Morpher91, um estúdio pedagógico de morphing 2D: crossfade, mesh, Thin-Plate Spline e Beier–Neely, renderizados em WebGPU, com vídeo, camadas, máscaras na GPU e exportação em MP4 — tudo sem servidor."
+date: 2026-09-08
+tags: [apps, webgpu, wgsl, shaders, morphing, image-processing, graphics, typescript, webcodecs, computer-graphics-history]
+en_mdx: morpher91-the-1991-special-effect-rebuilt-in-webgpu.mdx
+fr_mdx: morpher91-effet-special-1991-recode-webgpu.mdx
+pt_mdx: morpher91-efeito-especial-de-1991-recriado-em-webgpu.mdx
+es_mdx: morpher91-efecto-especial-de-1991-recreado-en-webgpu.mdx
+image: /images/2026/morpher91/cover-studio.webp
+---
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/morpher91/cover-studio.webp"
+  darkSrc="/images/2026/morpher91/cover-studio.webp"
+  alt="Morpher91 em ação"
+  width={1600}
+  height={1200}
+  priority={true}
+/>
+
+## 1991, o ano em que os pixels aprenderam a derreter
+
+Duas imagens definiram os efeitos especiais do início dos anos 90. O T-1000 de
+*O Exterminador do Futuro 2*, metal líquido que retoma a forma humana. E a
+sequência final de *Black or White*, de Michael Jackson: rostos que se
+transformam uns nos outros, suavemente, sem corte. Os dois são de 1991. Os dois
+se apoiam na mesma ideia, o **morphing**: não fundir duas imagens uma na outra,
+mas *deformar cada uma em direção à outra* enquanto elas se fundem.
+
+A técnica por trás de *Black or White* — o *field morphing* de Thaddeus Beier e
+Shawn Neely, publicado na SIGGRAPH 1992 — rodava então em estações Silicon
+Graphics, fora do alcance da maioria das pessoas. Trinta e cinco anos depois, o pipeline
+inteiro cabe em uma aba do navegador: os campos de deformação são avaliados por
+pixel na GPU via WebGPU, o vídeo é codificado em H.264 via WebCodecs, e nada
+sai da máquina.
+
+O **Morpher91** nasceu daí: um **estúdio pedagógico de morphing 2D** onde você
+importa duas imagens ou vídeos, posiciona pontos, linhas e regiões, compara os
+algoritmos, compõe camadas e máscaras e depois exporta o resultado em MP4. Sem
+SaaS, sem conta, sem backend: uma demo técnica, e este artigo para contar como
+ela foi feita.
+
+As **camadas** são a parte de que mais gosto: um rosto deformado por linhas,
+cabelos por pontos, um fundo com um crossfade simples, e cada zona mantém suas
+referências, sua máscara e seu próprio ritmo.
+
+Este devlog conta as ideias e as decisões: a **matemática** dos quatro
+algoritmos, sua **composição em camadas**, o **pipeline WebGPU** compartilhado
+pela prévia e pela exportação, a **linha do tempo de vídeo** e suas operações de posicionamento (seeks)
+serializadas, o **scrub** que acabou cabendo dentro de um decodificador
+WebCodecs, os **quadros-chave** que se manipulam diretamente na linha do tempo, e a
+sobrevivência no **iPad**.
+
+<Callout type="info" title="App e código-fonte">
+  <div className="not-prose flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <a
+      href="https://morpher91.andrefrelicot.dev/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-center gap-4 rounded-lg border border-foreground/15 p-4 text-foreground transition hover:border-foreground/35 hover:bg-foreground/5"
+    >
+      <img
+        src="/images/2026/morpher91/app-icon.webp"
+        alt="Ícone do Morpher91"
+        width={64}
+        height={64}
+        className="h-16 w-16 shrink-0 rounded-xl transition group-hover:scale-105"
+      />
+      <span className="text-base font-semibold">Abrir o Morpher91 ↗</span>
+    </a>
+    <GitHubLink href="https://github.com/AndreFrelicot/morpher91" label="Código-fonte no GitHub" className="w-fit" />
+  </div>
+</Callout>
+
+<YouTubeEmbed
+  videoId="JGv8BJgco_U"
+  title="Trailer do Morpher91"
+/>
+
+## O princípio: deformar em direção a uma forma comum, depois dissolver
+
+Comecemos pelo que não funciona. O **crossfade** — interpolar linearmente os
+pixels, `mix(A, B, t)` — produz **ghosting**: no meio do caminho, os dois
+conjuntos de contornos coexistem, dois narizes, quatro olhos, uma sobreposição
+fantasmagórica. É o artefato que todo mundo já viu em apresentações de slides.
+
+Todo o morphing cabe em uma frase:
+
+> **Deformar as duas imagens em direção a uma forma intermediária comum, depois dissolver.**
+
+No tempo `t`, calcula-se uma geometria *intermediária* (os pontos de A
+deslocados em direção aos de B, a uma fração `t` do percurso), deforma-se A **para a
+frente** em direção a essa forma, deforma-se B **para trás** em direção a essa
+mesma forma, e só então os dois resultados são fundidos. Os contornos coincidem
+a cada instante, e os fantasmas desaparecem. Bem, onde as referências são boas:
+uma orelha escondida em apenas uma das duas imagens sempre deixará um contorno duplicado.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/morpher91/diagram-warp-then-dissolve-light-v2.pt-BR.webp"
+  darkSrc="/images/2026/morpher91/diagram-warp-then-dissolve-light-v2.pt-BR.webp"
+  alt="Esquema do funcionamento: o crossfade sobrepõe os contornos; o warp alinha os traços antes da fusão e reduz o ghosting."
+  width={1671}
+  height={941}
+/>
+
+Toda a questão passa a ser, então: *como* definir essa deformação? É aí que as
+famílias de algoritmos divergem — e é exatamente o que a vista Comparar do
+estúdio permite observar, sobre os mesmos pares de imagens.
+
+## Quatro famílias, um pipeline comum
+
+### Crossfade — a referência que mostra o problema
+
+Mantido de propósito no app como ponto de comparação. Um único shader, um
+`mix()`. Seu papel pedagógico é tornar o ghosting visível para que os outros
+três métodos tenham algo a superar.
+
+### Mesh — triangular e projetar
+
+O método da era do VHS: posicionar **referências** pareadas em A e B (os
+*landmarks* da literatura), triangular sua forma a meio caminho (Delaunay, via
+[Delaunator](https://github.com/mapbox/delaunator)) e depois manter essa
+conectividade enquanto as referências não mudam. Interpolam-se os vértices no
+tempo `t`, depois projeta-se cada triângulo de A e de B para o triângulo
+intermediário por transformação afim. Rápido, robusto, inteiramente
+paralelo — mas a deformação é afim *por partes*: em movimentos amplos, veem-se as
+arestas da malha dobrarem a imagem como papel.
+
+### Thin-Plate Spline — a placa de metal que se dobra
+
+A TPS responde à pergunta: *qual é a deformação mais suave possível que passa
+exatamente pelos meus pontos de controle?* A analogia é física: uma placa fina
+que é forçada a passar pelas referências minimizando a energia de curvatura. A
+interpolação se escreve como uma parte afim mais uma soma ponderada de um
+núcleo radial:
+
+$$
+f(\mathbf{p}) = a_0 + a_1 x + a_2 y + \sum_{i=1}^{n} w_i \, U\!\left(\lVert \mathbf{p} - \mathbf{p}_i \rVert\right),
+\qquad U(r) = r^2 \log r
+$$
+
+```ts
+function tpsKernel(r: number): number {
+  if (r < 1e-6) return 0;
+  return r * r * Math.log(r);
+}
+```
+
+A divisão CPU/GPU é o coração da decisão de arquitetura: os pesos `w_i` saem
+de um **pequeno sistema linear denso** (algumas dezenas de referências),
+resolvido na **CPU** para os dois caminhos inversos, da forma intermediária
+para A e para B. Como essa forma se move com `t`, não há uma solução, mas uma
+por posição: `t` é quantizado a 1/256 e um cache LRU guarda as 64 últimas,
+esvaziado assim que uma referência ou um ajuste muda. Já a **avaliação do
+campo** é feita **por pixel na GPU**:
+
+```wgsl
+fn tps_kernel(r: f32) -> f32 {
+  if (r < 0.000001) {
+    return 0.0;
+  }
+  return r * r * log(r);
+}
+```
+
+Duas salvaguardas mantêm a prévia estável: **âncoras de borda** (referências
+implícitas nos cantos e nas bordas, para que a imagem não se solte do quadro)
+e um parâmetro de **regularização** λ somado à diagonal da matriz, que troca um
+pouco de exatidão de interpolação por muita suavidade quando os pontos de
+controle são ruidosos.
+
+### Beier–Neely — as linhas de *Black or White*
+
+O método mais próximo do espírito de 1991 não trabalha com pontos, mas com
+**linhas de características**: o dorso do nariz, a linha da mandíbula, o
+contorno de uma sobrancelha. Cada par de linhas define um referencial local; um
+pixel é expresso no referencial de cada linha de destino e depois reprojetado
+pela linha de origem correspondente. As influências se combinam por média
+ponderada:
+
+$$
+X' = X + \frac{\sum_i w_i \,(X'_i - X)}{\sum_i w_i},
+\qquad
+w_i = \left( \frac{l_i^{\,p}}{a + d_i} \right)^{b}
+$$
+
+onde `l` é o comprimento da linha, `d` a distância do pixel à linha, e `p`,
+`a`, `b` os três parâmetros do *field morphing*: influência do comprimento,
+suavidade, concentração. No shader, um único loop avalia os dois warps (para A
+e para B) sobre o mesmo conjunto de linhas interpoladas: a distância e o peso
+são calculados uma única vez por linha, e `u.coeffs` guarda `a`, `b` e `p`
+nessa ordem.
+
+```wgsl title="beierNeely.wgsl"
+fn warp_both(x : vec2f, t : f32, count : u32) -> vec4f {
+  var totalA = vec2f(0.0, 0.0);
+  var totalB = vec2f(0.0, 0.0);
+  var totalWeight = 0.0;
+
+  for (var i = 0u; i < count; i = i + 1u) {
+    let ln = lines[i];
+    let a0 = ln.a.xy;
+    let a1 = ln.a.zw;
+    let b0 = ln.b.xy;
+    let b1 = ln.b.zw;
+
+    let m0 = mix(a0, b0, t);
+    let m1 = mix(a1, b1, t);
+
+    let dist = line_distance(x, m0, m1);
+    let len = length(m1 - m0);
+    let weight =
+      pow(pow(len, u.coeffs.z) / (u.coeffs.x + dist), u.coeffs.y) * ln.params.x;
+
+    let mappedA = map_point_by_line_pair(x, m0, m1, a0, a1);
+    let mappedB = map_point_by_line_pair(x, m0, m1, b0, b1);
+
+    totalA = totalA + (mappedA - x) * weight;
+    totalB = totalB + (mappedB - x) * weight;
+    totalWeight = totalWeight + weight;
+  }
+
+  if (totalWeight <= 0.000001) {
+    return vec4f(x, x);
+  }
+  return vec4f(x + totalA / totalWeight, x + totalB / totalWeight);
+}
+```
+
+É caro — cada pixel visita cada linha — mas é exatamente o tipo de loop bruto
+e regular que as GPUs adoram, e o resultado tem aquele caráter "orgânico" que
+nem o mesh nem a TPS reproduzem: as linhas *atraem* a imagem ao seu redor.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/morpher91/screenshot-four-methods-v1.webp"
+  darkSrc="/images/2026/morpher91/screenshot-four-methods-v1.webp"
+  alt="Captura do estúdio a meio caminho: o mesmo par Claire → Anna em crossfade, Mesh, TPS e Beier–Neely. As diferenças aparecem sobretudo em torno dos olhos e da boca."
+  width={1672}
+  height={912}
+/>
+
+## Um espaço para governar todos: o Project Space
+
+Decisão fundadora, invisível na tela: **todas as coordenadas vivem em um
+espaço de projeto normalizado comum**. Nem pixels da mídia de origem (A e B
+quase nunca têm o mesmo tamanho), nem pixels CSS (o zoom e o pan mudam o tempo
+todo), nem pixels do canvas (a resolução de renderização varia conforme o
+aparelho e o orçamento de GPU).
+
+Pareia-se o nariz de A com o nariz de B uma vez, e essas posições continuam
+válidas seja qual for o zoom ou o formato das duas imagens. O mesmo JSON
+alimenta a prévia, as vistas de debug e a exportação, mesmo quando essas saídas não
+são renderizadas na mesma resolução. Todas as conversões passam por funções
+dedicadas — é chato, é quase nada, e provavelmente é a decisão que evitou mais
+bugs em todo o projeto.
+
+## As camadas não são um quinto algoritmo
+
+Ninguém faz o morphing de um plano inteiro com um único campo. Em *Black or
+White*, o rosto, os cabelos e o fundo não se transformam no mesmo ritmo, e um
+ajuste que serve para os olhos arrasta o cenário junto com o rosto. Daí as
+**camadas**: cada uma calcula seu próprio morph a partir das **mesmas duas
+fontes A e B**, com suas referências, seu algoritmo se necessário, e uma
+máscara que delimita o que ela mantém do resultado. Um retrato típico se
+constrói em três tratamentos:
+
+- **O fundo em crossfade**, na camada Global que serve de base.
+- **Os cabelos em TPS**, com seus pontos de controle e uma máscara para
+  limitar esse campo de deformação à cabeleira.
+- **O rosto em Beier–Neely**, com linhas para os olhos, o nariz e a mandíbula, e
+  uma máscara de bordas suavizadas para encaixá-lo no restante.
+
+Os três métodos contribuem para **a mesma imagem final**, e retocar uma linha
+do rosto não mexe no cálculo TPS dos cabelos. A armadilha clássica: é a máscara
+que recorta, não as referências. Uma camada sem máscara cobre o quadro inteiro
+e encobre as de baixo.
+
+A separação vale também para o tempo. Cada camada tem seu bloco na linha do tempo,
+um início e uma duração, e dentro dele as janelas de **warp** e de
+**dissolve** são ajustadas separadamente, cada uma com sua curva de
+aceleração, inclusive uma Bézier personalizada. O fundo pode, portanto, começar sua
+fusão enquanto o rosto ainda se deforma, sem deixar B aparecer ainda na camada do rosto. Atenção às
+bordas do bloco: fora dele, a camada some de uma vez.
+
+A ordem da pilha, a opacidade e o modo de mesclagem decidem em seguida a
+sobreposição. O compositor mescla tudo em **alfa pré-multiplicado**, com os
+modos `normal`, `multiply`, `screen` e `lighter`, e cada camada pode ser
+inspecionada sozinha nas vistas de debug: seu resultado, sua máscara, sua
+contribuição, e então a pilha completa para verificar o encaixe.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/morpher91/diagram-layer-stack-light-v2.pt-BR.webp"
+  darkSrc="/images/2026/morpher91/diagram-layer-stack-light-v2.pt-BR.webp"
+  alt="Exemplo ilustrado de composição: fundo em crossfade, cabelos em TPS e rosto em Beier–Neely, com suas máscaras."
+  width={1672}
+  height={941}
+/>
+
+A regra de ouro do renderer: **o viewport, as vistas de debug e a exportação
+chamam o mesmo `LayeredRenderer`**, com a mesma composição das camadas e a
+mesma avaliação da linha do tempo. A prévia às vezes roda em resolução reduzida ou
+sobre um proxy de vídeo, e o codificador acrescenta sua compressão, mas existe
+um único morph. Não há uma segunda versão que possa divergir.
+
+As **máscaras vetoriais** de camada seguem a mesma regra. Seu contorno, reto ou
+suavizado em Catmull–Rom, compartilha sua geometria com o overlay de edição;
+essa pequena geometria é triangulada na CPU e depois rasterizada na GPU em
+`r8unorm` com **MSAA 4×** — um byte por texel em vez de quatro. A **suavização das bordas (feather)**
+usa um desfoque gaussiano separável multiescala, também na GPU. Prévia, debug e
+exportação fabricam a máscara da mesma maneira, sem readback para a CPU a cada
+quadro.
+
+### Uma máscara pintada que acompanha o rosto
+
+O pincel, por sua vez, aplica uma máscara raster sobre a imagem de origem. A
+armadilha seria deixá-la imóvel enquanto os traços se deslocam: um retoque na
+bochecha acabaria recortando o nariz. Cada backend de morph sabe, portanto,
+produzir um **mapa de deformação inversa**: para cada pixel do resultado, onde
+ir ler em A? O compositor relê a máscara pintada nessa mesma coordenada. A
+pintura acompanha assim a deformação da camada sem precisar ser repintada a
+cada instante.
+
+Região vetorial e máscara pintada podem coexistir em uma mesma camada; sua
+cobertura se combina por união, o máximo das duas, antes da eventual inversão.
+O que surpreende na primeira tentativa: a borracha não apaga o que a região
+cobre. O preset "Máscaras combinadas — região e pincel" mostra isso na vista
+Máscara.
+
+<ScreenshotGallery
+  images={[
+    { src: "/images/2026/morpher91/mask-final-25-v1.webp", alt: "Resultado a 25% — Foxy → Bunny.", width: 1064, height: 665 },
+    { src: "/images/2026/morpher91/mask-debug-25-v1.webp", alt: "Máscara pintada deformada a 25% — Foxy → Bunny.", width: 1064, height: 665 },
+    { src: "/images/2026/morpher91/mask-final-50-v1.webp", alt: "Resultado a 50% — Foxy → Bunny.", width: 1064, height: 665 },
+    { src: "/images/2026/morpher91/mask-debug-50-v1.webp", alt: "Máscara pintada deformada a 50% — Foxy → Bunny.", width: 1064, height: 665 },
+    { src: "/images/2026/morpher91/mask-final-75-v1.webp", alt: "Resultado a 75% — Foxy → Bunny.", width: 1064, height: 665 },
+    { src: "/images/2026/morpher91/mask-debug-75-v1.webp", alt: "Máscara pintada deformada a 75% — Foxy → Bunny.", width: 1064, height: 665 }
+  ]}
+  caption="Capturas a 25, 50 e 75%: resultado à esquerda, máscara à direita. A máscara pintada em A se deforma com o rosto. Fora de sua cobertura, o fundo permanece em crossfade, o que explica os contornos duplicados no meio."
+/>
+
+### Deformar primeiro, fundir na hora certa
+
+Mesmo com referências caprichadas, variar a forma e a opacidade exatamente no
+mesmo ritmo nem sempre é a melhor escolha. O preset de transição **Morphing
+clássico** deforma durante toda a duração, mas concentra o dissolve entre
+**30% e 70%**. O início dá mais tempo a A para se aproximar da forma comum
+antes que B se torne visível; o fim deixa B terminar seu movimento depois que
+A desapareceu. Os contornos duplos ficam assim visíveis por menos tempo nas
+etapas inicial e final da transição. Cada janela tem também sua curva de aceleração, com um editor de
+Bézier para os ajustes finos.
+
+<ZoomableThemeImage
+  src="/images/2026/morpher91/transition-bezier.webp"
+  alt="Ajustes de transição: warp de 0 a 100%, dissolve de 30 a 70% e curva de Bézier personalizada."
+  width={618}
+  height={780}
+  className="my-8 max-w-sm"
+/>
+
+<ScreenshotGallery
+  images={[
+    { src: "/images/2026/morpher91/transition-standard-25-v1.webp", alt: "Padrão a 25% — mesma geometria Mesh, mesmo enquadramento.", width: 1064, height: 691 },
+    { src: "/images/2026/morpher91/transition-classicMorph-25-v1.webp", alt: "Morphing clássico a 25% — mesma geometria Mesh, mesmo enquadramento.", width: 1064, height: 691 },
+    { src: "/images/2026/morpher91/transition-standard-50-v1.webp", alt: "Padrão a 50% — mesma geometria Mesh, mesmo enquadramento.", width: 1064, height: 691 },
+    { src: "/images/2026/morpher91/transition-classicMorph-50-v1.webp", alt: "Morphing clássico a 50% — mesma geometria Mesh, mesmo enquadramento.", width: 1064, height: 691 },
+    { src: "/images/2026/morpher91/transition-standard-75-v1.webp", alt: "Padrão a 75% — mesma geometria Mesh, mesmo enquadramento.", width: 1064, height: 691 },
+    { src: "/images/2026/morpher91/transition-classicMorph-75-v1.webp", alt: "Morphing clássico a 75% — mesma geometria Mesh, mesmo enquadramento.", width: 1064, height: 691 }
+  ]}
+  caption="À esquerda, Padrão: warp e dissolve em 0–100%. À direita, Morphing clássico: warp em 0–100%, dissolve em 30–70%. De cima para baixo: 25, 50 e 75%. O centro é idêntico; o Morphing clássico reduz o tempo em que os contornos duplos ficam visíveis perto do início e do fim."
+/>
+
+## Então chegou o vídeo, e o tempo com ele
+
+A v1 foi pensada para imagens fixas. Mas o morphing icônico — *Black or White*, de novo — é
+feito entre **vídeos**: os sujeitos se movem *durante* o morph. Acrescentá-lo
+trouxe para dentro o pior inimigo de um app gráfico: o tempo.
+
+Duas fontes de vídeo A/B, uma **linha do tempo mestra em segundos**, clipes que nunca
+são esticados, quadros-chave de referências por lado. E, muito rápido, relógios
+concorrentes: o elemento de vídeo tem o seu, o `requestAnimationFrame` tem o
+seu, o store tem o seu. A reformulação impôs **uma autoridade RAF única** — um
+único loop é dono de τ, o tempo mestre, e todo mundo o lê.
+
+O problema mais sorrateiro: os **seeks obsoletos**. Um seek de vídeo é
+assíncrono; durante um scrub rápido, dez seeks partem e voltam fora de ordem,
+e uma resposta atrasada pode publicar um quadro velho *por cima* do certo. A
+solução: serializar os seeks e protegê-los com uma **geração**:
+
+```ts title="PreviewEngine.ts"
+sync(tauSec: number, { realtime = false } = {}): Promise<void> {
+  const generation = ++this.syncGeneration;
+  const run = this.syncTail
+    .catch(() => undefined)
+    .then(async () => {
+      if (generation !== this.syncGeneration) return;
+      await this.applyFrame(tauSec, realtime, generation);
+    });
+  this.syncTail = run;
+  return run;
+}
+```
+
+Cada pedido incrementa o contador; uma resposta cuja geração já não é a última
+é simplesmente descartada, *antes* do upload para a GPU e *antes* da
+publicação. A reprodução privilegia a cadência em tempo real (os vídeos tocam,
+amostramos seus quadros); o scrub e a exportação pausam e buscam o **quadro exato**.
+Dois regimes, um único motor.
+
+Uma última escolha para manter os arquivos de projeto leves: os bytes de vídeo **nunca** são embutidos no
+arquivo de projeto. As imagens vivem ali como data URL, mas um vídeo só deixa
+seus metadados e uma identificação simples: nome, tamanho e data de
+modificação, ou, na falta disso, as mesmas dimensões e uma duração próxima. Ao
+reabrir, você indica de novo o arquivo local e o app verifica se ele bate. O
+projeto pesa o que pesam suas imagens, não seus vídeos: algumas centenas de
+quilobytes ou alguns megabytes, nunca um arquivo de um giga.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/morpher91/diagram-timeline-clock-light-v2.pt-BR.webp"
+  darkSrc="/images/2026/morpher91/diagram-timeline-clock-light-v2.pt-BR.webp"
+  alt="Um relógio mestre comanda as fontes e a linha do tempo; as respostas de seeks que ficaram obsoletas são rejeitadas."
+  width={1672}
+  height={941}
+/>
+
+## O scrub, ou como fazer um decodificador de vídeo caber debaixo do polegar
+
+Uma linha do tempo de vídeo se julga pelo scrub: você agarra o cursor de reprodução,
+arrasta, e a imagem tem que acompanhar. A primeira versão não acompanhava. Foram necessárias duas
+etapas de desenvolvimento, que mostram bem a distância entre "funciona" e "é
+instantâneo".
+
+A primeira eliminou o trabalho inútil. Cada evento de ponteiro recalculava
+tudo: a amostragem temporal das referências, a triangulação, a resolução do sistema TPS, as
+grades de overlay, e depois uma renderização por superfície. Hoje a amostragem
+é memoizada (τ quantizado a 1/240 s), as solicitações de redesenho são agrupadas em uma por
+vsync e por superfície, a propagação React é quantizada ao quadro, e uma vista
+cujo quadro não mudou não dispara mais nenhuma passagem na GPU.
+
+A segunda atacou a decodificação em si. O seek de um elemento `<video>` é
+lento e impreciso; o Morpher91 agora lê os pacotes com o
+[Mediabunny](https://github.com/Vanilagy/mediabunny) e os decodifica via
+**WebCodecs**, em um cache LRU de texturas GPU indexado por número de quadro de
+origem. O diagnóstico teve seu momento de humildade: os clipes de demonstração
+estavam codificados com um único quadro-chave de compressão (decodificável de forma independente) a cada 166 quadros, e o decodificador
+recomeçava do zero a cada acesso — 44 a 180 ms por quadro ausente do cache. Daí três
+decisões:
+
+- **pré-decodificar em uma única passagem sequencial** em torno de τ, cerca de
+  vinte quadros de cada lado no desktop (sete em GPU restrita), interrompível em
+  um quadro assim que o cursor de reprodução volta a se mover;
+- um **proxy em resolução reduzida** do clipe inteiro, gerado em segundo
+  plano dentro de um orçamento de memória fixo quando seu tamanho permite,
+  exibido durante o arrasto se o quadro já estiver disponível, e depois
+  substituído pela resolução original assim que o cursor para;
+- **recodificar os clipes de demonstração** com um quadro-chave de compressão a cada 12 quadros,
+  sem B-frames — metade do problema estava na mídia, não no código.
+
+Uma limitação permanece: em um MacBook Air M1 com 16 GB, um scrub ainda pode
+travar por alguns segundos quando um clipe importado tem um GOP longo, ou quando
+a memória unificada está cheia de texturas. Em vez de fingir, a linha do tempo exibe
+um indicador "renderizando… 1,2 s" enquanto o motor espera um quadro, com a etapa
+responsável pela espera. Um viewport parado se lê como uma espera, não como um travamento — e
+o número diz onde procurar.
+
+<ZoomableThemeImage
+  lightSrc="/images/2026/morpher91/diagram-scrub-tiers-light-v2.pt-BR.webp"
+  darkSrc="/images/2026/morpher91/diagram-scrub-tiers-light-v2.pt-BR.webp"
+  alt="Durante o scrub, o motor procura um quadro disponível e depois prepara os seguintes em segundo plano."
+  width={1672}
+  height={941}
+/>
+
+## Quadros-chave que você arrasta com o mouse
+
+O morphing de vídeo só faz sentido se as referências acompanharem os sujeitos:
+um ponto colocado no queixo no segundo 1 ainda precisa estar no queixo no
+segundo 3. As referências carregam, portanto, **quadros-chave por lado**, no
+tempo local de cada vídeo, e a amostragem interpola entre eles — para todos os
+tipos, pontos, segmentos, polilinhas e regiões.
+
+A primeira interface era uma lista de números no inspetor: "0.10 1.10 2.10
+2.79…". Ilegível a partir de dez quadros-chave, e sobretudo cega: nada ligava
+esses tempos locais ao cursor de reprodução. A linha do tempo agora segue a
+convenção dos softwares de animação. Os quadros-chave das referências
+selecionadas aparecem como **losangos na trilha da mídia** em questão,
+convertidos para o tempo mestre: o tempo da mídia, menos o ponto de entrada na
+fonte, mais o deslocamento do clipe na linha do tempo. O losango sob o cursor de
+reprodução é preenchido; um clique salta até ele; arrastá-lo muda seu instante,
+com ajuste ao quadro e uma única ação de desfazer; Alt-clique o remove. Quando
+ficam próximos demais, eles se agrupam em uma barra com um contador para continuarem legíveis.
+O inspetor, por sua vez, se reduz a uma linha por lado: anterior, inserir ou
+remover aqui, próximo.
+
+<ZoomableThemeImage
+  src="/images/2026/morpher91/screenshot-timeline-keyframes-v1.webp"
+  alt="O exemplo de caminhada a 3 s: a referência Menton (queixo) está selecionada, com seus quadros-chave em losangos nas trilhas A e B, e no inspetor."
+  width={1672}
+  height={912}
+/>
+
+Um detalhe de design merece ser contado, porque surgiu de um mal-entendido real.
+Em duas imagens fixas, mover um vértice de polilinha em τ = 0 e depois em τ = 2
+não criava nenhum quadro-chave: eles só existiam na presença de um vídeo, e a
+interface não dizia isso. Em vez de ativar o auto-keying em todo lugar — e
+transformar cada retoque em um quadro-chave involuntário —, a regra das imagens
+fixas tornou-se explícita: uma referência permanece estática enquanto não se
+insere um primeiro quadro-chave à mão; depois disso, cada deslocamento em outro
+tempo acrescenta um. O que abre, de passagem, uma possibilidade que as imagens
+fixas não tinham: **trajetórias de morph não lineares** — uma banana que passa
+por uma forma intermediária antes de virar um abacaxi. Entre dois quadros-chave,
+a interpolação continua linear; é o encadeamento deles que desenha o desvio. Em
+um vídeo, a questão não se coloca: cada deslocamento insere um quadro-chave, já
+que se trata de seguir o sujeito.
+
+### Presets que realmente acompanham os sujeitos
+
+Alguns pontos colocados no início, no meio e no fim não bastam para um rosto
+que canta. Os lábios mudam de forma entre duas poses, a cabeça gira, os ombros
+se movem. Para refazer os exemplos em vídeo, preparei as referências **em cada
+quadro de origem**, com scripts locais: o framework Vision da Apple para os 44
+pontos do rosto e a pose humana, depois o OpenCV para rastrear o robô a partir
+de poses corrigidas à mão. O detector de corpo humano errava com frequência
+demais na silhueta metálica dele; o rastreamento óptico é verificado nos dois
+sentidos e recorre a uma interpolação entre poses manuais quando não é
+confiável.
+
+Esses scripts servem para gerar os presets; o estúdio carrega seus
+quadros-chave e permite retocá-los. O resultado também me lembrou um limite do
+morph 2D: alinhar as articulações não faz desaparecer os contornos duplos das
+roupas, e parear os lábios não resolve todas as diferenças de penteado ou de
+oclusão. É preciso olhar a sequência renderizada, quadro a quadro, não só uma bela
+captura a 50%.
+
+<ZoomableThemeImage
+  src="/images/2026/morpher91/screenshot-video-tracking-v1.webp"
+  alt="Rastreamento do corpo inteiro a 2,5 s: fonte A, prévia do morph e alvo B. As referências acompanham cada clipe em seu próprio tempo; a fusão clássica começa depois de 30% da sobreposição."
+  width={1672}
+  height={912}
+/>
+
+### Retocar uma forma, não quinze vértices
+
+A ferramenta **Empurrar pontos** desloca juntas as alças ao redor do cursor,
+com influência forte no centro do pincel e decrescente até a borda. Seu raio é
+medido na tela, para manter um gesto previsível quando se dá zoom. Ela age
+sobre as referências visíveis da camada ativa e respeita seus bloqueios. Em uma
+forma animada, parte da posição exibida naquele instante: corrigir uma mandíbula
+não a traz de volta à sua geometria inicial. Todo o arrasto conta como um único
+desfazer. São escolhas pequenas, mas tornam o retoque manual das
+correspondências bem menos trabalhoso.
+
+<ScreenshotGallery
+  images={[
+    { src: "/images/2026/morpher91/screenshot-push-before-v1.webp", alt: "Antes do gesto: contorno da bochecha do Bunny selecionado, ferramenta Empurrar pontos ativa.", width: 1672, height: 912 },
+    { src: "/images/2026/morpher91/screenshot-push-after-v1.webp", alt: "Depois de um deslocamento de 10 pixels para a direita e 5 pixels para cima: as alças vizinhas acompanham o pincel.", width: 1672, height: 912 }
+  ]}
+  caption="Retoque local da bochecha do Bunny, antes / depois. O anel mostra o raio do pincel; um único desfazer restabelece o contorno anterior."
+/>
+
+## Aprender dentro do estúdio
+
+Uma grade de algoritmos não diz onde clicar. O estúdio embarca, portanto,
+projetos de exemplo e um **assistente contextual**, disponíveis em dezesseis
+idiomas. Cada etapa aponta o controle em questão. Algumas detectam que a ação
+foi feita e ficam verdes, mas esperam um clique em "Avançar" para continuar.
+"Mostrar" abre o painel certo sem mexer no projeto.
+
+O verdadeiro problema de um tutorial é que ele envelhece. As etapas apontam
+para âncoras `data-assist` colocadas na interface, e testes verificam que
+nenhuma âncora referenciada desapareceu e que nenhuma ficou órfã. Isso não
+garante que a explicação esteja correta. Garante que ela aponta para um botão
+que existe.
+
+<ZoomableThemeImage
+  src="/images/2026/morpher91/screenshot-contextual-guide-v1.webp"
+  alt="O guia em francês explica as janelas de warp e de dissolve, destacando a seção Transição do inspetor."
+  width={1672}
+  height={912}
+/>
+
+### Traduzir, depois reler dentro do estúdio
+
+A tradução cobre os controles, os exemplos e os guias. Foi feita em quatro
+etapas: tradução a partir de um glossário comum, revisão de sentido,
+revisão editorial, e então verificação na interface. O vocabulário da
+computação gráfica reserva algumas armadilhas: aqui, *feature* designa uma
+referência, e *feather* a suavização da borda de uma máscara. Traduzi-los fora
+de contexto pode mudar o sentido de um ajuste.
+
+A última etapa trata também dos botões estreitos demais para seus rótulos, dos plurais, das
+fontes e do árabe da direita para a esquerda. Os painéis seguem o idioma; a
+linha do tempo mantém seu sentido de leitura. Testes verificam as chaves e as
+variáveis dos dezesseis catálogos. Os nomes em inglês das referências e os
+nomes personalizados do projeto permanecem inalterados quando se troca de
+idioma. Esses controles não substituem uma releitura por falantes nativos, que
+ainda está por fazer.
+
+## Exportar: o mesmo loop, quadro a quadro
+
+A exportação não reimplementa nada: ela repete **o mesmo loop de renderização
+WebGPU** da prévia, quadro a quadro, no modo "quadro exato". Cada quadro vira um
+`VideoFrame`, vai para um `VideoEncoder` WebCodecs (H.264, VP9 ou AV1 conforme
+a verificação de compatibilidade), e o fluxo é multiplexado em **MP4 ou WebM** com o
+[Mediabunny](https://github.com/Vanilagy/mediabunny). A alternativa sem
+WebCodecs existe: uma **sequência PNG** acrescentada progressivamente a um ZIP,
+sem perdas e com transparência — o vídeo, por sua vez, é composto sobre um fundo
+preto ou branco.
+
+A lição de robustez, aprendida do jeito difícil: **validar antes de alocar**.
+Os limites de exportação são verificados *antes* de qualquer alocação na GPU — 16
+a 3.840 px de largura, 12 a 60 fps, 15 segundos no máximo, 900 quadros, 1 a 20
+Mbit/s, orçamento acumulado para os PNG. As exportações são **canceláveis** a
+qualquer momento, o controle de fluxo (backpressure) limita a fila (a codificação não acumula quadros
+mais rápido do que o multiplexador consegue processá-los), e codificadores, texturas, quadros
+e URLs de download são liberados explicitamente. No desktop, uma exportação
+que falha é irritante; em um iPad, um vazamento de `VideoFrame` é uma aba encerrada
+pelo sistema.
+
+<Callout type="info" title="War story: os vídeos que não funcionavam no Zen Browser">
+
+No Zen Browser, os vídeos simplesmente não funcionavam. O navegador, baseado no
+motor Gecko da Mozilla, expunha, no entanto, WebGPU e WebCodecs. O bloqueio
+ficava entre os dois: na versão testada, `copyExternalImageToTexture` rejeitava
+as fontes `VideoFrame` e `HTMLVideoElement` com um `TypeError`. Decodificar um
+quadro de vídeo era possível; transferi-lo diretamente para uma textura GPU não
+era.
+
+A [correção](https://github.com/AndreFrelicot/morpher91/commit/52fdbdda6549823f0880dac6e0647807fde808c4)
+acrescenta um desvio por um canvas intermediário: o quadro de vídeo é desenhado
+nele e depois esse canvas é copiado para a textura. O canvas é reutilizado e a
+falha da transferência direta é memorizada por dispositivo GPU e por tipo de
+fonte, para não provocar a mesma exceção a cada quadro. Os navegadores que
+aceitam a transferência direta a mantêm.
+
+Testar a presença das duas APIs na inicialização não bastava, portanto: era
+preciso verificar também a operação que as liga.
+
+</Callout>
+
+## Sobreviver no iPad
+
+O morphing por pixel é exatamente o tipo de carga que esquenta um tablet. Três
+decisões emergiram dessa batalha:
+
+- **O orçamento de GPU não é o breakpoint visual.** O perfil "GPU restrita" é
+  detectado pelas capacidades (`pointer: coarse`, `maxTouchPoints`) e limita a
+  resolução de renderização — independentemente do layout exibido. Um iPad que
+  mostra a interface desktop mantém seus orçamentos de tablet.
+- **Um único teto de resolução para todas as superfícies.** Renderização,
+  overlays e vistas de debug aplicam a mesma regra, rebaixada nos aparelhos
+  restritos. Nada de esperto, nenhum alocador: uma regra, em todo lugar.
+- **Nunca um snapshot síncrono.** O caminho que capturava um PNG em resolução
+  plena de forma síncrona na troca de vista mobile congelava a interface de
+  uma vez — removido, como o readback das máscaras.
+
+Os relatórios de qualificação do projeto dizem preto no branco: 526 testes em
+99 arquivos, typecheck, lint, build e simulações responsivas no verde, mas
+**uma simulação Chromium não prova nem o WebKit real, nem os gestos, nem a
+memória, nem o aquecimento**. Uma primeira passagem manual no iPad confirmou
+desde então que o app se sustenta ali. O smartphone, por sua vez, recebeu uma
+resposta mais franca: o shell mobile existe, mas a experiência **não é
+suportada** nele. Um visitante no telefone vê uma tela que diz isso claramente,
+pode copiar o link para abri-lo em um computador, e ainda assim pode seguir em
+frente — uma tela sem saída é hostil, e a fronteira entre um telefone dobrável
+e um tablet pequeno é pouco nítida.
+
+<Callout type="info" title="War story: o validador que recusava os arquivos do próprio app">
+  Esses relatórios servem, antes de tudo, para não mentir para si mesmo, e a
+  auditoria pré-lançamento pegou o tipo de bug que nunca se encontra clicando.
+  O novo validador de projetos recusava reabrir cerca de **1%** dos arquivos que
+  o próprio app acabava de salvar: cortar o início de um clipe, salvar, reabrir,
+  "estrutura inválida", arquivo definitivamente ilegível. A causa cabia em uma
+  comparação. A validação verificava se `início + duração` não ultrapassava a
+  duração total da mídia, com tolerância de `Number.EPSILON`. Só que o
+  normalizador calcula justamente `duração = total − início`, e em float64 a
+  soma inversa pode cair um ulp acima do total. `Number.EPSILON` é a distância
+  entre dois doubles em torno de 1; assim que o total passa de 2, um ulp vale o
+  dobro, e a tolerância já não cobria um simples erro de arredondamento.
+  Reproduzido em 1,04% de pares realistas, corrigido com uma tolerância
+  proporcional. Uma validação que deveria proteger o usuário o impedia de acessar o próprio
+  trabalho.
+</Callout>
+
+## 1991 em uma aba
+
+Comparar os quatro algoritmos explica uma parte do resultado. O resto se
+trabalha nas camadas: escolher as referências de uma zona, mascarar o que
+transborda, deslocar sua fusão, verificar o encaixe com as zonas vizinhas. Um
+mesmo plano costuma pedir várias, e o estúdio mantém essas camadas separadas até a
+renderização: refaz-se a boca ou o timing do fundo sem refazer o resto. É esse
+retoque pedaço por pedaço que mais me interessa no Morpher91.
+
+1991 rodava em estações Silicon Graphics. 2026 cabe em uma aba. Entre os dois,
+não há só a lei de Moore: há WebGPU, WebCodecs, e a ideia um pouco teimosa de
+que um efeito especial de cinema pode voltar a ser um brinquedo que se manipula.
+
+<Callout type="tip" title="Código-fonte">
+  <div className="not-prose">
+    <GitHubLink href="https://github.com/AndreFrelicot/morpher91" label="Código-fonte no GitHub" className="w-fit" />
+  </div>
+</Callout>
+
+{/* A FINALIZAR — completar os links com o app e uma remissão ao artigo do Lorenz Clash. */}

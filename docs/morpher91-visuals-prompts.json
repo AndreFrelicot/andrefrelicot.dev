@@ -1,0 +1,38 @@
+{
+  "generatedWith": "Outil image_gen intégré",
+  "date": "2026-09-05",
+  "assets": [
+    {
+      "id": "cover-white-v1",
+      "prompt": "Use case: illustration-story. Create a premium editorial cover for a French technical devlog about Morpher91, a 2D image morphing studio. Landscape 4:3, 1600x1200 or equivalent. Pure white background. A beautiful horizontal sequence of five stylized animal busts gradually transforming from a friendly orange fox at left into a white rabbit at right, with intermediate ears, muzzle and fur transitioning smoothly. Sophisticated tactile 3D illustration, subtle paper-like material, warm orange, cool blue and small golden yellow accents, delicate soft contact shadows. Thin blue and orange correspondence lines and a sparse triangulated mesh hover over the middle forms, suggesting image warping. Generous white margins. All five forms fully visible, equally spaced on one baseline. This is a conceptual illustration, not a screenshot of software and not a claim about an actual renderer's output. No interface, no text, no logo, no watermark.",
+      "source": "/Users/andre/.codex/generated_images/01a06ee3-b9ec-7460-8e0c-0d59b4806017/exec-5c2648ce-d4e9-4487-9efc-60fe069fd53d.png",
+      "savedPath": "public/images/2026/morpher91/cover-white-v1.png"
+    },
+    {
+      "id": "diagram-warp-then-dissolve-light-v1",
+      "prompt": "Use case: scientific-educational. Generate a precise, beautiful French educational infographic on a pure white background, landscape 16:9 approximately 1672x941. Flat editorial vector-like style, thin crisp strokes, large dark navy sans-serif text. Blue represents source A, orange source B, golden yellow represents intermediate geometry. Two clearly separated horizontal rows. Top row title exactly 'Crossfade naïf'. Left a simple stylized blue human face with broad proportions, center a visibly ghosted overlay of blue and orange face outlines with displaced eyes and noses, right a narrower orange face. Thin arrows from the left and right faces converge on center. Center caption exactly 'Contours dédoublés'. Bottom row title exactly 'Warp + dissolve'. Left same blue face with sparse correspondence points, right same orange face with corresponding points; both arrows converge on a central golden intermediate face, a single aligned set of eyes, nose and mouth, subtle deformation grid. Center caption exactly 'Traits alignés, ghosting réduit'. The two input faces differ in shape and eye/nose positions so comparison is meaningful. Only requested labels. Clean balanced generous whitespace, technically coherent diagram, no UI, no photo, no decorative fake data.",
+      "source": "/Users/andre/.codex/generated_images/01a06ee3-b9ec-7460-8e0c-0d59b4806017/exec-df7b28e5-4be0-4edb-8891-8a7f39c30206.png",
+      "savedPath": "public/images/2026/morpher91/diagram-warp-then-dissolve-light-v1.png"
+    },
+    {
+      "id": "diagram-layer-stack-light-v1",
+      "prompt": "Use case: scientific-educational. Precise French technical infographic, pure white background, landscape 16:9 approximately1672x941, navy sans-serif large crisp typography, thin blue/orange/golden accent lines. Explain compositing specialized morph layers. Left side three transparent rectangular planes in exploded gentle isometric perspective, top to bottom: top face region with feature lines and exact label 'Visage · Beier–Neely'; middle hair region and exact label 'Cheveux · TPS'; bottom entire portrait background and exact label 'Fond · Crossfade'. Small actual black-and-white mask thumbnails beside the face and hair planes, exact badge 'masque'. Bottom layer badge 'plein cadre'. Align label with each correct plane, no overlaps. Three arrows converge into a central rounded box labeled exactly 'Compositor' and 'Alpha prémultiplié'. Beneath the box exactly 'normal · multiply · screen · lighter'. One arrow from box to rightmost complete stylized human portrait showing composed hair, face and backdrop, label 'Image composée'. Use simple illustrative portrait, not real photo or UI screenshot. Plenty whitespace. Correct readable French accents. Hierarchy and arrow directions unambiguous.",
+      "source": "/Users/andre/.codex/generated_images/01a06ee3-b9ec-7460-8e0c-0d59b4806017/exec-016e97ec-92b9-4f6e-acdb-adeb73e6330a.png",
+      "savedPath": "public/images/2026/morpher91/diagram-layer-stack-light-v1.png",
+      "initialSource": "/Users/andre/.codex/generated_images/01a06ee3-b9ec-7460-8e0c-0d59b4806017/exec-5d008175-8bc0-4dc5-9e48-c8fce1899f1e.png",
+      "editPrompt": "Change ONLY the large top heading to exactly 'COMPOSER PLUSIEURS MORPHS'. Keep the pure white background, all three planes, portrait, masks, arrows, all other labels, dimensions and composition unchanged."
+    },
+    {
+      "id": "diagram-timeline-clock-light-v1",
+      "prompt": "Use case: scientific-educational. Create a polished technical architecture diagram in French, pure white background, landscape16:9 approx1672x941. Crisp navy large sans-serif typography, thin blue/orange/golden lines, spacious rounded boxes. Left central clock circle label exactly 'Boucle rAF unique' and 'τ maître'. Outgoing control arrows to two boxes upper center 'VideoSource A' in blue and 'VideoSource B' in orange, each subtitled 'Seeks sérialisés'. Both source boxes send arrows labeled 'génération n' toward right box 'Renderer', subtitle 'Frame courante'. One separate dashed red branch from source A leads down to crossed-out small box labeled 'génération n − 1' and 'Réponse rejetée'. Clock also sends arrow along bottom to box 'UI timeline', subtitle 'Lit τ pendant la lecture'. Renderer receives only current generation, never the rejected response. Small footer exact text: 'Lecture : temps réel' and 'Scrub / export : frame exacte'. Accurate arrowheads, no overlapping connectors or text, keep labels brief and legible. No fake UI, photos, or extra labels.",
+      "source": "/Users/andre/.codex/generated_images/01a06ee3-b9ec-7460-8e0c-0d59b4806017/exec-5d1cf4db-853f-4009-9f1d-a57b236ff744.png",
+      "savedPath": "public/images/2026/morpher91/diagram-timeline-clock-light-v1.png"
+    },
+    {
+      "id": "diagram-scrub-tiers-light-v1",
+      "prompt": "Use case: scientific-educational. Generate a clear French architecture infographic about video scrubbing. Pure white background. Landscape16:9 approx1672x941. Large dark navy sans-serif text, thin blue outlines, muted orange and golden yellow accents, lots whitespace. Top title 'Afficher une frame'. Four equal rounded cards in horizontal order, connected left-to-right arrows with small label 'si absente': 1 'Cache LRU' subtitle 'Pleine résolution'; 2 'Proxy' subtitle 'Résolution réduite'; 3 'WebCodecs' subtitle 'Décodage à la demande'; 4 'Élément vidéo' subtitle 'Repli'. No speed guarantees or numerical latencies. Lower section title 'Préparer les prochaines images'. Three cards connected left-to-right: 'Frame courante' subtitle 'Pleine résolution'; 'Images voisines' subtitle 'Autour de τ'; 'Proxy du clip' subtitle 'En arrière-plan'. Below lower row small orange interrupt mark and exact text 'Nouveau τ : interrompre le pré-décodage'. Typography readable at article width. No icons of actual software, no realistic screenshots, no extra text, precise arrow directions and spacing.",
+      "source": "/Users/andre/.codex/generated_images/01a06ee3-b9ec-7460-8e0c-0d59b4806017/exec-60592f5e-c8c3-497e-ab12-3cfd1861b046.png",
+      "savedPath": "public/images/2026/morpher91/diagram-scrub-tiers-light-v1.png"
+    }
+  ]
+}

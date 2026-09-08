@@ -1,0 +1,70 @@
+{
+  "purpose": "Conserver les briefs des placeholders et les consignes de capture, visibles sous les images dans la version française. Ne pas les supprimer lors du remplacement d’un visuel sans demande explicite.",
+  "briefs": [
+    {
+      "key": "cover-white",
+      "title": "Couverture",
+      "body": "**Rôle :** image de couverture de l'article, aussi référencée dans le frontmatter `image`.\n\n**Alternative simple :** une vraie capture du studio, prise avec l'interface superposée masquée (touche `U`), légèrement retouchée.\n\n**Prompt du placeholder initial :**\n\n- Sujet : le studio Morpher91, interface sombre, affichant un morph à mi-chemin (t = 0,5) entre deux personnages du catalogue de démos (Foxy → Bunny, ou Claire → Anna).\n- Composition : capture plein cadre, canvas central dominant, panneaux latéraux sombres discrets, timeline en bas avec la tête de lecture au milieu.\n- Éléments obligatoires : les lignes de correspondance Beier–Neely en overlay sur le canvas ; le visage intermédiaire net, sans ghosting.\n- Ambiance : studio créatif sombre, contraste doux, lumière venant de l'image elle-même.\n- Contraintes : 1600×1200, aucun texte ajouté, aucun logo tiers, pas de visage réel identifiable.\n\n**Direction retenue ensuite :** illustration conceptuelle sur fond blanc ; une capture du studio reste une alternative. Le prompt initial est conservé pour relecture, il ne décrit pas l'image générée actuelle."
+    },
+    {
+      "key": "diagram-warp-then-dissolve",
+      "title": "Warp puis dissolve",
+      "body": "**Rôle :** montrer en un regard pourquoi le crossfade produit du ghosting et comment le morphing peut le réduire.\n\n**Prompt du placeholder initial :**\n\n- Type : schéma pédagogique, fond clair, traits fins, même famille visuelle que les diagrammes de l'article Lorenz Clash.\n- Structure : deux rangées horizontales lues de gauche à droite, séparées par un titre chacune.\n- Rangée du haut « Crossfade naïf » : silhouette de visage A → flèche → vignette t = 0,5 où les deux jeux de contours se superposent (deux nez, quatre yeux, contours semi-transparents) → flèche → silhouette de visage B. Légende sous la vignette : « ghosting ».\n- Rangée du bas « Warp + dissolve » : A se déforme vers une forme intermédiaire (flèche courbe « warp avant »), B se déforme vers la même forme (flèche courbe « warp arrière »), les deux convergent vers une vignette t = 0,5 nette. Annotation : « traits alignés → ghosting réduit ».\n- Couleurs : contours de A en bleu, de B en orange, forme intermédiaire en jaune (palette de l'app), fond blanc cassé.\n- Texte : uniquement les deux titres de rangée et une annotation par rangée. Silhouettes stylisées, pas de photos.\n- Format prévu : 1672×941."
+    },
+    {
+      "key": "screenshot-four-methods",
+      "title": "Les quatre méthodes",
+      "body": "**Rôle :** le visuel signature de l'article : la même paire d'images morphée à mi-chemin par les quatre méthodes.\n\n**Capture :**\n\n- Dans Morpher91, charger le preset de comparaison des quatre algorithmes, puis ouvrir l'onglet Comparer. Le projet doit contenir à la fois des points pour Mesh/TPS et des segments ou polylignes pour Beier–Neely : un projet composé uniquement de points ne permet pas cette comparaison.\n- Placer τ au milieu de la timeline (t = 0,5) et capturer la grille 2×2 des quatre algorithmes, interface superposée masquée (touche `U`).\n- Si la grille Comparer ne montre pas les lignes Beier–Neely, capturer la vignette Beier–Neely séparément dans le studio avec l'overlay des lignes activé.\n\n**Annotations prévues en post-production :**\n\n- Crossfade : cercle ou flèche sur la zone de double contour, légende « ghosting ».\n- Mesh : flèche sur une arête visible du maillage, légende « plis anguleux ».\n- TPS : légende « champ lisse ».\n- Beier–Neely : légende « déformation guidée par les lignes », lignes visibles en overlay.\n- Titre discret par vignette, même police que le site, rien d'autre.\n\n**Capture insérée :** comparaison réelle à 2 s sur 4 s, sans annotations ajoutées. Les consignes d'annotation restent disponibles si tu veux les reprendre."
+    },
+    {
+      "key": "diagram-layer-stack",
+      "title": "Composition des calques",
+      "body": "**Rôle :** expliquer que les calques composent plusieurs morphs spécialisés au lieu d'un seul champ global.\n\n**Prompt du placeholder initial :**\n\n- Type : vue éclatée en légère perspective, fond clair, traits fins.\n- Structure : trois plans rectangulaires empilés du bas vers le haut et décalés, à gauche ; des flèches convergent vers un bloc central « Compositor — alpha prémultiplié » ; à droite, l'image finale composée.\n- Plan du bas : « Fond — Crossfade », image entière, pas de masque.\n- Plan du milieu : « Cheveux — Thin-Plate Spline », avec à côté une petite vignette de son masque (zone des cheveux en blanc sur noir, bord adouci).\n- Plan du haut : « Visage — Beier–Neely », avec les lignes de caractéristiques tracées dessus (arête du nez, mâchoire, sourcils).\n- Sous le compositor, une liste courte : « normal · multiply · screen · lighter ».\n- Badges : « masque » sur les deux plans masqués, « plein cadre » sur le fond.\n- Couleurs : A bleu, B orange, accents jaune ; texte court, une étiquette par plan.\n- Format prévu : 1672×941."
+    },
+    {
+      "key": "mask-final-25",
+      "title": "Advection du masque peint",
+      "body": "**Rôle :** rendre visible le déplacement du masque peint avec le morph.\n\n**Capture :** ouvrir le preset « Masque peint — suivre le morph », sélectionner son calque peint, puis capturer le résultat et la vue debug Masque à 25 %, 50 % et 75 % de la transition. Faire un montage en deux rangées (résultat / masque) et trois colonnes (temps). Le masque doit accompagner le même trait du visage.\n\n**Annotations :** « peint sur A » au départ et « échantillonné à travers le warp » sur le résultat. Utiliser les rendus réels ; ne pas inventer de comparaison « avant » qui ne serait pas reproductible dans le studio.\n\n**Présentation insérée :** galerie des six captures réelles, résultat et masque côte à côte, trois instants de haut en bas. Format du montage initialement prévu : 1672×941."
+    },
+    {
+      "key": "transition-standard-25",
+      "title": "Fenêtres de transition",
+      "body": "**Rôle :** comparer le même morph avec un fondu sur toute la durée et un fondu concentré au centre.\n\n**Capture :** ouvrir le preset « Transition — morph classique ». À 25 %, 50 % et 75 %, capturer une première rangée avec la transition Standard, puis une seconde avec Morph classique. Conserver les mêmes repères, le même cadrage et le même algorithme. Ajouter sous chaque rangée deux bandes graduées : Warp 0–100 % ; Dissolve 0–100 % ou 30–70 %. Encadrer un double contour seulement s'il est réellement visible. Le centre peut être identique : c'est attendu.\n\n**Présentation insérée :** galerie des six captures réelles, Standard à gauche et Morph classique à droite, trois instants de haut en bas. Les plages de warp et de dissolve sont décrites dans la légende ; les bandes graphiques restent à ajouter si souhaité. Format du montage initialement prévu : 1672×941."
+    },
+    {
+      "key": "diagram-timeline-clock",
+      "title": "Horloge maître et seeks",
+      "body": "**Rôle :** montrer l'autorité temporelle unique et le rejet des seeks obsolètes.\n\n**Prompt du placeholder initial :**\n\n- Type : schéma d'architecture épuré, fond clair, encadrés arrondis, flèches fines.\n- Centre : un cercle « Boucle rAF unique — τ maître ».\n- Flèches sortantes vers « VideoSource A » et « VideoSource B » (chacun annoté « seeks sérialisés · génération n »), « Renderer » (annoté « upload à la frame exacte »), « UI timeline » (annotée « lit τ, ne l'écrit jamais pendant la lecture »).\n- Détail obligatoire : depuis VideoSource A, une flèche de retour étiquetée « réponse génération n−1 : périmée » part vers une icône de corbeille, barrée d'une croix ; une seconde flèche « génération n » va vers le Renderer.\n- Sous le schéma, deux petites étiquettes : « lecture : temps réel, on prélève » et « scrub / export : pause, frame exacte ».\n- Texte court, une phrase maximum par encadré.\n- Format prévu : 1672×941."
+    },
+    {
+      "key": "diagram-scrub-tiers",
+      "title": "Niveaux de service du scrub",
+      "body": "**Rôle :** montrer les niveaux de service d'une frame pendant un scrub, et le travail idle qui s'interrompt dès que τ bouge.\n\n**Prompt du placeholder initial :**\n\n- Type : schéma épuré, fond clair, même famille visuelle que les autres schémas de l'article.\n- Rangée principale, de gauche à droite, quatre encadrés reliés par des flèches « miss → » : « Cache LRU de textures pleine résolution (indexé par n° de frame) » → « Proxy résolution réduite du clip entier » → « Décodeur WebCodecs (Mediabunny) » → « Repli : élément vidéo ». Sur chaque encadré, une étiquette de coût relative : « instantané », « instantané, flou », « quelques ms », « lent ».\n- Rangée du bas « Travail idle après un scrub stabilisé », trois étapes en séquence : « pleine résolution de la frame présentée » → « voisins de τ (±23 images) » → « balayage proxy du clip ».\n- Annotation reliant les deux rangées : « nouveau τ ⇒ abandon en ≤ 1 image ».\n- Texte court, pas de code, pas d'icônes réalistes.\n- Format prévu : 1672×941.\n\n**Ajustement retenu :** les images générées évitent les promesses de latence ; les coûts du brief initial restent ici comme indication d'intention, pas comme mesure garantie."
+    },
+    {
+      "key": "screenshot-timeline-keyframes",
+      "title": "Images clés dans la timeline",
+      "body": "**Rôle :** montrer les images clés en losanges sur les pistes A/B et la navigation dans l'inspecteur.\n\n**Fichier du placeholder initial :** `docs/screenshots/m25-timeline-keyframes.png` dans le dépôt Morpher91.\n\n**Pour la refaire :** charger le preset « Marche — morph de corps entier », sélectionner le calque « Morph pendant le chevauchement » puis le repère « Menton », passer en vue Triple, cliquer un losange pour que celui sous la tête de lecture soit plein, et capturer. Recadrer sur la moitié basse (timeline + section Images clés de l'inspecteur) si l'image entière est trop dense.\n\n**Capture insérée :** nouvelle capture à τ = 3 s, avec les presets actuels. Format du fichier initial : 1400×900."
+    },
+    {
+      "key": "screenshot-video-tracking",
+      "title": "Suivi vidéo du corps entier",
+      "body": "**Rôle :** montrer que les repères suivent réellement les sujets et que le morph se produit pendant le chevauchement des clips.\n\n**Capture :** charger « Marche — morph de corps entier », sélectionner « Menton », afficher la vue Triple (Source A, aperçu du morph, Cible B) et capturer entre 2 et 4 s. Conserver les repères visibles, les pistes A/B et les images clés. Regarder aussi plusieurs frames voisines : une capture isolée ne suffit pas à valider le suivi.\n\n**À montrer :** les articulations appariées, le calque « Morph pendant le chevauchement », les décalages des clips et les limites du morph 2D sur les silhouettes et les vêtements.\n\n**Capture insérée :** τ = 2,5 s, commandes superposées masquées et repères conservés. Format prévu : 1672×941."
+    },
+    {
+      "key": "screenshot-push-before",
+      "title": "Outil Pousser",
+      "body": "**Rôle :** montrer une retouche locale de contour avec l'outil Pousser.\n\n**Capture :** ouvrir le preset « Contours — sculpter avec Pousser », afficher les repères, puis activer Pousser (`K`). Capturer avant et après un léger déplacement de joue ; laisser l'anneau du pinceau visible sur la seconde capture. Vérifier qu'une seule annulation revient à la forme précédente. Ne pas déplacer le contour jusqu'à créer un pli uniquement pour rendre l'effet spectaculaire.\n\n**Captures insérées :** déplacement local de la joue de Bunny, 10 pixels vers la droite et 5 pixels vers le haut ; une annulation rétablit le contour précédent. Format du montage prévu : 1672×941."
+    },
+    {
+      "key": "screenshot-contextual-guide",
+      "title": "Assistant contextuel",
+      "body": "**Rôle :** montrer le lien entre une instruction et la commande réelle.\n\n**Capture :** charger un preset, ouvrir l'assistant, puis le guide sur les transitions de calque. Capturer une étape avec la commande surlignée et le texte français lisible. Conserver assez de studio autour pour situer le panneau ; ne pas ajouter de bulle fictive en post-production.\n\n**Capture insérée :** guide « Opacité, fusion, clip et transition », étape 5/8, section Transition réellement surlignée. Format prévu : 1672×941."
+    },
+    {
+      "key": "screenshot-ipad",
+      "title": "iPad réel",
+      "body": "**Rôle :** prouver que l'app tourne sur iPad en layout desktop, et illustrer le choix « smartphone non supporté ».\n\n**À prendre :**\n\n- Photo réelle de l'app sur iPad, layout desktop, de préférence en vue Triple pendant un morph (preset Foxy → Bunny ou Claire → Anna), interface superposée masquée (touche `U`) pour une image plus propre.\n- Alternative en montage côte à côte : capture iPhone de l'écran « Morpher91 est conçu pour un ordinateur » avec son lien « Continuer quand même », et capture iPad du studio.\n- Éviter les reflets sur l'écran, cadrer l'appareil entier ou uniquement l'écran, pas de main dans le champ."
+    }
+  ]
+}

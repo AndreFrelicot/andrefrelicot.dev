@@ -31,6 +31,12 @@ The repo uses **pnpm** (`pnpm-lock.yaml` is authoritative; a stray `package-lock
 - A missing translation automatically falls back to English.
 - Post URLs are date-based: `/{locale}/{year}/{month}/{slug}`, constructed by `buildPostPath()` in `src/lib/post-path.ts`.
 
+### Morpher91 devlog — current editorial work
+
+- For this article, the French version is the user's canonical working version.
+- Keep the visual briefs, placeholder instructions, and generation prompts below their images in the French article until the user explicitly asks to remove them. Replacing an image must not delete its brief or prompt history.
+- Preserve the archives in `docs/morpher91-visuals-placeholders.json`, `docs/morpher91-visuals-prompts.json`, and `docs/morpher91-visuals-prompts-v2.json` when revising visuals.
+
 ### Post Frontmatter
 
 ```yaml
