@@ -68,7 +68,10 @@ function enhanceCodeFigure(figure: HastElement) {
   const titleIndex = figure.children.findIndex(
     (child) =>
       isElement(child) &&
-      Boolean(child.properties?.["data-rehype-pretty-code-title"]),
+      Object.prototype.hasOwnProperty.call(
+        child.properties ?? {},
+        "data-rehype-pretty-code-title",
+      ),
   );
 
   let label: string | undefined;
