@@ -27,7 +27,7 @@ export function SiteShell({
   contentClassName,
 }: SiteShellProps) {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-14">
+    <div lang={locale} className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-14">
       <SiteHeader
         locale={locale}
         navLinks={navLinks}
