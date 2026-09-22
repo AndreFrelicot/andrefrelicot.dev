@@ -5,7 +5,7 @@ export const dynamic = "error";
 
 export async function GET() {
   const origin = "https://andrefrelicot.dev";
-  const posts = getAllPosts();
+  const posts = SUPPORTED_LOCALES.flatMap((locale) => getAllPosts(locale));
   const localeRoots = SUPPORTED_LOCALES.map((locale) => `${origin}/${locale}`);
   const urls = [
     `${origin}/`,

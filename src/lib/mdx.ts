@@ -25,6 +25,7 @@ export type PostFrontMatter = {
   tags?: string[];
   image?: string;
   type?: string;
+  canonical_locale?: Locale;
   translations?: Partial<Record<Locale, string>>;
 };
 
@@ -142,6 +143,30 @@ function buildTranslationIndex(): TranslationIndex {
     byCanonical.set(canonicalSlug, locales);
     Object.entries(locales).forEach(([localeKey, slugValue]) => {
       canonicalByLocaleSlug.set(`${localeKey}:${slugValue}`, canonicalSlug);
+    });
+  });
+
+  // A post can start in another language before an English version exists.
+  SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).forEach((locale) => {
+    listPostSlugs(locale).forEach((slug) => {
+      if (canonicalByLocaleSlug.has(`${locale}:${slug}`) || byCanonical.has(slug)) return;
+      const filePath = resolvePostPath(slug, locale);
+      if (!filePath) return;
+      const { data } = matter(fs.readFileSync(filePath, "utf8"));
+      if (data.canonical_locale !== locale) return;
+      const locales: Partial<Record<Locale, string>> = { [locale]: slug };
+      SUPPORTED_LOCALES.forEach((targetLocale) => {
+        if (targetLocale === locale) return;
+        const translated = normalizeTranslationSlug(data[`${targetLocale}_mdx`]);
+        if (translated) {
+          const targetSlug = resolveLocalizedSlug(slug, translated);
+          if (resolvePostPath(targetSlug, targetLocale)) locales[targetLocale] = targetSlug;
+        }
+      });
+      byCanonical.set(slug, locales);
+      Object.entries(locales).forEach(([targetLocale, targetSlug]) => {
+        canonicalByLocaleSlug.set(`${targetLocale}:${targetSlug}`, slug);
+      });
     });
   });
 
@@ -268,8 +293,7 @@ export function readPostBySlug(
 }
 
 export function getAllPosts(locale: Locale = DEFAULT_LOCALE): Post[] {
-  const slugs =
-    locale === DEFAULT_LOCALE ? listCanonicalSlugs() : listPostSlugs(locale);
+  const slugs = listPostSlugs(locale);
 
   return slugs
     .map((slug) => readPostBySlug(slug, locale))
@@ -278,6 +302,7 @@ export function getAllPosts(locale: Locale = DEFAULT_LOCALE): Post[] {
 
 export function getAllPostsWithFallback(locale: Locale): Post[] {
   return listCanonicalSlugs()
+    .filter((slug) => getPostLocales(slug).includes(locale))
     .map((canonicalSlug) => {
       const localizedSlug = getLocalizedSlug(canonicalSlug, locale);
       try {
@@ -321,7 +346,21 @@ export function getTranslationMap(canonicalSlug: string): Partial<Record<Locale,
 }
 
 export function listCanonicalSlugs(): string[] {
-  return listPostSlugs(DEFAULT_LOCALE);
+  return Array.from(getTranslationIndex().byCanonical.keys());
+}
+
+export function getCanonicalLocale(canonicalSlug: string): Locale {
+  // The source locale is inserted before its translations in the index.
+  const [locale] = Object.keys(getTranslationMap(canonicalSlug)) as Locale[];
+  return locale ?? DEFAULT_LOCALE;
+}
+
+export function getPostLocales(canonicalSlug: string): readonly Locale[] {
+  const translations = getTranslationMap(canonicalSlug);
+  // Preserve the existing English fallback, but don't invent untranslated routes.
+  return translations[DEFAULT_LOCALE]
+    ? SUPPORTED_LOCALES
+    : SUPPORTED_LOCALES.filter((locale) => translations[locale]);
 }
 
 export function refreshTranslationIndex(): void {

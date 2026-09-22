@@ -2,12 +2,12 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site-shell";
 import { getDictionary } from "@/lib/dictionary";
 import {
-  SUPPORTED_LOCALES,
   type Locale,
   getCanonicalSlug,
   getDateSegments,
   getLocalizedSlug,
   getPostPermalink,
+  getPostLocales,
   getValidLocale,
   readPostBySlug,
 } from "@/lib/mdx";
@@ -34,19 +34,17 @@ export default async function PostLayout({
   const aboutPath = getPostPermalink(locale, aboutSlug, aboutPost.frontmatter.date);
   const canonicalSlug = getCanonicalSlug(locale, resolved.slug);
   const languagePaths = Object.fromEntries(
-    SUPPORTED_LOCALES.map((loc) => {
+    getPostLocales(canonicalSlug).map((loc) => {
       const targetSlug = getLocalizedSlug(canonicalSlug, loc);
       const targetPost = readPostBySlug(targetSlug, loc);
       const { year, month } = getDateSegments(targetPost.frontmatter.date);
       return [loc, `${year}/${month}/${targetSlug}`];
     }),
   ) as Partial<Record<Locale, string>>;
-  const currentPath = languagePaths[locale];
 
   return (
     <SiteShell
       locale={locale}
-      languagePath={currentPath}
       languagePaths={languagePaths}
       navLinks={[
         {

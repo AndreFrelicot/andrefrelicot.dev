@@ -13,11 +13,12 @@ import { formatLocaleDate } from "@/lib/date";
 import { formatReadingTime, getDictionary } from "@/lib/dictionary";
 import {
   DEFAULT_LOCALE,
-  SUPPORTED_LOCALES,
+  getCanonicalLocale,
   getCanonicalSlug,
   getDateSegments,
   getLocalizedSlug,
   getPostPermalink,
+  getPostLocales,
   getValidLocale,
   listCanonicalSlugs,
   readPostBySlug,
@@ -92,7 +93,7 @@ export function generateStaticParams() {
   refreshTranslationIndex();
   const canonicalSlugs = listCanonicalSlugs();
   return canonicalSlugs.flatMap((canonicalSlug) =>
-    SUPPORTED_LOCALES.map((locale) => {
+    getPostLocales(canonicalSlug).map((locale) => {
       const localizedSlug = getLocalizedSlug(canonicalSlug, locale);
       const post = readPostBySlug(localizedSlug, locale);
       const { year, month } = getDateSegments(post.frontmatter.date);
@@ -114,7 +115,8 @@ export async function generateMetadata({ params }: { params: PageParams }) {
   const canonicalSlug = getCanonicalSlug(locale, resolved.slug);
   const localizedSlug = getLocalizedSlug(canonicalSlug, locale);
   const post = readPostBySlug(localizedSlug, locale);
-  const defaultPost = readPostBySlug(canonicalSlug, DEFAULT_LOCALE);
+  const canonicalLocale = getCanonicalLocale(canonicalSlug);
+  const defaultPost = readPostBySlug(canonicalSlug, canonicalLocale);
   const pathForLocale = getPostPermalink(
     locale,
     localizedSlug,
@@ -126,7 +128,7 @@ export async function generateMetadata({ params }: { params: PageParams }) {
     ? `${post.frontmatter.modified}T00:00:00+00:00`
     : null;
   const ogLocale = OG_LOCALE_MAP[locale] ?? OG_LOCALE_MAP[DEFAULT_LOCALE];
-  const alternateOgLocales = SUPPORTED_LOCALES.filter(
+  const alternateOgLocales = getPostLocales(canonicalSlug).filter(
     (loc) => loc !== locale,
   ).map((loc) => OG_LOCALE_MAP[loc] ?? OG_LOCALE_MAP[DEFAULT_LOCALE]);
   const description =
@@ -145,7 +147,7 @@ export async function generateMetadata({ params }: { params: PageParams }) {
   const absoluteArticleUrl = toAbsoluteUrl(pathForLocale);
 
   const languageAlternates = Object.fromEntries(
-    SUPPORTED_LOCALES.map((loc) => {
+    getPostLocales(canonicalSlug).map((loc) => {
       const targetSlug = getLocalizedSlug(canonicalSlug, loc);
       const localizedPost = readPostBySlug(targetSlug, loc);
       return [
@@ -164,7 +166,7 @@ export async function generateMetadata({ params }: { params: PageParams }) {
     publisher: AUTHOR_NAME,
     alternates: {
       canonical: getPostPermalink(
-        DEFAULT_LOCALE,
+        canonicalLocale,
         canonicalSlug,
         defaultPost.frontmatter.date,
       ),

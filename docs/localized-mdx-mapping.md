@@ -31,3 +31,18 @@ The loader normalizes slashes and trims the extension, so either `guides/perform
 4. Run `pnpm build` (or `pnpm prebuild`) to rebuild translation mappings and search indexes.
 
 Only the default-locale file needs to list translations; translated files can keep minimal front matter.
+
+## Starting with a French article
+
+An article can be integrated before its English translation is written. Store it under
+`src/content/fr/<year>/<slug>.mdx` and add `canonical_locale: fr`. Only declare
+translation keys for files that exist (for example, `fr_mdx: <slug>.mdx`).
+
+It appears in the French listing and search index, with a French canonical URL and
+only existing language alternates. The language menu links to the other languages'
+homepages until translations exist. As with every file in `src/content`, it will be
+included in the next deployment; this field is not a draft flag.
+
+When the English version is ready, add it with the usual `fr_mdx` mapping. The
+English index then takes precedence automatically, preserving the existing French
+URL and restoring the standard translation workflow.
