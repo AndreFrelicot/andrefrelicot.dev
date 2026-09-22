@@ -1,0 +1,191 @@
+---
+title: "2brain : mon second cerveau agentique & RAG basé sur Convex"
+description: "Un second cerveau dans le cloud, accessible en web, CLI et MCP : retour d’expérience sur le RAG, les workers et la consolidation assistée des connaissances."
+date: 2026-09-22
+en_mdx: 2brain-agentic-second-brain-rag-convex.mdx
+fr_mdx: 2brain-second-cerveau-agentique-rag-convex.mdx
+es_mdx: 2brain-segundo-cerebro-agentico-rag-convex.mdx
+pt_mdx: 2brain-segundo-cerebro-agentico-rag-convex.mdx
+tags: [ai, rag, agents, convex, knowledge-graph, mcp, typescript, workers, second-brain, vector-db, embeddings, llm, ocr, hybrid-search, chrome-extension, cli, realtime, workflows]
+image: /images/2026/2brain/2brain-devlog-cover.webp
+---
+
+<ThemeImage
+  src="/images/2026/2brain/2brain-devlog-cover.webp"
+  alt="Le graphe de 2brain, avec ses sources et leurs connexions."
+  width={1600}
+  height={1200}
+  priority
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Ma veille produit beaucoup de matière : articles, documentation, vidéos, notes de recherche. Retrouver un lien est une chose ; retrouver une idée, ses sources et ce qu’elle apporte à un projet en est une autre.
+
+Avec **2brain**, j’explore une alternative à Obsidian pour mon propre usage : conserver les notes reliées, les backlinks et le graphe, tout en remplaçant le coffre de fichiers locaux par une base accessible dans le cloud. La même connaissance est disponible dans une interface web, en ligne de commande et via MCP pour mes assistants IA. Markdown reste le format d’édition et d’export ; Convex est la source de vérité.
+
+> **2brain est un outil interne de recherche et d’expérimentation, utilisé pour ma propre veille. Il ne sera pas publié tel quel pour le moment.**
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/2brain-demo.mov"
+  title="Démonstration de 2brain"
+  caption="2brain en action"
+/>
+
+## De la capture à une réponse sourcée
+
+L’extension Chrome me permet de capturer une page pendant ma lecture, y compris son contenu visible dans une session authentifiée, sans exporter les cookies. Je peux joindre une consigne : comparer cette source à mes notes, par exemple, puis produire un rapport lié.
+
+<ThemeImage
+  src="/images/2026/2brain/screenshots/extension-capture-confirmee.webp"
+  alt="Capturer une page sans quitter sa lecture : l’extension confirme l’enregistrement et l’indexation de l’article Anthropic."
+  width={2558}
+  height={1540}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ScreenshotGallery
+  images={[
+  {
+    "src": "/images/2026/2brain/screenshots/extension-apercu.webp",
+    "alt": "Extension Chrome de 2brain : aperçu du texte capturé et de l’image de la page Anthropic avant enregistrement.",
+    "width": 934,
+    "height": 1214
+  },
+  {
+    "src": "/images/2026/2brain/screenshots/note-source.webp",
+    "alt": "Note source dans 2brain : article Anthropic importé, résumé, URL d’origine et capture du navigateur conservée.",
+    "width": 2258,
+    "height": 1742
+  }
+]}
+  caption="De Chrome à 2brain : vérifier le texte et l’image capturés, puis retrouver la source, son résumé et sa capture dans la note."
+/>
+
+Je peux aussi joindre des images et des PDF à une note, puis lancer une **reconnaissance de texte (OCR)** en français ou en anglais. Tesseract.js s’exécute dans une action Convex ; le texte extrait rejoint la recherche full-text et vectorielle avec sa provenance : note, document et page. Les fichiers originaux restent conservés.
+
+Le contenu est extrait, découpé en passages et indexé. La recherche combine correspondances textuelles et proximité sémantique par embeddings, puis un reranker peut affiner le classement. Les passages retenus alimentent le contexte du modèle pour construire une réponse avec ses références : c’est le pipeline **RAG**.
+
+Le graphe ajoute les relations entre sources, concepts et projets. Je peux suivre les liens pour explorer une idée et comprendre son contexte, puis revenir aux documents d’origine.
+
+<ThemeImage
+  src="/images/2026/2brain/screenshots/graphe-anonymise.webp"
+  alt="Explorer les connexions d’une entité parmi les sources, les projets et les autres notes. Libellés masqués par le mode de présentation."
+  width={2578}
+  height={1736}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/2brain/screenshots/edition-markdown.webp"
+  alt="Le texte de la note reste éditable en Markdown. Une sélection peut devenir un lien vers une autre note."
+  width={2538}
+  height={1742}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+<ThemeImage
+  src="/images/2026/2brain/screenshots/lier-une-entite.webp"
+  alt="Relier le passage à une entité existante ou créer une nouvelle note."
+  width={1800}
+  height={826}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+J’évalue aussi les choix de recherche. Sur un jeu interne de **33 questions**, l’ajout du reranking au classement hybride a fait passer le MRR de **0,771 à 0,822** : les résultats attendus remontent mieux. Ce petit jeu ne constitue pas un benchmark général, mais il permet de décider sur une mesure plutôt que sur une impression.
+
+## Convex pour expérimenter vite
+
+Je veux faire évoluer ce cerveau au rythme de mes besoins. Un usage révèle une limite, j’adapte les structures de données et j’ajoute une fonctionnalité ciblée : **projets pour regrouper les connaissances, tâches avec échéances, workflows personnalisés** pour enchaîner capture, analyse et revue. Avec Convex, je peux faire évoluer ensemble ces structures, leurs traitements et leur interface, puis les confronter rapidement à mon usage quotidien. Le second cerveau prend ainsi la forme de ma manière de travailler.
+
+<ThemeImage
+  src="/images/2026/2brain/screenshots/accueil-anonymise.webp"
+  alt="Un point d’entrée commun pour capturer une source, demander une action à l’agent et retrouver projets et tâches. Interface en mode de présentation."
+  width={2554}
+  height={1740}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Le **BaaS Convex** simplifie ce travail parce que les briques essentielles sont intégrées :
+
+- Une **base documentaire avec transactions ACID** : les modifications regroupées dans une mutation sont validées ensemble, pour garder notes, liens et journal cohérents.
+- Le **stockage de fichiers** pour les documents et les captures, référencés depuis les notes.
+- Des **index vectoriels et une recherche full-text** dans la même plateforme, pour retrouver les passages par proximité sémantique ou par mots-clés.
+- Un **backend TypeScript réactif**, auquel les clients peuvent s’abonner pour recevoir les changements des données qu’ils consultent.
+
+Cette réactivité relie directement les traitements à leur suivi. Mes workers s’abonnent aux requêtes de jobs disponibles, sans interroger périodiquement le serveur. Lorsqu’ils enregistrent leur progression ou un résultat dans Convex, l’interface React abonnée se met à jour en temps réel.
+
+Je peux ainsi faire évoluer données, logique backend et interface dans une même itération, sans déployer séparément une base vectorielle, un moteur full-text et une couche de synchronisation. La génération des embeddings et les appels aux modèles restent confiés aux services IA ; Convex fournit le socle intégré qui me permet d’expérimenter rapidement.
+
+<ThemeImage
+  src="/images/2026/2brain/architecture-convex.webp"
+  alt="Convex réunit données, fichiers, recherche et backend réactif. Les workers s’abonnent aux jobs et publient leur progression. Schéma simplifié ; l’OCR est une fonction applicative exécutée dans Convex."
+  width={1536}
+  height={1024}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+## Des agents intégrés à un système observable
+
+Convex conserve l’état durable des workflows et des jobs. Des **workers externes** prennent en charge l’extraction lourde et les traitements IA, avec des adaptateurs pour Claude et Codex. Le CLI et le serveur MCP permettent aussi aux assistants d’interroger et d’enrichir la base depuis leur environnement de travail.
+
+Les workers répondent aussi à un **choix économique** : utiliser les sessions Claude Code ou Codex pour mobiliser la capacité incluse dans mes abonnements et limiter les appels API facturés à l’usage. Cela facilite les expérimentations répétées sur l’enrichissement et les rapports, dans les limites et quotas de ces offres. Le mode serveur via OpenRouter reste une autre option, configurable selon le traitement.
+
+Un cas concret : **extraire la transcription d’une vidéo YouTube**. Un worker local utilise `yt-dlp` pour récupérer les sous-titres disponibles, y compris automatiques, puis les structure en Markdown avec des liens vers les passages horodatés. La transcription rejoint la note et son indexation ; un agent peut ensuite la résumer ou la rapprocher d’autres sources du cerveau. Convex orchestre le job et rend son état visible dans l’interface, tandis que le worker exécute l’outil local.
+
+Par exemple, **ChatGPT web accède à mon cerveau via MCP, à travers un tunnel vers le serveur**. Je peux lui demander de retrouver et résumer l’article que je viens de capturer dans Chrome : il consulte 2brain avec ses outils et cite la note dans sa réponse. Depuis le terminal, le CLI donne accès à cette même base.
+
+<ThemeImage
+  src="/images/2026/2brain/screenshots/chatgpt-web-mcp.webp"
+  alt="De la capture Chrome à la conversation : ChatGPT web consulte 2brain via MCP et référence la note retrouvée. Le serveur MCP est accessible par tunnel."
+  width={1596}
+  height={1224}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Une consigne après capture devient ainsi un travail suivi : attendre l’indexation, préparer le contexte, produire un rapport, puis le relier à sa source. Les traitements disposent de mécanismes de reprise, de limites et d’un journal ; les instructions de l’utilisateur restent séparées du contenu des documents.
+
+J’accorde autant d’attention à ces mécanismes qu’au prompt : reprendre une publication sans régénérer le rapport, éviter les effets en double et rendre la consommation visible lorsqu’elle est disponible font partie du fonctionnement quotidien.
+
+## Des modèles et des traitements configurables
+
+Pour l’enrichissement, les paramètres me permettent de choisir un worker local piloté par Claude Code ou Codex, ou un modèle serveur via OpenRouter. Le modèle et le niveau de raisonnement du worker sont réglables, tout comme la limite d’appels par heure et la taille du texte envoyé. Je peux ainsi expérimenter différents compromis entre qualité, latence et coût, et éviter de relancer l’enrichissement lorsque le contenu n’a pas changé.
+
+<ThemeImage
+  src="/images/2026/2brain/screenshots/parametres-modeles.webp"
+  alt="Configurer le mode d’enrichissement, les modèles, l’effort de raisonnement et les limites des traitements."
+  width={1574}
+  height={1532}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+## Jev et le « rêve » : consolider la connaissance
+
+J’explore maintenant l’entretien du cerveau. J’ai intégré **Jev via OpenRouter** comme brique de classification pour trier des candidats, proposer des rapprochements et repérer les apports possibles d’une source à une synthèse.
+
+J’appelle « rêve » un cycle de consolidation : examiner les changements dans un périmètre choisi, proposer des liens utiles et préparer l’actualisation de fiches. Le pilote manuel fonctionne avec un budget borné et une possibilité d’interruption et de reprise.
+
+Les propositions passent par une revue : texte avant/après, passages justificatifs et validation avant application. Les contributions personnelles sont protégées. La qualification des décisions et une éventuelle automatisation restent des sujets de recherche ; aucune cadence ni application automatique de ce pilote n’est activée.
+
+<ThemeImage
+  src="/images/2026/2brain/consolidation-validation.webp"
+  alt="Des passages sources à une proposition, puis à une version validée. Illustration conceptuelle du parcours de consolidation."
+  width={1536}
+  height={1024}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+## Ce que j’en retiens, et la suite
+
+Avec 2brain, je travaille toute la chaîne : capturer une source, la rendre interrogeable, confier un traitement à un agent et retrouver le résultat dans son contexte. L’usage quotidien me confronte aux détails qui rendent le système utile : qualité de l’extraction, pertinence des passages, reprise après erreur et visibilité sur ce que font les agents. Ces questions se retrouvent aussi dans des outils de recherche documentaire ou d’assistance métier.
+
+Convex me permet de garder des cycles de développement courts, en faisant évoluer ensemble les données, les workflows et l’interface. La suite consiste à élargir mes évaluations de recherche et à mieux qualifier les propositions du « rêve » avant d’en automatiser davantage la consolidation.
+
+**2brain reste un outil interne de recherche, qui ne sera pas publié tel quel pour le moment.** Je continuerai à partager ici les choix techniques et les enseignements de cette expérimentation : construire un second cerveau qui m’aide à passer de l’information accumulée à une connaissance que je peux vérifier et utiliser.

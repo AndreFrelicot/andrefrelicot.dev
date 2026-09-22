@@ -1,0 +1,137 @@
+{
+  "date": "2026-09-22",
+  "inputs": [
+    {
+      "number": 1,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-21145ad1-2782-4d88-847b-2a1600a6a31c.png",
+      "file": null,
+      "width": 2232,
+      "height": 1702,
+      "sha256": "f06f6b935cb887292ca1e4be35589dadd461be35f6d5a7f2881f3fbbf10f2fe2",
+      "status": "excluded-stale-confirmation",
+      "note": "Confirmation Eiffage affichée sur une page Anthropic ; aperçu de capture #2 préféré.",
+      "replacedBy": 12
+    },
+    {
+      "number": 2,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-3d24a9df-a9ca-47ae-b9d5-e95e29594312.png",
+      "file": "public/images/2026/2brain/screenshots/extension-apercu.png",
+      "width": 934,
+      "height": 1214,
+      "sha256": "0171b6e35768d7f21a2a99a2c68f2d0fbb6acd6947720f31b0e5471f69d969c1",
+      "status": "integrated",
+      "note": "Original conservé sans modification de pixels."
+    },
+    {
+      "number": 3,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-98946c0d-d492-4808-bfdb-4c88211d2225.png",
+      "file": "public/images/2026/2brain/screenshots/note-source.png",
+      "width": 2258,
+      "height": 1742,
+      "sha256": "695e3fc240761cf6b4f2956e33a35a3dc55c5fc36ac019a1c4ed2bd6cb1fc8c1",
+      "status": "integrated",
+      "note": "Original conservé sans modification de pixels."
+    },
+    {
+      "number": 4,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-2d9d9928-e253-4d95-97af-a87a54a24e7d.png",
+      "file": "public/images/2026/2brain/screenshots/edition-markdown.png",
+      "width": 2538,
+      "height": 1742,
+      "sha256": "14b6715e9697e928dc24f2dad7af7d1b23b345a473d4ad038de5c97457c21e62",
+      "status": "integrated",
+      "note": "Original conservé sans modification de pixels."
+    },
+    {
+      "number": 5,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-5d5a1cea-106b-4533-bd9c-cc4a7f5a3799.png",
+      "file": "public/images/2026/2brain/screenshots/lier-une-entite.png",
+      "width": 1800,
+      "height": 826,
+      "sha256": "2964d1a5d9cd1610756896777e187653dfcaf9c1a53709c558c5f6cc7ec4a024",
+      "status": "integrated",
+      "note": "Original conservé sans modification de pixels."
+    },
+    {
+      "number": 6,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-73149b55-81f8-4f9b-af77-aa245f15dedf.png",
+      "file": null,
+      "width": 1800,
+      "height": 826,
+      "sha256": "2964d1a5d9cd1610756896777e187653dfcaf9c1a53709c558c5f6cc7ec4a024",
+      "status": "duplicate-of-5",
+      "note": "Pixels identiques à la capture #5."
+    },
+    {
+      "number": 7,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-011ac8ae-0c60-483f-b51a-59225230f150.png",
+      "file": null,
+      "width": 1800,
+      "height": 826,
+      "sha256": "2964d1a5d9cd1610756896777e187653dfcaf9c1a53709c558c5f6cc7ec4a024",
+      "status": "duplicate-of-5",
+      "note": "Pixels identiques à la capture #5."
+    },
+    {
+      "number": 8,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-2a3e2ccf-bd20-4993-b4e5-20706c4fd613.png",
+      "file": null,
+      "width": 1800,
+      "height": 826,
+      "sha256": "2964d1a5d9cd1610756896777e187653dfcaf9c1a53709c558c5f6cc7ec4a024",
+      "status": "duplicate-of-5",
+      "note": "Pixels identiques à la capture #5."
+    },
+    {
+      "number": 9,
+      "source": "/Users/andre/Library/Application Support/CleanShot/media/media_88HzaxP4hL/CleanShot 2026-09-22 at 14.26.09@2x.png",
+      "file": null,
+      "width": 1800,
+      "height": 826,
+      "sha256": "2964d1a5d9cd1610756896777e187653dfcaf9c1a53709c558c5f6cc7ec4a024",
+      "status": "duplicate-of-5",
+      "note": "Pixels identiques à la capture #5."
+    },
+    {
+      "number": 10,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-34b0aec4-d76a-4fd8-9eaa-66c58e18502a.png",
+      "file": "public/images/2026/2brain/screenshots/graphe-anonymise.png",
+      "width": 2578,
+      "height": 1736,
+      "sha256": "b8c9a8802489bd108f8b4bb7b97692a65192dc6768c67c33ae9779c7684b2187",
+      "status": "integrated",
+      "note": "Original conservé sans modification de pixels."
+    },
+    {
+      "number": 11,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-67c923d9-d748-4983-9668-b810689bf25e.png",
+      "file": "public/images/2026/2brain/screenshots/accueil-anonymise.png",
+      "width": 2554,
+      "height": 1740,
+      "sha256": "932521876f646a8338da152969bb88355b0207ac7ac356650b404c67ecca2b73",
+      "status": "integrated",
+      "note": "Original conservé sans modification de pixels."
+    },
+    {
+      "number": 12,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-ce6b9661-774b-4238-9a99-2938bfef3108.png",
+      "file": "public/images/2026/2brain/screenshots/extension-capture-confirmee.png",
+      "width": 2558,
+      "height": 1540,
+      "sha256": "938d62473d1cf13dd3b4eb67496b73b9afe65def00850403c0c5444f27e4263c",
+      "status": "integrated",
+      "replaces": 1,
+      "note": "Nouvelle capture fournie par André : confirmation Anthropic cohérente avec la page courante. Original conservé sans modification de pixels."
+    },
+    {
+      "number": 13,
+      "source": "/var/folders/yx/ksq6y6sj0b9dnp9lb5ybpdfh0000gn/T/codex-clipboard-c750d21e-d91a-4c39-942e-8a5ad8bd99ca.png",
+      "file": "public/images/2026/2brain/screenshots/chatgpt-web-mcp.png",
+      "width": 1596,
+      "height": 1224,
+      "sha256": "9d337de2caf0183acebd4c2ee71afb6fe4692e087927a79eb9b01eb7dac863f7",
+      "status": "integrated",
+      "note": "ChatGPT web relié au serveur MCP de 2brain par tunnel, selon André. Capture des appels d’outils et de la réponse avec référence à la note ; ne montre pas une session CLI."
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+---
+title: "2brain : mon second cerveau agentique & RAG basé sur Convex"
+description: "Un second cerveau dans le cloud, accessible en web, CLI et MCP : retour d’expérience sur le RAG, les workers et la consolidation assistée des connaissances."
+date: 2026-09-22
+tags: [ai, rag, agents, convex, knowledge-graph, mcp, typescript]
+image: /images/2026/2brain/graphe-et-notes.png
+---
+
+{/* Ancien brouillon de préparation, conservé pour historique. La version française active est src/content/fr/2026/2brain-second-cerveau-agentique-rag-convex.mdx. Archive complète : /Users/andre/code/andre-brain/docs/devlog-2brain/. */}
+
+<figure>
+  <a href="/images/2026/2brain/graphe-et-notes.png" target="_blank" rel="noopener noreferrer">
+    <img src="/images/2026/2brain/graphe-et-notes.png" alt="Illustration conceptuelle : articles, PDF et vidéos reliés aux concepts RAG, agents et Convex, puis à un projet de recherche." width="1536" height="1024" style={{ width: "100%", height: "auto" }} />
+  </a>
+  <figcaption>Des sources aux connaissances : relier la veille aux concepts et aux projets. Illustration conceptuelle.</figcaption>
+</figure>
+
+<details>
+  <summary>Note de production — image 1</summary>
+  <p>Illustration générée avec imagegen intégré, sur fond blanc, en ouverture et comme couverture. Elle représente le principe du graphe, sans reproduire l’interface réelle. Le brief initial de capture est conservé dans la note des visuels ; le prompt exact utilisé figure dans docs/2brain-visuels-prompts.json.</p>
+</details>
+
+Ma veille produit beaucoup de matière : articles, documentation, vidéos, notes de recherche. Retrouver un lien est une chose ; retrouver une idée, ses sources et ce qu’elle apporte à un projet en est une autre.
+
+Avec **2brain**, j’explore une alternative à Obsidian pour mon propre usage : conserver les notes reliées, les backlinks et le graphe, tout en remplaçant le coffre de fichiers locaux par une base accessible dans le cloud. La même connaissance est disponible dans une interface web, en ligne de commande et via MCP pour mes assistants IA. Markdown reste le format d’édition et d’export ; Convex est la source de vérité.
+
+> **2brain est un outil interne de recherche et d’expérimentation, utilisé pour ma propre veille. Il ne sera pas publié tel quel pour le moment.**
+
+## De la capture à une réponse sourcée
+
+L’extension Chrome me permet de capturer une page pendant ma lecture, y compris son contenu visible dans une session authentifiée, sans exporter les cookies. Je peux joindre une consigne : comparer cette source à mes notes, par exemple, puis produire un rapport lié.
+
+<figure>
+  <a href="/images/2026/2brain/screenshots/extension-capture-confirmee.png" target="_blank" rel="noopener noreferrer">
+    <img src="/images/2026/2brain/screenshots/extension-capture-confirmee.png" alt="Extension 2brain ouverte sur un article Anthropic dans Chrome : options de capture et confirmation que cette même page est enregistrée et indexée." width="2558" height="1540" loading="lazy" style={{ width: "100%", height: "auto" }} />
+  </a>
+  <figcaption>Capturer une page sans quitter sa lecture : l’extension confirme l’enregistrement et l’indexation de l’article Anthropic. Capture réelle, cliquer pour agrandir.</figcaption>
+</figure>
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "24px", margin: "32px 0" }}>
+  <figure style={{ margin: 0 }}>
+    <a href="/images/2026/2brain/screenshots/extension-apercu.png" target="_blank" rel="noopener noreferrer">
+      <img src="/images/2026/2brain/screenshots/extension-apercu.png" alt="Extension Chrome de 2brain : aperçu du texte capturé et de l’image de la page Anthropic avant enregistrement." width="934" height="1214" loading="lazy" style={{ width: "100%", height: "340px", objectFit: "contain", background: "#fff" }} />
+    </a>
+    <figcaption>1. Vérifier le texte et l’image capturés dans Chrome. Capture réelle, cliquer pour agrandir.</figcaption>
+  </figure>
+  <figure style={{ margin: 0 }}>
+    <a href="/images/2026/2brain/screenshots/note-source.png" target="_blank" rel="noopener noreferrer">
+      <img src="/images/2026/2brain/screenshots/note-source.png" alt="Note source dans 2brain : article Anthropic importé, résumé, URL d’origine et capture du navigateur conservée." width="2258" height="1742" loading="lazy" style={{ width: "100%", height: "340px", objectFit: "contain", background: "#fff" }} />
+    </a>
+    <figcaption>2. Retrouver la source, son résumé et la capture conservée dans la note. Capture réelle, cliquer pour agrandir.</figcaption>
+  </figure>
+</div>
+
+Je peux aussi joindre des images et des PDF à une note, puis lancer une **reconnaissance de texte (OCR)** en français ou en anglais. Tesseract.js s’exécute dans une action Convex ; le texte extrait rejoint la recherche full-text et vectorielle avec sa provenance : note, document et page. Les fichiers originaux restent conservés.
+
+Le contenu est extrait, découpé en passages et indexé. La recherche combine correspondances textuelles et proximité sémantique par embeddings, puis un reranker peut affiner le classement. Les passages retenus alimentent le contexte du modèle pour construire une réponse avec ses références : c’est le pipeline **RAG**.
+
+Le graphe ajoute les relations entre sources, concepts et projets. Je peux suivre les liens pour explorer une idée et comprendre son contexte, puis revenir aux documents d’origine.
+
+<figure>
+  <a href="/images/2026/2brain/screenshots/graphe-anonymise.png" target="_blank" rel="noopener noreferrer">
+    <img src="/images/2026/2brain/screenshots/graphe-anonymise.png" alt="Graphe réel de 2brain : une entité sélectionnée et ses connexions, avec filtres par type de note et libellés masqués par le mode de présentation." width="2578" height="1736" loading="lazy" style={{ width: "100%", height: "auto" }} />
+  </a>
+  <figcaption>Explorer les connexions d’une entité parmi les sources, les projets et les autres notes. Capture réelle avec libellés masqués par le mode de présentation.</figcaption>
+</figure>
+
+<details>
+  <summary>Voir les captures : éditer une note et créer un lien</summary>
+  <figure>
+    <a href="/images/2026/2brain/screenshots/edition-markdown.png" target="_blank" rel="noopener noreferrer">
+      <img src="/images/2026/2brain/screenshots/edition-markdown.png" alt="Éditeur Markdown de 2brain : sélection d’un passage de la source et commande Lier, à côté de la capture originale conservée." width="2538" height="1742" loading="lazy" style={{ width: "100%", height: "auto" }} />
+    </a>
+    <figcaption>Le texte de la note reste éditable en Markdown. Une sélection peut devenir un lien vers une autre note.</figcaption>
+  </figure>
+  <figure>
+    <a href="/images/2026/2brain/screenshots/lier-une-entite.png" target="_blank" rel="noopener noreferrer">
+      <img src="/images/2026/2brain/screenshots/lier-une-entite.png" alt="Dialogue de création d’un lien dans 2brain : recherche d’Anthropic parmi les entités et les sources existantes, avec possibilité de créer une note." width="1800" height="826" loading="lazy" style={{ width: "100%", height: "auto" }} />
+    </a>
+    <figcaption>Relier le passage à une entité existante ou créer une nouvelle note. Capture réelle du choix de la cible.</figcaption>
+  </figure>
+</details>
+
+J’évalue aussi les choix de recherche. Sur un jeu interne de **33 questions**, l’ajout du reranking au classement hybride a fait passer le MRR de **0,771 à 0,822** : les résultats attendus remontent mieux. Ce petit jeu ne constitue pas un benchmark général, mais il permet de décider sur une mesure plutôt que sur une impression.
+
+## Convex pour expérimenter vite
+
+Je veux faire évoluer ce cerveau au rythme de mes besoins. Un usage révèle une limite, j’adapte les structures de données et j’ajoute une fonctionnalité ciblée : **projets pour regrouper les connaissances, tâches avec échéances, workflows personnalisés** pour enchaîner capture, analyse et revue. Avec Convex, je peux faire évoluer ensemble ces structures, leurs traitements et leur interface, puis les confronter rapidement à mon usage quotidien. Le second cerveau prend ainsi la forme de ma manière de travailler.
+
+<details>
+  <summary>Voir l’accueil : sources, actions d’agent, projets et tâches</summary>
+  <figure>
+    <a href="/images/2026/2brain/screenshots/accueil-anonymise.png" target="_blank" rel="noopener noreferrer">
+      <img src="/images/2026/2brain/screenshots/accueil-anonymise.png" alt="Accueil réel de 2brain avec formulaire d’ajout de source, option d’action pour l’agent, notes récentes, prochaines tâches, captures et projets actifs ; contenus personnels masqués." width="2554" height="1740" loading="lazy" style={{ width: "100%", height: "auto" }} />
+    </a>
+    <figcaption>Un point d’entrée commun pour capturer une source, demander une action à l’agent et retrouver projets et tâches. Capture réelle en mode de présentation.</figcaption>
+  </figure>
+</details>
+
+Le **BaaS Convex** simplifie ce travail parce que les briques essentielles sont intégrées :
+
+- Une **base documentaire avec transactions ACID** : les modifications regroupées dans une mutation sont validées ensemble, pour garder notes, liens et journal cohérents.
+- Le **stockage de fichiers** pour les documents et les captures, référencés depuis les notes.
+- Des **index vectoriels et une recherche full-text** dans la même plateforme, pour retrouver les passages par proximité sémantique ou par mots-clés.
+- Un **backend TypeScript réactif**, auquel les clients peuvent s’abonner pour recevoir les changements des données qu’ils consultent.
+
+Cette réactivité relie directement les traitements à leur suivi. Mes workers s’abonnent aux requêtes de jobs disponibles, sans interroger périodiquement le serveur. Lorsqu’ils enregistrent leur progression ou un résultat dans Convex, l’interface React abonnée se met à jour en temps réel.
+
+Je peux ainsi faire évoluer données, logique backend et interface dans une même itération, sans déployer séparément une base vectorielle, un moteur full-text et une couche de synchronisation. La génération des embeddings et les appels aux modèles restent confiés aux services IA ; Convex fournit le socle intégré qui me permet d’expérimenter rapidement.
+
+<figure>
+  <a href="/images/2026/2brain/architecture-convex.png" target="_blank" rel="noopener noreferrer">
+    <img src="/images/2026/2brain/architecture-convex.png" alt="Architecture simplifiée de 2brain : interfaces reliées à Convex, abonnements des workers aux jobs, progression et retours temps réel dans React ; OCR dans Convex et services IA externes." width="1536" height="1024" loading="lazy" style={{ width: "100%", height: "auto" }} />
+  </a>
+  <figcaption>Convex réunit données, fichiers, recherche et backend réactif. Les workers s’abonnent aux jobs et publient leur progression. Schéma simplifié ; l’OCR est une fonction applicative exécutée dans Convex.</figcaption>
+</figure>
+
+<details>
+  <summary>Note de production — image 2</summary>
+  <p>Schéma généré avec imagegen intégré, placé après la présentation de Convex. Les flèches distinguent les jobs reçus par abonnement et les résultats enregistrés ; les services d’embeddings et les modèles restent externes. Fond blanc, même palette que les deux autres visuels. Le prompt exact est conservé dans docs/2brain-visuels-prompts.json.</p>
+</details>
+
+## Des agents intégrés à un système observable
+
+Convex conserve l’état durable des workflows et des jobs. Des **workers externes** prennent en charge l’extraction lourde et les traitements IA, avec des adaptateurs pour Claude et Codex. Le CLI et le serveur MCP permettent aussi aux assistants d’interroger et d’enrichir la base depuis leur environnement de travail.
+
+Par exemple, **ChatGPT web accède à mon cerveau via MCP, à travers un tunnel vers le serveur**. Je peux lui demander de retrouver et résumer l’article que je viens de capturer dans Chrome : il consulte 2brain avec ses outils et cite la note dans sa réponse. Depuis le terminal, le CLI donne accès à cette même base.
+
+<figure>
+  <a href="/images/2026/2brain/screenshots/chatgpt-web-mcp.png" target="_blank" rel="noopener noreferrer">
+    <img src="/images/2026/2brain/screenshots/chatgpt-web-mcp.png" alt="ChatGPT web résume l’article Anthropic conservé dans 2brain, après deux appels d’outils, et référence la note source dans sa réponse. Connexion MCP via tunnel." width="1596" height="1224" loading="lazy" style={{ width: "100%", height: "auto" }} />
+  </a>
+  <figcaption>De la capture Chrome à la conversation : ChatGPT web consulte 2brain via MCP et référence la note retrouvée. Le serveur MCP est accessible par tunnel. Capture réelle, cliquer pour agrandir.</figcaption>
+</figure>
+
+Une consigne après capture devient ainsi un travail suivi : attendre l’indexation, préparer le contexte, produire un rapport, puis le relier à sa source. Les traitements disposent de mécanismes de reprise, de limites et d’un journal ; les instructions de l’utilisateur restent séparées du contenu des documents.
+
+J’accorde autant d’attention à ces mécanismes qu’au prompt : reprendre une publication sans régénérer le rapport, éviter les effets en double et rendre la consommation visible lorsqu’elle est disponible font partie du fonctionnement quotidien.
+
+## Jev et le « rêve » : consolider la connaissance
+
+J’explore maintenant l’entretien du cerveau. J’ai intégré **Jev via OpenRouter** comme brique de classification pour trier des candidats, proposer des rapprochements et repérer les apports possibles d’une source à une synthèse.
+
+J’appelle « rêve » un cycle de consolidation : examiner les changements dans un périmètre choisi, proposer des liens utiles et préparer l’actualisation de fiches. Le pilote manuel fonctionne avec un budget borné et une possibilité d’interruption et de reprise.
+
+Les propositions passent par une revue : texte avant/après, passages justificatifs et validation avant application. Les contributions personnelles sont protégées. La qualification des décisions et une éventuelle automatisation restent des sujets de recherche ; aucune cadence ni application automatique de ce pilote n’est activée.
+
+<figure>
+  <a href="/images/2026/2brain/consolidation-validation.png" target="_blank" rel="noopener noreferrer">
+    <img src="/images/2026/2brain/consolidation-validation.png" alt="Illustration conceptuelle de la consolidation : deux sources justifient une proposition de synthèse, examinée par une personne avant publication." width="1536" height="1024" loading="lazy" style={{ width: "100%", height: "auto" }} />
+  </a>
+  <figcaption>Des passages sources à une proposition, puis à une version validée. Illustration conceptuelle du parcours de consolidation.</figcaption>
+</figure>
+
+<details>
+  <summary>Note de production — image 3</summary>
+  <p>Illustration générée avec imagegen intégré, placée après la section Jev et rêve. Elle explique les preuves et la validation humaine ; ce n’est pas une capture de Review. Le brief de capture réelle reste disponible pour une version ultérieure. Le prompt exact est conservé dans docs/2brain-visuels-prompts.json.</p>
+</details>
+
+Ce laboratoire me permet de travailler ensemble le RAG, l’orchestration de traitements IA et leur intégration dans une interface utilisable. À chaque itération, je cherche à rendre la connaissance plus facile à retrouver, ses transformations plus explicables et le système plus fiable.
