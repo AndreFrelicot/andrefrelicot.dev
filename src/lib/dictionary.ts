@@ -45,7 +45,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   en: {
     site: {
       title: "André Frélicot",
-      description: "Builder • CTO • TechLead • Entrepreneur devlogs.",
+      description: "Builder • Freelance Software Engineer devlogs.",
     },
     nav: {
       home: "Home",
@@ -55,7 +55,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline: "Builder • CTO • TechLead • Entrepreneur",
+      tagline: "Builder • Freelance Software Engineer",
       callToAction: "View content",
       linksHeading: "Selected Reading",
     },
@@ -95,7 +95,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline: "Builder • CTO • TechLead • Entrepreneur",
+      tagline: "Builder • Freelance Software Engineer",
       callToAction: "Voir les contenus",
       linksHeading: "Lectures sélectionnées",
     },
@@ -124,7 +124,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   pt: {
     site: {
       title: "André Frélicot",
-      description: "Builder • CTO • TechLead • Entrepreneur",
+      description: "Builder • Freelance Software Engineer",
     },
     nav: {
       home: "Início",
@@ -134,7 +134,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline: "Builder • CTO • TechLead • Entrepreneur",
+      tagline: "Builder • Freelance Software Engineer",
       callToAction: "Ver conteúdo",
       linksHeading: "Leituras em destaque",
     },
@@ -173,7 +173,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       headline: "André Frélicot",
-      tagline: "Builder • CTO • TechLead • Entrepreneur",
+      tagline: "Builder • Freelance Software Engineer",
       callToAction: "Ver contenidos",
       linksHeading: "Lecturas destacadas",
     },
