@@ -5,6 +5,18 @@ import { Callout } from "./callout";
 import { GitHubLink } from "./github-link";
 import { OsibitsLogo } from "./osibits-logo";
 import { PlayStoreLink } from "./play-store-link";
+import { PocketAnatomy } from "./pocket/pocket-anatomy";
+import { PocketBridge } from "./pocket/pocket-bridge";
+import { PocketFeedSignals } from "./pocket/pocket-feed-signals";
+import { PocketKnowns } from "./pocket/pocket-knowns";
+import { PocketLoop } from "./pocket/pocket-loop";
+import { PocketPhotoFlow } from "./pocket/pocket-photo-flow";
+import { PocketPipeline } from "./pocket/pocket-pipeline";
+import { PocketRuntime } from "./pocket/pocket-runtime";
+import { PocketSandbox } from "./pocket/pocket-sandbox";
+import { PocketScenarios } from "./pocket/pocket-scenarios";
+import { PocketStats } from "./pocket/pocket-stats";
+import { PocketTimeline } from "./pocket/pocket-timeline";
 import { PubDevLink } from "./pub-dev-link";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import { ThreeCube } from "./three-cube";
@@ -27,6 +39,18 @@ export const mdxComponents = {
   GitHubLink,
   OsibitsLogo,
   PlayStoreLink,
+  PocketAnatomy,
+  PocketBridge,
+  PocketFeedSignals,
+  PocketKnowns,
+  PocketLoop,
+  PocketPhotoFlow,
+  PocketPipeline,
+  PocketRuntime,
+  PocketSandbox,
+  PocketScenarios,
+  PocketStats,
+  PocketTimeline,
   PubDevLink,
   ScreenshotGallery,
   ThreeCube,

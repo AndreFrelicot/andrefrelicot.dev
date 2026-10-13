@@ -1,0 +1,394 @@
+---
+title: "Meta Pocket: Make Gizmos, o TikTok do vibe coding?"
+description: "Com o Pocket: Make Gizmos, a Meta lançou um app em que você rola um feed de miniapps gerados por IA. Análise de produto, negócio e estratégia, seguida de uma autópsia técnica de quatro gizmos abertos em um navegador."
+date: 2026-10-13
+tags: [ai, vibe-coding, meta, pocket-make-gizmos, product, strategy, business, social-media, llm, codegen, reverse-engineering, web, react, threejs, webview, architecture]
+en_mdx: pocket-meta-the-tiktok-of-vibe-coding.mdx
+fr_mdx: pocket-meta-tiktok-du-vibe-coding.mdx
+pt_mdx: pocket-meta-o-tiktok-do-vibe-coding.mdx
+es_mdx: pocket-meta-el-tiktok-del-vibe-coding.mdx
+image: /images/2026/pocket/cover.webp
+---
+
+<ThemeImage
+  src="/images/2026/pocket/cover.webp"
+  alt="Três telefones exibindo gizmos do Pocket: Make Gizmos (um jogo de sinuca, a tela inicial, um desenho sobre a Mona Lisa) e o ícone do app, sobre um fundo em degradê reticulado."
+  width={1600}
+  height={1200}
+  priority
+  style={{ width: "100%", height: "auto" }}
+/>
+
+No feed do **Pocket: Make Gizmos**, o novo app da Meta, você não rola vídeos, e sim programas. Um jogo de corrida em 3D em que um personagem dispara sobre trilhos. Um jogo de objetos escondidos com gatos parisienses. Uma folha em branco em que cada rabisco vira uma criatura que sai andando. Seus autores não escreveram código: descreveram uma ideia, um modelo a gerou e o app a publicou como um post.
+
+A Meta chama esses objetos de **gizmos**. Você cria um com uma frase, publica, e outras pessoas curtem, comentam, repostam ou **remixam**. A comparação vem naturalmente: depois do vídeo curto, chegou a vez do software curto. Daí a pergunta deste artigo: será que o Pocket (é assim que abrevio o nome daqui em diante) é o TikTok do *vibe coding*, esse jeito de programar descrevendo a um modelo o que se quer, sem ler o código que ele produz?
+
+Para responder, olho para o Pocket por dois ângulos. Primeiro, o produto, o negócio e a estratégia, a partir do que a Meta e a imprensa publicaram. Depois, a técnica: abri quatro gizmos públicos em um navegador e li o que a página servia. O resultado diz mais do que eu esperava. Dá para ver ali o formato exato de um gizmo, o sandbox que o confina, a API que ele tem permissão para chamar e até o esquema da API do feed. A primeira metade se lê sem bagagem técnica; a segunda é voltada para desenvolvedores. Nela, cada afirmação técnica traz seu nível de evidência: **observado** em uma captura, **deduzido** de indícios ou **desconhecido**.
+
+## O que é o Pocket: Make Gizmos
+
+O Pocket: Make Gizmos é um aplicativo independente da Meta, gratuito, disponível para iPhone e Android, que exige uma conta da Meta. Ele faz três coisas.
+
+- **Criar.** Você descreve uma ideia em linguagem natural, opcionalmente com uma foto. O app devolve um gizmo: um minijogo, um brinquedo digital, um quiz, um filtro de câmera. Alguns chamam, eles próprios, um modelo de IA enquanto são usados, para produzir um texto ou uma imagem. Dá para refinar o gizmo em um editor antes de publicá-lo.
+- **Descobrir.** A tela principal é um feed vertical, como no TikTok ou no Reels, com a diferença de que cada publicação pode ser manipulada: você toca, desenha, inclina o telefone.
+- **Reaproveitar.** Um gizmo publicado pode ser remixado por outra pessoa, que parte do original para criar uma variante.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/pocket-make-gizmos-demo.mp4"
+  title="O feed do Pocket: Make Gizmos em ação"
+  caption="Três trechos dos vídeos de apresentação do Pocket: no feed, cada publicação é um miniapp que você manipula."
+/>
+
+Em torno desse núcleo está o pacote completo de uma rede social: perfis, seguidores e seguidos, curtidas, comentários, reposts, itens salvos e playlists.
+
+A própria Meta resume o app em cinco telas em sua página na App Store: Create, Community, Discover, Tweaks e Playlists. O remix não aparece ali; os ajustes, sim.
+
+<ThemeImage
+  src="/images/2026/pocket/app-store-en.webp"
+  alt="A página do Pocket: Make Gizmos na App Store dos Estados Unidos e suas cinco telas: Create, Community, Discover, Tweaks e Playlists."
+  width={2738}
+  height={1780}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Por trás dessas telas, o ciclo completo cabe em cinco etapas.
+
+<PocketLoop locale="pt" />
+
+É esse ciclo que diferencia o Pocket de um gerador de jogos. Ferramentas que transformam um prompt em aplicativo existem desde 2024. O que o Pocket acrescenta é o que vem depois: a publicação, o ranqueamento e o remix. Ali, o software é tratado como conteúdo social, com um custo de criação próximo ao de um post.
+
+## De onde vem: Gizmo, uma startup, depois a Meta
+
+O Pocket não nasceu na Meta. Seu antecessor direto se chama **Gizmo**, um app da startup nova-iorquina **Atma Sciences**, fundada em 2024 por ex-engenheiros do Snapchat. A Atma levantou cerca de US$ 5,5 milhões em uma rodada seed no início de 2025 ([AlleyWatch](https://www.alleywatch.com/2025/02/the-alleywatch-startup-daily-funding-report-2-3-2025/)) e lançou o Gizmo no mesmo ano, com o mesmo princípio: criar um miniapp pelo telefone, sem código.
+
+Em março de 2026, o [Business Insider revelou](https://www.businessinsider.com/ex-snapchat-engineers-behind-gizmo-join-meta-superintelligence-labs-2026-3) que a Meta havia contratado a equipe. O formato do acordo é peculiar: a Meta não comprou a empresa, e sim obteve uma **licença não exclusiva** sobre a tecnologia dela, enquanto a equipe passou a integrar o Meta Superintelligence Labs, o laboratório que desenvolve os modelos Muse.
+
+<PocketTimeline locale="pt" />
+
+Daí em diante, tudo aconteceu rápido. No fim de junho, o Pocket apareceu nas lojas de apps sem nenhum anúncio, [disponível apenas no Brasil](https://techcrunch.com/2026/07/02/meta-quietly-launches-vibe-coded-gaming-app-pocket/). Quem o encontrou foi Alessandro Paluzzi, um caçador de recursos ainda não lançados. Em 20 de agosto, a Atma anunciou que estava [encerrando as atividades](https://x.com/MakeGizmos/status/2090471668632154545), no momento em que o Pocket chegava aos Estados Unidos. O Business Insider, que testou os dois apps, os considerou [quase idênticos](https://www.businessinsider.com/meta-rolls-out-new-vibe-coding-social-app-pocket-us-2026-8).
+
+Três coisas me chamam a atenção nessa sequência.
+
+- **A Meta comprou uma prova, não uma ideia.** O Gizmo já tinha 635.000 instalações acumuladas, segundo a Appfigures. O formato tinha sido testado no mercado por terceiros.
+- **O lançamento é um teste, não uma campanha.** Um único país, nenhum comunicado e, dois meses depois, uma ampliação. A Meta mede antes de falar.
+- **O codinome sobreviveu.** O identificador do app Android é `com.facebook.gizmo`, e a aplicação web se chama `gizmo-web` internamente. Pocket é um rótulo colado sobre o Gizmo.
+
+Também não é o primeiro feed de conteúdo gerado da Meta. Em setembro de 2025, a empresa havia lançado o [Vibes](https://about.fb.com/news/2025/09/introducing-vibes-ai-videos/), um feed de vídeos produzidos por IA. O Pocket aplica a mesma ideia a outro tipo de objeto.
+
+## Uma rede social, até na API
+
+Curtidas, comentários, reposts: na superfície, o Pocket se parece com qualquer rede social. O esquema da sua API, legível no JavaScript público da aplicação web, diz mais. Ele descreve quatro mecânicas pensadas para fazer os gizmos circularem.
+
+### O som como unidade de remix
+
+É o paralelo mais nítido com o TikTok. Na API do Pocket, cada gizmo carrega uma lista de **atribuições musicais**: título, artista, indicador de conteúdo explícito, identificador de “cluster de áudio”. Duas requisições acompanham essa lista: uma retorna os gizmos que usam determinado som; a outra, os de determinado artista.
+
+No TikTok, essa mecânica se chama “usar este som” e é um dos motores da viralização: um som vira tendência porque qualquer pessoa pode criar a partir dele. O Pocket instalou o mesmo encanamento, e a tela de criação oferece uma aba “Sons” ao lado das imagens.
+
+### O remix, com atribuição
+
+Cada gizmo remixado guarda o registro do original e de seu autor, e uma página lista todos os remixes de um gizmo. O criador pode desativar o remix. Dos quatro gizmos que examinei, dois tinham feito isso.
+
+Um detalhe técnico deixa o remix ainda mais barato, e volto a ele mais abaixo: cada gizmo declara seus próprios **ajustes** (cores, velocidades, textos). Dá, portanto, para modificar um gizmo sem escrever um prompt, como quem troca um filtro.
+
+### As playlists são coleções de gizmos
+
+Apesar do nome, as playlists do Pocket não são musicais. São listas de gizmos: as que você monta, mais três listas automáticas (histórico, curtidas, salvos). As capturas de tela da página na App Store mostram playlists por tema (“Desenho”, “Foto”, “Jogos”, “Mundos 3D”), com uma aba “Seguindo”. Cada gizmo conta o número de playlists em que aparece, assim como suas curtidas e seus reposts. É mais um sinal de engajamento, e um jeito de consumir gizmos em série.
+
+### O que o feed sabe
+
+O esquema também diz o que o app transmite quando pede a continuação do feed, e o que cada gizmo carrega.
+
+<PocketFeedSignals locale="pt" />
+
+Dois detalhes se destacam. O app envia o estado das **permissões de câmera e microfone**, e cada gizmo traz capacidades “inferidas” (câmera, microfone, áudio): a plataforma sabe, portanto, quais gizmos precisam de quê, e o que o seu telefone permite. E o ranqueamento existe em dois modos, **personalizado** e **não personalizado**, o que parece uma resposta às obrigações europeias sobre sistemas de recomendação. O esquema mostra o que está previsto, não a maneira como o ranqueamento usa isso.
+
+## Onde a analogia quebra
+
+Quatro diferenças me parecem estruturais.
+
+**Um gizmo é para jogar, não para assistir.** Um vídeo é consumido sem esforço e julgado em um segundo. Um gizmo exige entender uma regra e, depois, agir. O custo de atenção por publicação é mais alto, e um feed vive da leveza de cada swipe.
+
+**A escala não se compara.** O Google Play exibe mais de 50.000 instalações, contra 10.000 no fim de agosto. Na App Store, o app é o 48º da categoria Graphics & Design (gráficos e design) nos Estados Unidos, com 1.600 avaliações, e o quinto na França, com apenas 32 avaliações. Os gizmos que abri têm entre 1.300 e 5.800 curtidas. É um crescimento real, mas estamos falando de um laboratório, não de um fenômeno.
+
+<PocketStats locale="pt" />
+
+**Não é exatamente vibe coding.** No vibe coding, você não lê o código, mas sabe que ele existe e pode abri-lo. No Pocket, ele nunca aparece. O criador manipula um objeto, não um programa. O termo mais adequado seria “software descartável”: um app que se cria como quem posta, sem intenção de mantê-lo.
+
+**Em um gizmo, você joga sozinho.** É a descoberta mais importante da parte técnica, e ela tem uma consequência direta para o produto. A API oferecida ao código gerado não tem salvamento, nem identidade do jogador, nem rede, nem multiplayer. Um gizmo pode, no máximo, guardar um recorde no aparelho, como faz o jogo de corrida infinita que analiso mais abaixo. Ele não pode exibir um ranking, nem comparar a sua partida com a de outra pessoa, nem colocar você contra um amigo. As mecânicas virais dos jogos mobile (pontuações para bater entre amigos, desafios, rankings) estão fechadas para ele. O social vive *em volta* do gizmo, nos comentários e nos reposts, nunca *dentro* dele.
+
+## O negócio: quem paga pelo processamento?
+
+O Pocket é gratuito. Nenhuma assinatura, nenhuma compra dentro do app, e o Business Insider não viu nenhuma publicidade nele durante o lançamento nos Estados Unidos. A Meta não anunciou nenhum modelo de negócio.
+
+Esse silêncio é interessante porque a estrutura de custos de um gizmo é o inverso da de um vídeo.
+
+- **Um vídeo custa caro para distribuir e nada para executar.** É preciso armazená-lo, transcodificá-lo e depois transmitir vários megabytes a cada reprodução.
+- **Um gizmo não custa quase nada para distribuir.** Os quatro que medi pesam cerca de 80 a 280 KB depois de comprimidos, e o servidor autoriza que fiquem em cache por vinte horas.
+- **Mas um gizmo pode custar a cada partida.** Alguns chamam um modelo de IA enquanto se joga. Mais abaixo, detalho um deles, que gera uma imagem a cada uso.
+
+O custo se desloca, portanto, da largura de banda para a inferência, e depende do que os criadores inventam. É uma economia que ninguém ainda fez funcionar em grande escala.
+
+Resta a questão da contrapartida. Três hipóteses, ordenadas da mais bem embasada à mais especulativa.
+
+1. **Os dados.** A [página de ajuda do Pocket](https://www.meta.com/help/pocket/4433460963602094/) diz isso sem rodeios: suas interações com os gizmos servem para melhorar a IA da Meta. É a única contrapartida explicitamente documentada.
+2. **A distribuição cruzada.** A Meta diz não ter nenhum plano de conectar o Pocket ao Instagram “por enquanto”. A API, por sua vez, já prevê o compartilhamento para o Instagram Direct e o Messenger, as contas vinculadas do Instagram e do Facebook e configurações de promoção por plataforma. A ponte está construída, ainda que não esteja aberta.
+3. **A publicidade interativa.** O Business Insider a menciona como uma possibilidade: um formato em que o anúncio é um minijogo gerado. É uma hipótese de jornalista, não um roadmap.
+
+Acrescento uma quarta leitura, a minha. Um feed de gizmos é um **campo de testes permanente para um modelo de código**. Cada publicação associa um prompt, um programa gerado e um sinal de engajamento. Saber qual código gerado faz as pessoas jogarem, nessa escala e de graça, tem um valor que poucos laboratórios conseguem bancar. O fato de a equipe ter sido vinculada a um laboratório de pesquisa, e não a uma divisão de produto, aponta nessa direção.
+
+## A viralização: um funil sem mecanismo de busca
+
+Um gizmo público tem um endereço web. É sua principal via de saída do app, e a forma como ela foi concebida é instrutiva.
+
+- **A página é uma vitrine.** Dá para jogar o gizmo no navegador, mas uma mensagem avisa que se trata apenas de uma prévia. No desktop, metade da tela é um QR code para baixar o app. No mobile, um botão.
+- **Ela é invisível para o Google.** Cada página traz uma diretiva `noindex`. A Meta abre mão de todo o tráfego de busca. A aquisição depende inteiramente do compartilhamento de links.
+- **O compartilhamento conta com ferramentas.** A prévia do link exibe uma miniatura do gizmo, e a API prevê sugestões de destinatários no Instagram Direct e no Messenger.
+- **O Threads já está no circuito.** A política de segurança dos gizmos autoriza `threads.com` a incorporá-los. Isso prova uma permissão, não um recurso entregue, mas ninguém acrescenta um domínio a essa lista por acaso.
+
+Esta é a página de “Gatos em Paris”, um gizmo de @medeo, em um navegador de desktop.
+
+<ThemeImage
+  src="/images/2026/pocket/gizmo-web-page.webp"
+  alt="A página web do gizmo “Gatos em Paris”, de @medeo, no desktop: à esquerda, o gizmo jogável com seus contadores de curtidas e de comentários; à direita, um QR code e um botão para baixar o app."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Vale a pena se deter na escolha do `noindex`. Milhões de minijogos indexáveis poderiam ter se tornado uma fonte de audiência. A Meta prefere um jardim murado em que cada visitante chega por um link enviado por alguém e vai embora com o app. É coerente com um produto em fase de testes e com a cautela que um conteúdo gerado por desconhecidos impõe.
+
+## Sob o capô: o método
+
+A Meta não documenta a parte técnica do Pocket: nem o formato dos gizmos, nem o motor gráfico, nem o sandbox. Mesmo assim, tudo isso pode ser lido no navegador.
+
+Meu método é deliberadamente limitado. Carreguei quatro páginas públicas de gizmos no Chrome, em 11 e 13 de outubro de 2026, registrando o tráfego de rede e as mensagens trocadas entre a página e o gizmo. Li o JavaScript servido publicamente. Não usei nenhuma conta, não passei por nenhuma tela de login nem examinei o app nativo.
+
+Os quatro gizmos:
+
+| Gizmo | O que ele faz | Renderização |
+|---|---|---|
+| [Corrida nos trilhos](https://www.madewithpocket.com/p/FBkf7Yp-h) | Jogo de corrida infinita em 3D, com um personagem animado | Three.js |
+| [Gatos em Paris](https://www.madewithpocket.com/p/Fcf330Mh2) | Jogo de objetos escondidos ilustrado, com música | DOM e imagens |
+| [Family time!](https://www.madewithpocket.com/p/Hk1fwvb4x) | Você desenha, e nascem criaturas animadas | Canvas 2D |
+| [Foto do cômodo](https://www.madewithpocket.com/p/KIhrjGz4b) | Uma foto vira um diorama em pixel art | Canvas 2D e IA |
+
+## Um gizmo é uma página web
+
+Primeira constatação: um gizmo é **um único documento HTML autocontido**. Nada de formato proprietário, nada de linguagem intermediária. HTML, um bloco de estilos e um único script.
+
+Esse script é um bundle convencional. Ele contém o **React 19**, o código gerado e uma pequena biblioteca fornecida pela plataforma. Quando o gizmo usa 3D, ele traz também o **Three.js** (revisão 186) e os loaders de modelos de que precisa. Os estilos são do Tailwind. O documento termina com uma referência a `app.js.map`, a assinatura de uma etapa de build: uma ferramenta junta o código gerado a um kit de ferramentas fixo.
+
+Em outras palavras, o modelo não escreve “um jogo”. Ele escreve **um componente React**, dentro de uma moldura que a plataforma escolheu por ele.
+
+<PocketAnatomy locale="pt" />
+
+O número fala por si. No jogo 3D, o código gerado representa cerca de 68 KB de um total de 1 MB, ou seja, menos de 7% do documento. Todo o resto é base. Nos gizmos sem 3D, a parte gerada vai de 8% a 27%, porque ali a base é quatro vezes mais leve, não porque o modelo escreva mais.
+
+Mais duas observações sobre o conteúdo.
+
+- **O jogo 3D não desenha seu personagem em código.** É um modelo animado em formato glTF de 3,7 MB, exportado do Blender com seis animações, entre elas correr, pular, deslizar e cair. Ele chega comprimido nos pixels de uma imagem PNG, que o gizmo relê em um canvas antes de entregá-la ao Three.js. O decodificador reconhece dois formatos de modelo, STL e glTF. Deduzo daí que se trata de uma ferramenta da plataforma, não de um truque do criador.
+- **“Gatos em Paris” leva a lógica mais longe.** Seu código é o mais curto dos quatro (19 KB), mas ele carrega quase 10 MB de imagens e sons. As mídias ficam armazenadas na rede de distribuição da Meta, e seus endereços são assinados com uma data de expiração de alguns dias. O documento HTML é, portanto, regenerado sob demanda com links novos.
+
+Último indício: os gizmos publicados ou atualizados em agosto e setembro trazem o React 19.2.8; os de outubro, o React 19.3.0. Um gizmo parece, portanto, ficar congelado em sua última publicação, com o kit de ferramentas do dia.
+
+## O sandbox
+
+Executar código escrito por um modelo, a pedido de desconhecidos, no telefone de qualquer pessoa: o risco é evidente. A resposta da Meta se resume a três camadas aninhadas.
+
+<PocketSandbox locale="pt" />
+
+A página host não contém o gizmo. Ela o exibe em um **iframe**, uma janela isolada servida a partir de um domínio que a Meta reserva para conteúdo não confiável. Cada gizmo recebe seu próprio subdomínio, o que lhe dá uma origem distinta: dois gizmos não conseguem ler os dados um do outro.
+
+A principal trava é a política de segurança de conteúdo, o cabeçalho que diz ao navegador o que uma página tem permissão para carregar.
+
+```http title="Cabeçalhos do documento gizmo (trecho)"
+content-security-policy:
+  default-src 'self' blob: fbcdn.net *.fbcdn.net;
+  connect-src 'self' blob: fbcdn.net *.fbcdn.net;
+  script-src 'self' blob: fbcdn.net *.fbcdn.net 'unsafe-inline' 'unsafe-eval' data:;
+  frame-ancestors https://*.madewithpocket.com https://*.threads.com …
+cache-control: public, max-age=72000
+```
+
+A linha `connect-src` é a que importa: o código gerado só pode abrir conexões consigo mesmo e com a rede de distribuição da Meta. **Um gizmo não pode chamar nenhum servidor externo.** De acordo com essa política, ele não pode enviar uma foto para outro lugar, nem carregar um script de terceiros, nem falar com uma API.
+
+Tudo o que sai do gizmo passa por um único canal, controlado pelo host.
+
+<Callout type="info" title="Curiosidade: vídeos passados de contrabando">
+  Um quinto gizmo, uma TV cor-de-rosa dos anos 2000 em que dá para zapear, reproduz trechos de vídeo sem carregar um único arquivo de vídeo. Os sete vídeos estão escondidos nos pixels de sete imagens PNG: três bytes por pixel, que o código relê em um canvas para reconstruir um MP4. Eu os decodifiquei: são 65 segundos ao todo.
+
+  A técnica é a mesma que transporta o personagem do jogo 3D, bytes guardados em pixels, aplicada aqui a vídeos pelo código do próprio gizmo. Nada disso extrapola o que o sandbox permite. Mas a plataforma armazena imagens de ruído, e o conteúdo real só aparece no aparelho de quem assiste. Fechar a rede não impede que qualquer coisa entre, desde que se pareça com uma imagem.
+</Callout>
+
+## A ponte: o que um gizmo pode pedir
+
+Esse canal é um mecanismo padrão do navegador, `postMessage`, que permite que duas janelas de origens diferentes troquem mensagens. O Pocket faz passar por ele um pequeno protocolo de chamada de procedimento: o gizmo pede um serviço, o host responde.
+
+Registrei essas trocas escutando as mensagens dos dois lados.
+
+<PocketBridge locale="pt" />
+
+Essa sequência revela três comportamentos.
+
+- **O host controla o volume.** No carregamento, a página impõe um volume mestre ao gizmo. Para isso, um script injetado pela plataforma intercepta tudo o que produz som no documento: tags de áudio e de vídeo, motor de áudio, síntese de voz. O código gerado pode fazer barulho, mas quem fica com o botão é o app.
+- **Cada gesto é reportado.** Um clique, um arrasto ou uma tecla pressionada dispara uma mensagem de atividade, no máximo uma vez por segundo. É um sinal de engajamento que o gizmo não precisa programar: a plataforma o adiciona automaticamente.
+- **As vibrações são traduzidas.** O gizmo pede um feedback háptico “leve”, e a página web o converte em dez milissegundos de vibração. No gizmo de desenho, contei 24 pedidos durante uma curta sessão de teste.
+
+### A API oferecida ao código gerado
+
+Do lado do gizmo, esse protocolo fica escondido atrás de um objeto global, `window.gizmoRuntime`. É o contrato entre o modelo e a plataforma: tudo o que um gizmo sabe fazer além de exibir pixels passa por ali.
+
+<PocketRuntime locale="pt" />
+
+Esta é a superfície completa, tal como a reconstruí. Os nomes são os do código; os tipos são deduzidos.
+
+```ts title="gizmo-runtime.d.ts (reconstruído)"
+interface GizmoRuntime {
+  audio: {
+    createPlayer(o: { source: string; autoplay?: boolean; params?: AudioParams }): Promise<AudioPlayer>;
+  };
+  tweaks<T extends Record<string, Tweak>>(config: T): {
+    [K in keyof T]: { useState(): number | boolean | string };
+  };
+  performHaptic(style: HapticStyle): void;
+  logAnalyticsEvent(event: string, payload: Record<string, string>): void;
+  generateText(r: { prompt: string; imageData?: string | Uint8Array }): Promise<{ text: string }>;
+  generateImage(r: {
+    prompt: string;
+    imageData?: (string | Uint8Array)[];
+    targetAspectRatio?: string;
+  }): Promise<{ url: string }>;
+  addShakeListener(cb: () => void): () => void;
+  addMotionListener(cb: (m: Motion) => void): () => void;
+}
+
+type HapticStyle =
+  | "light" | "medium" | "heavy" | "rigid" | "soft"
+  | "success" | "warning" | "error";
+
+type Tweak = { name?: string; index?: number; group?: string } & (
+  | { type: "slider"; value: number; min: number; max: number; step: number }
+  | { type: "toggle"; value: boolean }
+  | { type: "color"; value: string }
+  | { type: "text"; value: string }
+  | { type: "font"; value: string }
+  | { type: "enum"; value: string; options: { value: string; name: string }[] }
+);
+```
+
+### Os “tweaks”, ou modificar sem prompt
+
+A função mais interessante para o produto é `tweaks`. Nela, o código gerado declara seus próprios parâmetros, com um nome legível, um tipo e limites. Veja o que declara “Family time!”, o gizmo de desenho.
+
+```js title="Ajustes declarados por “Family time!” (nomes de variáveis restaurados)"
+const tweaks = gizmoRuntime.tweaks({
+  paperBackground: { index: 0, name: "Paper Background", type: "color",  value: "#FFFBF2" },
+  brushSize:       { index: 1, name: "Brush Size",       type: "slider", value: 8,    min: 6,   max: 30,   step: 1 },
+  gravityStrength: { index: 2, name: "Gravity",          type: "slider", value: 1800, min: 500, max: 3000, step: 50 },
+  walkSpeed:       { index: 3, name: "Walk Speed",       type: "slider", value: 45,   min: 20,  max: 150,  step: 5 },
+  maxCreatures:    { index: 4, name: "Max Creatures",    type: "slider", value: 20,   min: 5,   max: 30,   step: 1 },
+  brushColor:      { index: 5, name: "Brush Color",      type: "color",  value: "#FF5A5A" },
+  randomColors:    { index: 6, name: "Random Colors",    type: "toggle", value: true },
+  outlineColor:    { index: 7, name: "Outline Color",    type: "color",  value: "#2E2E30" },
+});
+```
+
+Cor do papel, tamanho do pincel, gravidade, velocidade de caminhada das criaturas: o gizmo chega com seus próprios controles. Essas declarações são transmitidas ao host, que pode devolver novos valores em tempo real.
+
+Quem decide esses ajustes, o criador ou o modelo? A Meta não documenta isso, e o código não diz. Ele traz apenas um indício: no jogo de corrida infinita, valores padrão como `1.4699998` têm a cara de um slider arrastado à mão, como se o editor reescrevesse a declaração depois.
+
+Esse nome não é um detalhe de implementação. “Tweaks” (algo como “ajustes”) é uma das cinco telas que a Meta destaca na página da App Store, com três abas: cores, ajustes e texto. São os tipos que o código pode declarar. Minhas capturas não mostram o editor lendo essas declarações, mas a correspondência entre nomes e tipos deixa pouca dúvida.
+
+O mecanismo é elegante: cada gizmo chega com sua própria interface de personalização, e ajustá-lo não exige nem prompt nem nova geração. É o equivalente aos efeitos e aos templates do TikTok, com a diferença de que são próprios de cada gizmo.
+
+### O que a API não contém
+
+A ausência é tão instrutiva quanto a presença. Nenhuma função para salvar um estado, conhecer o usuário, chamar um servidor ou sincronizar dois jogadores. Resta uma brecha, a de qualquer página web: o armazenamento local do navegador. O jogo de corrida infinita guarda ali o recorde, as moedas e os itens desbloqueados, e verifiquei no visualizador web que esse armazenamento sobrevive a um recarregamento. Mas esses dados não saem do aparelho. Somado à rede fechada, isso faz de um gizmo um **brinquedo sem ligação com o grafo social, cuja memória termina no telefone**. É uma escolha de segurança tanto quanto de formato: um objeto que não transmite nada não pode vazar nada, e é consumido em trinta segundos.
+
+## Estudo de caso: um prompt dentro de um gizmo
+
+“Foto do cômodo”, o gizmo publicado pela conta oficial do Pocket, mostra até onde vai o modelo. Ele pede que você fotografe o lugar onde está e devolve o cômodo na forma de um diorama isométrico em pixel art.
+
+<PocketPhotoFlow locale="pt" />
+
+Seu JavaScript, servido publicamente como o de qualquer gizmo, contém um **prompt de 5.595 caracteres**. Não é o prompt que serviu para criar o gizmo, que eu não conheço. É uma instrução que o próprio gizmo envia a um modelo de imagem, a cada uso. Ela trata de projeção isométrica estrita, de inventário dos objetos da foto, de proibição de pegar móveis emprestados das imagens de referência. O gizmo envia esse prompt, a foto e três imagens de referência para `generateImage` e depois remove o fundo branco do resultado antes de exibi-lo.
+
+<details>
+  <summary>Ver o prompt completo de geração de imagens</summary>
+  <p lang="en">Inputs contain one user photo followed by two successful isometric pixel-room references. Use Input 1 only for content: inventory every visible room element and recreate each distinct item as its own separate asset, preserving count, identity, dominant color, relative scale, placement, adjacency, depth order, and floor-mounted versus wall-mounted relationships. Inventory only Input 1 for content — every user photo must produce a unique diorama containing only its own items. Use Inputs 2-3 only for the successful visual language, as STYLE ONLY and never as content sources: a compact floating cutaway room, coherent floor diamond, vertical walls, consistent miniature scale, every object redrawn as a pixel-art game asset, crisp dark sprite outlines, visible square pixels, flat posterized colors, hard-edged shade ramps, and dense but readable detail. Style references only — do not borrow items. Do not use, copy, reinterpret, or insert any exact furniture, decor, posters, plants, colors, layouts, or objects from the reference images. If Input 1 shows a bedroom with laptop and bed, output only that bedroom's items in isometric pixel style; never add a dining table, Ontario poster, or orange pendant from the references unless it is actually in Input 1. Every user photo must produce a unique diorama containing only its own items. Reconstruct from scratch; never trace, paste, crop, collage, or lightly filter the source photo. STRICT PROJECTION: one orthographic isometric master grid for the room and every asset; world X/Y axes at exactly +30/-30 degrees from horizontal, Z vertical, equal projected unit scale, a symmetric 60/120-degree floor rhombus, two rear walls, open front and ceiling, no perspective convergence, no mixed cameras, and no off-grid furniture. STRICT 16-BIT PIXEL ART: design at an apparent 128-192 pixel logical resolution and nearest-neighbor enlarge; clearly visible pixel cells, staircase diagonals, one-logical-pixel outlines, limited scene-accurate palette, two-to-four flat tones per material, and hard pixel shadows. The result is invalid if it looks photographic, like smooth 3D, a realistic cutout, a photo composited onto walls, a filtered photograph, vector art, or an ordinary front-facing room. Do not preserve photographic textures, lens perspective, continuous gradients, soft lighting, antialiasing, fabric micro-detail, or realistic surfaces. STRICT CONTENT BAN — do not copy room contents from Inputs 2-3: Inputs 2-3 are STYLE ONLY, never content sources; do not use, copy, reinterpret, or insert any exact furniture, decor, posters, plants, colors, layouts, or objects from them. Center the complete floating miniature with margin on a pure white exterior matte for extraction. No glass case, front frame, wireframe, guide grid, text, logo, card, border, or watermark. Square 1:1. Inputs now include a fourth image: a 30-degree geometry diagram as construction guidance only. Establish one global screen-space basis before drawing anything: X-axis edges run at exactly +30 degrees from horizontal, Y-axis edges run at exactly -30 degrees, and Z-axis edges are vertical. The projected unit length is identical on X, Y, and Z. The floor, wall edges, and EVERY rectilinear asset must use only those three basis directions. Each bed, sofa, ottoman, rug, table, chair, cabinet, shelf, drawer, box, window, door, frame, appliance, and container must be rebuilt as a true isometric sprite whose top, side, and front planes form consistent 60/120-degree diamonds or parallelograms. Assets may rotate only by 90-degree increments in world space, which swaps the same +30/-30 axes; they may not choose independent screen angles. No screen-horizontal furniture faces, arbitrary slopes, perspective trapezoids, or mixed foreshortening. Equal real-world dimensions must map to equal projected pixel lengths everywhere, and object scale must remain coherent relative to wall height, floor tiles, and neighboring assets. Organic and round objects may curve, but their bases, bounding boxes, placement, and supporting geometry must snap to the shared grid. After inventorying Input 1 only, SELECT 4-8 of the most prominent items actually visible in Input 1 (desk, TV, boxes, shelves, bed, chair, etc.) and explicitly CONVERT each one into a true isometric sprite asset. Do not leave any selected item as a flat photo cutout or front-facing billboard. Every converted asset MUST have: a top plane that is a 60/120-degree diamond, side planes that are parallelograms using only +30°/-30°/vertical edges, consistent wall-height-relative scale, and pixel-art shading. If an item cannot be made isometric, omit it rather than pasting it flat. CRITICAL: Reject any generation where furniture faces are screen-horizontal, where boxes show a straight-on front face, where the TV/monitor is a flat rectangle facing the viewer, or where the desk top is a horizontal rectangle. All tops must be diamonds, all fronts/sides must be parallelograms. The floor rhombus, desk top, box tops, and shelf tops must all share the exact same diamond angle. Before finalizing, visually audit every hard edge and reject the candidate if any major asset is off-grid, uses a different projection, looks pasted into the room, or matches an item from Inputs 2-3 that is not present in Input 1. Uniqueness check: if Input 1 does not contain it, do not render it — no borrowed furniture, decor, posters, plants, colors, or layouts from the style references. Input 4 is construction guidance only: never render its dashed grid, cube, labels, numerals, arrows, or white paper background.</p>
+</details>
+
+Esse caso muda a leitura do produto em dois pontos.
+
+- **O know-how muda de lugar.** O valor desse gizmo não está no código, bastante banal, e sim no prompt. O criador de um gizmo desse tipo é um autor de instruções para um segundo modelo. Programa-se um programa que programa uma imagem.
+- **Cada partida tem um custo.** Com 2.860 curtidas e 535 comentários, esse gizmo provavelmente foi jogado muito mais vezes do que isso. Cada uso dispara uma geração de imagem que nem o criador nem o jogador pagam. Enquanto o Pocket continuar pequeno, é uma linha no orçamento de pesquisa. Na escala de uma rede social, é a questão central do modelo de negócio.
+
+## Web ou app: o mesmo gizmo, dois transportes
+
+Um último detalhe diz muito sobre o app nativo, que não examinei. O servidor fornece o mesmo gizmo em duas variantes, conforme um parâmetro do endereço.
+
+- **Variante web.** O documento contém 13 KB a mais: o transporte `postMessage` descrito acima.
+- **Variante app.** Servida a um navegador mobile, ela não contém esse transporte. O código do gizmo procura ali um objeto global, `__bridgeTransport`, que ninguém define no documento.
+
+A única maneira de esse objeto existir é um programa externo injetá-lo antes da execução. Deduzo daí que **o app nativo exibe os gizmos em uma WebView**, um navegador embutido, e instala nela sua própria ponte para as funções do telefone. É uma dedução sólida, não uma observação.
+
+Se ela estiver certa, a conclusão tem um sabor especial para quem trabalha com web: o formato de execução do “TikTok do software” é uma página HTML. Nem motor de jogo, nem máquina virtual proprietária. A plataforma universal para código gerado, executado com segurança em qualquer telefone, já existia.
+
+## A linha de produção completa
+
+Juntando o que foi observado e o que foi deduzido, a fabricação de um gizmo se parece com isto.
+
+<PocketPipeline locale="pt" />
+
+As duas etapas tracejadas merecem um comentário. Não vi a geração em si. Mas o código da aplicação web contém o necessário para exibir transcrições de agente: chamadas de ferramentas, subagentes, arquivos em um espaço isolado. Esse código provavelmente serve ao editor do site, que existe atrás do login: o endereço `/create` tem o título “New gizmo” e pede uma conta da Meta. E o [Business Insider](https://www.businessinsider.com/meta-rolls-out-new-vibe-coding-social-app-pocket-us-2026-8) relata que o Pocket se baseia no Muse Spark, um modelo que a Meta já apresentava em abril como capaz de [gerar minijogos](https://about.fb.com/news/2026/04/introducing-muse-spark-meta-superintelligence-labs/) e de orquestrar vários agentes.
+
+## A estratégia da Meta
+
+Visto em conjunto, o Pocket combina quatro ativos que a Meta já possui: um modelo de fundação, know-how em recomendação, uma infraestrutura de distribuição e bilhões de contas. A aposta inicial é baixa, uma vez que a equipe e o produto já existiam.
+
+Minha leitura é que o Pocket está no cruzamento de três frentes de trabalho da Meta.
+
+- **A geração de software.** Em 12 de outubro de 2026, a Meta apresentou o [Muse Wonder e o Muse Wonder Full](https://about.fb.com/news/2026/10/introducing-muse-wonder-models/), que descreve como seus modelos mais capazes até hoje, projetados para agentes, com a programação entre os usos destacados. Nada indica que o Pocket os utilize: o anúncio não menciona o app. Por outro lado, mostra onde a Meta está investindo.
+- **A experimentação.** Um app independente, lançado sem anúncio em um único país, permite aprender o que funciona longe dos produtos que dão dinheiro.
+- **A distribuição social.** É o terreno em que a Meta larga com mais vantagem: bilhões de contas e superfícies onde exibir um gizmo.
+
+A aposta, portanto, me parece ser menos no app do que no formato. Se um gizmo é uma página web isolada de algumas centenas de quilobytes, ele pode viver em qualquer lugar onde a Meta exibe conteúdo: um feed do Threads, um story, uma conversa, um anúncio.
+
+Os riscos são proporcionais. Três me parecem sérios.
+
+- **Os dados.** A atividade no Pocket alimenta os modelos da Meta. A página de ajuda esclarece também que, em certos casos, as mensagens enviadas à IA e informações gerais, como a região, são compartilhadas com parceiros.
+- **A persistência dos remixes.** Excluir um gizmo ou tornar o perfil privado não exclui os remixes já criados. Para um gizmo que contém uma foto pessoal, é irreversível.
+- **Os direitos.** Um produto concebido para misturar fotos, música e código reaproveitado de terceiros herda todas as questões de direito autoral do remix, somadas às da geração por IA.
+
+O Pocket não está sozinho nesse terreno. [Wabi](https://techcrunch.com/2025/11/05/replika-founder-raises-20m-pre-seed-for-wabi-the-youtube-of-apps) e [Sekai](https://axios.com/2026/06/01/sekai-mini-app-startup-funding) exploram a mesma ideia, a do software gerado como mídia social. O diferencial da Meta é a distribuição.
+
+## Aonde isso pode levar
+
+<PocketScenarios locale="pt" />
+
+O primeiro cenário tem um precedente recente. A OpenAI havia lançado um app com um feed de vídeos gerados com o Sora, antes de [anunciar seu encerramento](https://engadget.com/ai/openai-is-shutting-down-its-sora-video-generation-app-211023358.html) no primeiro semestre de 2026. Um formato pode fascinar no lançamento e não reter os usuários.
+
+Minha intuição pende para o segundo. Tudo na arquitetura do Pocket prepara o gizmo para ser incorporado em outro lugar: um documento autocontido, um isolamento estrito, um domínio já autorizado. O app seria então a oficina, e os outros produtos da Meta, a vitrine.
+
+Para um desenvolvedor, o terceiro cenário é o que conta, e ele não tem nada de ameaça existencial. Veja o que um gizmo não sabe fazer: identificar, se conectar, sincronizar, guardar dados fora do aparelho. É exatamente a lista do que define um aplicativo de negócio. O software descartável vai absorver o joguinho promocional, o quiz, o protótipo, a demo. O que exige dados persistentes, um backend, integração e confiança continua sendo software no sentido pleno.
+
+O que muda, por outro lado, é a moldura. No Pocket, a plataforma escolheu a stack (React, Tailwind, Three.js), o escopo das permissões e o canal de distribuição. O modelo preenche as lacunas. Talvez seja a lição mais geral: o software gerado em grande escala não se parece com um desenvolvedor aumentado; ele se parece com **uma moldura muito restrita, dentro da qual um modelo só precisa escrever algumas dezenas de quilobytes**.
+
+## O que se sabe, o que se deduz, o que não se sabe
+
+<PocketKnowns locale="pt" />
+
+E então, o TikTok do vibe coding? A mecânica está lá, até em detalhes que a interface não mostra: o som como unidade de remix, a atribuição, as playlists, um feed que conhece as suas permissões. O que falta é a prova de que as pessoas voltam. A Meta não publica nenhum número de uso, e um formato que pede para jogar em vez de assistir larga em desvantagem.
+
+O que fica para mim, acima de tudo, é o que o exercício mostra sobre a fabricação. Por trás da mágica de uma frase transformada em jogo, há uma página web, um iframe, uma política de segurança e uma API de oito funções. Nada de exótico. A novidade não está na técnica; está na decisão de tratar um programa como um post.
+
+<Callout type="tip" title="Fontes">
+  **Imprensa e anúncios**: [Business Insider, 5 de março de 2026](https://www.businessinsider.com/ex-snapchat-engineers-behind-gizmo-join-meta-superintelligence-labs-2026-3) · [TechCrunch, 2 de julho de 2026](https://techcrunch.com/2026/07/02/meta-quietly-launches-vibe-coded-gaming-app-pocket/) · [The Verge, 2 de julho de 2026](https://www.theverge.com/tech/961086/meta-pocket-app-gizmo-ai) · [Business Insider, agosto de 2026](https://www.businessinsider.com/meta-rolls-out-new-vibe-coding-social-app-pocket-us-2026-8) · [The Next Web, 21 de agosto de 2026](https://thenextweb.com/news/meta-pocket-vibe-coding-app-us-gizmo-atma-sciences) · [AlleyWatch, 3 de fevereiro de 2025](https://www.alleywatch.com/2025/02/the-alleywatch-startup-daily-funding-report-2-3-2025/).
+
+  **Meta**: [página de ajuda do Pocket](https://www.meta.com/help/pocket/4433460963602094/) · [Muse Spark](https://about.fb.com/news/2026/04/introducing-muse-spark-meta-superintelligence-labs/) · [Muse Spark 1.1](https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/) · [Muse Spark 1.3](https://research.meta.ai/blog/introducing-muse-spark-1-3) · [Muse Wonder](https://about.fb.com/news/2026/10/introducing-muse-wonder-models/) · [Pocket: Make Gizmos no Google Play](https://play.google.com/store/apps/details?id=com.facebook.gizmo) · [na App Store](https://apps.apple.com/fr/app/pocket-make-gizmos/id6761221765).
+
+  **Capturas**: quatro gizmos públicos carregados no Chrome em 11 e 13 de outubro de 2026, sem conta.
+</Callout>
