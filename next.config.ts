@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   output: "export",
   trailingSlash: true,
-  allowedDevOrigins: ["192.168.1.122", "192.168.1.*"],
+  allowedDevOrigins: ["192.168.1.122", "192.168.1.*", "100.106.139.83"],
   // Pin the workspace root to this project. A stray pnpm-workspace.yaml in the
   // parent directory otherwise makes Next.js infer the wrong root and fail to
   // resolve dependencies like tailwindcss.
