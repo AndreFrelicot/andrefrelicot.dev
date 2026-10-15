@@ -1,9 +1,9 @@
 /* Infographics for the Pocket: Make Gizmos article.
 
-   Same house language as the Morpher91 diagrams: a white sheet in both site
-   themes, a light title with a short teal bar, one-pixel grey rules, text in
+   Same house language as the Morpher91 diagrams: a sheet that follows the site
+   theme, a light title with a short teal bar, one-pixel grey rules, text in
    regular weight, teal for secondary labels, short amber dashes, monospace
-   for anything technical, and a lot of white. Almost nothing is boxed.
+   for anything technical, and a lot of space. Almost nothing is boxed.
 
    Colour is rationed. Teal marks the platform and whatever is "current";
    amber marks the creator and the generated code; slate is the runtime.
@@ -41,7 +41,17 @@
 }
 
 :global(:root.dark) .viz {
-  border-color: transparent;
+  --paper: #222326;
+  --ink: #e7e9ec;
+  --ink-2: #bcc2c9;
+  --ink-3: #969fa9;
+  --line: #626c78;
+  --hair: #3a4149;
+  --teal-ink: #58cabb;
+  --slate: #9aa6b3;
+  --red: #ff747a;
+
+  color-scheme: dark;
 }
 
 @media (min-width: 640px) {
