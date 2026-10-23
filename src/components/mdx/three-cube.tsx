@@ -25,7 +25,7 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
   );
   const lastFrameTimeRef = useRef(0);
   const confettiRef = useRef<Array<{
-    mesh: THREE.Mesh;
+    mesh: THREE.Object3D;
     velocity: THREE.Vector3;
     angularVelocity: THREE.Vector3;
     startTime: number;
@@ -210,101 +210,97 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
         animation.opacity = 0;
         animation.startTime = 0;
         materials[index].color.setRGB(1, 1, 1);
-        materials[index].needsUpdate = true;
         stopOscillator(index);
       });
     };
+
+    // Reuse one GPU draw and a fixed particle pool across celebrations.
+    const confettiColors = [0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf9ca24, 0xf0932b, 0xeb4d4b, 0x6c5ce7, 0xa29bfe];
+    const confettiGeometry = new THREE.PlaneGeometry(0.08, 0.08);
+    const confettiMaterial = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    const confettiMesh = new THREE.InstancedMesh(confettiGeometry, confettiMaterial, 100);
+    confettiMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    confettiMesh.frustumCulled = false;
+    const confettiColor = new THREE.Color();
+    confettiRef.current = Array.from({ length: 100 }, (_, index) => {
+      confettiMesh.setColorAt(index, confettiColor.setHex(confettiColors[Math.floor(Math.random() * confettiColors.length)]));
+      return {
+        mesh: new THREE.Object3D(),
+        velocity: new THREE.Vector3(),
+        angularVelocity: new THREE.Vector3(),
+        startTime: 0,
+      };
+    });
+    confettiMesh.count = 0;
+    scene.add(confettiMesh);
 
     const createConfetti = () => {
       if (confettiActiveRef.current) return;
 
       confettiActiveRef.current = true;
-      const confettiColors = [0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf9ca24, 0xf0932b, 0xeb4d4b, 0x6c5ce7, 0xa29bfe];
-      const particleCount = 100;
-
-      for (let i = 0; i < particleCount; i++) {
-        const geometry = new THREE.PlaneGeometry(0.08, 0.08);
-        const material = new THREE.MeshBasicMaterial({
-          color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-          side: THREE.DoubleSide
-        });
-        const particle = new THREE.Mesh(geometry, material);
-
+      const startTime = Date.now();
+      confettiRef.current.forEach((particle) => {
         // Start from cube center with random spread
-        particle.position.set(
+        particle.mesh.position.set(
           (Math.random() - 0.5) * 0.5,
           (Math.random() - 0.5) * 0.5,
           (Math.random() - 0.5) * 0.5
         );
 
-        const velocity = new THREE.Vector3(
+        particle.mesh.rotation.set(0, 0, 0);
+        particle.velocity.set(
           (Math.random() - 0.5) * 0.02,
           Math.random() * 0.015 + 0.01,
           (Math.random() - 0.5) * 0.02
         );
 
-        const angularVelocity = new THREE.Vector3(
+        particle.angularVelocity.set(
           (Math.random() - 0.5) * 0.1,
           (Math.random() - 0.5) * 0.1,
           (Math.random() - 0.5) * 0.1
         );
 
-        confettiRef.current.push({
-          mesh: particle,
-          velocity,
-          angularVelocity,
-          startTime: Date.now()
-        });
-
-        scene.add(particle);
-      }
-
-      // Auto-cleanup after 4 seconds
-      setTimeout(() => {
-        confettiActiveRef.current = false;
-      }, 4000);
+        particle.startTime = startTime;
+      });
+      confettiMesh.count = confettiRef.current.length;
     };
 
+    htmlConfettiRef.current = Array.from({ length: 30 }, () => {
+      const particle = document.createElement('div');
+      particle.style.cssText = `
+        position: fixed;
+        width: 8px;
+        height: 8px;
+        background-color: #${confettiColors[Math.floor(Math.random() * confettiColors.length)].toString(16).padStart(6, '0')};
+        pointer-events: none;
+        z-index: 1000;
+        border-radius: 2px;
+        animation: confetti-fall ${2 + Math.random() * 2}s ease-out forwards;
+      `;
+      return particle;
+    });
+    let htmlConfettiTimeout: ReturnType<typeof setTimeout> | undefined;
+    let completionTimeout: ReturnType<typeof setTimeout> | undefined;
+
     const createHtmlConfetti = () => {
-      const confettiColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7', '#a29bfe'];
-      const particleCount = 30;
-
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.style.cssText = `
-          position: fixed;
-          width: 8px;
-          height: 8px;
-          background-color: ${confettiColors[Math.floor(Math.random() * confettiColors.length)]};
-          pointer-events: none;
-          z-index: 1000;
-          border-radius: 2px;
-          animation: confetti-fall ${2 + Math.random() * 2}s ease-out forwards;
-        `;
-
-        const rect = container.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const fragment = document.createDocumentFragment();
+      htmlConfettiRef.current.forEach((particle) => {
         particle.style.left = `${centerX + (Math.random() - 0.5) * 50}px`;
         particle.style.top = `${centerY}px`;
         particle.style.setProperty('--random-x', `${(Math.random() - 0.5) * 600}px`);
         particle.style.setProperty('--random-y', `${-200 - Math.random() * 300}px`);
         particle.style.setProperty('--random-rotation', `${Math.random() * 1080}deg`);
 
-        document.body.appendChild(particle);
-        htmlConfettiRef.current.push(particle);
-
-        setTimeout(() => {
-          if (particle.parentNode) {
-            particle.parentNode.removeChild(particle);
-          }
-          const index = htmlConfettiRef.current.indexOf(particle);
-          if (index > -1) {
-            htmlConfettiRef.current.splice(index, 1);
-          }
-        }, 4000);
-      }
+        fragment.appendChild(particle);
+      });
+      document.body.appendChild(fragment);
+      clearTimeout(htmlConfettiTimeout);
+      htmlConfettiTimeout = setTimeout(() => {
+        htmlConfettiRef.current.forEach(particle => particle.remove());
+      }, 4000);
     };
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.2);
@@ -347,6 +343,11 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       scene.add(spotlight);
       scene.add(spotlight.target); // Important: add the target to the scene
     }
+
+    // Compile the celebration shader before the first win. The empty instance
+    // batch also uploads its buffers during the initial renders without drawing.
+    void renderer.compileAsync(confettiMesh, camera, scene);
+    ensureSuccessAudio()?.load();
 
     const resize = () => {
       if (!containerRef.current) return;
@@ -467,7 +468,7 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
           createHtmlConfetti();
         }
 
-        setTimeout(() => {
+        completionTimeout = setTimeout(() => {
           const successAudio = ensureSuccessAudio();
           if (successAudio) {
             try {
@@ -487,27 +488,26 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       }
 
       // Update confetti particles
-      confettiRef.current = confettiRef.current.filter(particle => {
-        const elapsed = (currentTime - particle.startTime) / 1000;
+      if (confettiActiveRef.current) {
+        if (currentTime - confettiRef.current[0].startTime > 4000) {
+          confettiActiveRef.current = false;
+          confettiMesh.count = 0;
+        } else {
+          confettiRef.current.forEach((particle, index) => {
+            // Apply gravity and update position
+            particle.velocity.y -= 0.0008; // gravity
+            particle.mesh.position.add(particle.velocity);
 
-        if (elapsed > 4) {
-          scene.remove(particle.mesh);
-          particle.mesh.geometry.dispose();
-          (particle.mesh.material as THREE.Material).dispose();
-          return false;
+            // Apply rotation
+            particle.mesh.rotation.x += particle.angularVelocity.x;
+            particle.mesh.rotation.y += particle.angularVelocity.y;
+            particle.mesh.rotation.z += particle.angularVelocity.z;
+            particle.mesh.updateMatrix();
+            confettiMesh.setMatrixAt(index, particle.mesh.matrix);
+          });
+          confettiMesh.instanceMatrix.needsUpdate = true;
         }
-
-        // Apply gravity and update position
-        particle.velocity.y -= 0.0008; // gravity
-        particle.mesh.position.add(particle.velocity);
-
-        // Apply rotation
-        particle.mesh.rotation.x += particle.angularVelocity.x;
-        particle.mesh.rotation.y += particle.angularVelocity.y;
-        particle.mesh.rotation.z += particle.angularVelocity.z;
-
-        return true;
-      });
+      }
 
       // Update face tint animations
       faceAnimationsRef.current.forEach((animation, index) => {
@@ -535,7 +535,6 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
           // Apply red tint with calculated opacity
           const tintAmount = animation.opacity;
           materials[index].color.setRGB(1, 1 - tintAmount, 1 - tintAmount);
-          materials[index].needsUpdate = true;
 
           // Update audio frequency based on opacity
           const oscillatorData = oscillatorsRef.current[index];
@@ -586,6 +585,8 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       container.removeEventListener("touchstart", handleTouchStart);
       container.removeEventListener("click", handleClick);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      clearTimeout(completionTimeout);
+      clearTimeout(htmlConfettiTimeout);
 
       // Clean up audio - capture current ref values
       const oscillatorsSnapshot = oscillatorsRef.current.map((entry) => ({
@@ -616,12 +617,12 @@ export function ThreeCube({ width, height }: { width?: number; height?: number }
       completionTriggeredRef.current = false;
 
       // Clean up confetti
-      confettiRef.current.forEach(particle => {
-        scene.remove(particle.mesh);
-        particle.mesh.geometry.dispose();
-        (particle.mesh.material as THREE.Material).dispose();
-      });
+      scene.remove(confettiMesh);
+      confettiMesh.dispose();
+      confettiGeometry.dispose();
+      confettiMaterial.dispose();
       confettiRef.current = [];
+      confettiActiveRef.current = false;
 
       // Clean up HTML confetti
       htmlConfettiRef.current.forEach(particle => {
