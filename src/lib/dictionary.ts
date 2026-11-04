@@ -9,7 +9,6 @@ export type Dictionary = {
   nav: {
     home: string;
     content: string;
-    apps: string;
     about: string;
   };
   home: {
@@ -50,7 +49,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     nav: {
       home: "Home",
       content: "Devlogs",
-      apps: "Apps",
       about: "About",
     },
     home: {
@@ -90,7 +88,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     nav: {
       home: "Accueil",
       content: "Devlogs",
-      apps: "Apps",
       about: "À propos",
     },
     home: {
@@ -129,7 +126,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     nav: {
       home: "Início",
       content: "Devlogs",
-      apps: "Apps",
       about: "Sobre",
     },
     home: {
@@ -168,7 +164,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     nav: {
       home: "Inicio",
       content: "Devlogs",
-      apps: "Apps",
       about: "Acerca de",
     },
     home: {

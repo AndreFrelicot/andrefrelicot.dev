@@ -66,10 +66,6 @@ export default async function LocaleHome({
           label: dictionary.nav.content,
         },
         {
-          href: `/${locale}?tag=apps`,
-          label: dictionary.nav.apps,
-        },
-        {
           href: aboutPath,
           label: dictionary.nav.about,
         },

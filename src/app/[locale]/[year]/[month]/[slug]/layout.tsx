@@ -52,10 +52,6 @@ export default async function PostLayout({
           label: dictionary.nav.content,
         },
         {
-          href: `/${locale}?tag=apps`,
-          label: dictionary.nav.apps,
-        },
-        {
           href: aboutPath,
           label: dictionary.nav.about,
         },
