@@ -1,0 +1,329 @@
+/* The plates of the poptoy series, in the language of the devlog diagrams (the
+   Pocket article): a sheet that follows the theme, a light title and a short
+   dash, one-pixel grey rules, regular-weight text, mono for anything technical,
+   lots of space. Almost nothing is framed: a frame means a boundary (an origin,
+   a sandbox, a project), drawn in one line, solid for what exists, dashed for
+   what is planned or inferred.
+
+   Colour is rationed: a dot, a dash, a rule, a mono label, an active state.
+   Never a coloured fill, a shadow, a glow or a gradient.
+
+   Each figure has its own CSS module and inherits the variables set on .viz.
+   @keyframes are declared in each figure's module: a CSS module makes their
+   names local. */
+
+.viz {
+  --paper: #ffffff;
+  --ink: #1c2126;
+  --ink-2: #4d555e;
+  --ink-3: #8a929b;
+  --line: #c3c8ce;
+  --hair: #e7e9ec;
+
+  /* The tones. The variable names are those of the tones in frame.tsx. */
+  --teal: #2bb3a3;
+  --teal-ink: #14877a;
+  --amber: #f0b429;
+  --amber-ink: #a8740a;
+  --violet: #8b7cf6;
+  --violet-ink: #6550d6;
+  --red: #e5484d;
+  --red-ink: #c4383d;
+  --green: #46a758;
+  --green-ink: #2f7d3e;
+  --slate: #7d8894;
+  --slate-ink: #55606b;
+
+  /* Old names, kept for the figures: they point to the sober palette. */
+  --pink: var(--amber);
+  --pink-ink: var(--amber-ink);
+  --cyan: var(--teal);
+  --cyan-ink: var(--teal-ink);
+  --orange: var(--red);
+  --orange-ink: var(--red-ink);
+  --lime: var(--green);
+  --lime-ink: var(--green-ink);
+  --paper-2: var(--paper);
+
+  --sans: var(--font-poptoy-sans), ui-sans-serif, system-ui, sans-serif;
+  --display: var(--sans);
+  --mono: var(--font-poptoy-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --spring: var(--ease);
+
+  position: relative;
+  counter-increment: poptoy-fig;
+  color-scheme: light;
+  margin: 3rem 0;
+  padding: 1.75rem 1.25rem 1.5rem;
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+:global(:root.dark) .viz {
+  --paper: #222326;
+  --ink: #e7e9ec;
+  --ink-2: #bcc2c9;
+  --ink-3: #969fa9;
+  --line: #626c78;
+  --hair: #3a4149;
+  --teal-ink: #58cabb;
+  --amber-ink: #f5c451;
+  --violet-ink: #ab9fff;
+  --red: #ff747a;
+  --red-ink: #ff8a8f;
+  --green-ink: #6fcf80;
+  --slate: #9aa6b3;
+  --slate-ink: #aab5c1;
+
+  color-scheme: dark;
+}
+
+@media (min-width: 640px) {
+  .viz {
+    padding: 2.75rem 2.75rem 2.25rem;
+  }
+}
+
+/* Animations wait until the figure is on screen. */
+.viz[data-inview="false"] *,
+.viz[data-inview="false"] *::before,
+.viz[data-inview="false"] *::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viz *,
+  .viz *::before,
+  .viz *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Code in a figure is bare mono: not the grey background of the article's code. */
+.viz code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+
+/* --- tons --------------------------------------------------------------- */
+
+.cloud {
+  --tone: var(--teal);
+  --tone-ink: var(--teal-ink);
+}
+
+.creator {
+  --tone: var(--amber);
+  --tone-ink: var(--amber-ink);
+}
+
+.ai {
+  --tone: var(--violet);
+  --tone-ink: var(--violet-ink);
+}
+
+.hostile {
+  --tone: var(--red);
+  --tone-ink: var(--red-ink);
+}
+
+.cost {
+  --tone: var(--green);
+  --tone-ink: var(--green-ink);
+}
+
+.neutral {
+  --tone: var(--slate);
+  --tone-ink: var(--slate-ink);
+}
+
+/* --- head, legend, caption ------------------------------------------------- */
+
+.head {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+}
+
+.figNo::after {
+  content: " " counter(poptoy-fig) " ·";
+}
+
+.title {
+  max-width: 40rem;
+  margin-top: 0.5rem;
+  font-size: clamp(1.45rem, 3.4vw, 1.85rem);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+.title::after {
+  content: "";
+  display: block;
+  width: 2.4rem;
+  height: 3px;
+  margin-top: 0.85rem;
+  background: var(--teal);
+}
+
+.body {
+  position: relative;
+  margin-top: 2.25rem;
+}
+
+.caption {
+  margin-top: 2.25rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--ink);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+  margin-top: 1.75rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.swatch {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--tone);
+}
+
+.swatchDashed {
+  width: 1.5rem;
+  height: 0;
+  border-radius: 0;
+  background: none;
+  border-top: 1px dashed var(--tone);
+}
+
+/* --- briques -------------------------------------------------------------- */
+
+/* A line icon, without a disc, in the secondary text colour. */
+.badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--size);
+  height: var(--size);
+  color: var(--ink-2);
+}
+
+.badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* A block: space around it, a name, a text, and a short dash underneath. */
+.card {
+  position: relative;
+}
+
+.card::after {
+  content: "";
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 0.9rem;
+  background: var(--tone);
+}
+
+/* A dashed block: what is planned, inferred or switched off. */
+.card.dashed {
+  padding: 0.9rem 1rem 1rem;
+  border: 1px dashed var(--line);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.cardTitle {
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+
+.cardBody {
+  margin-top: 0.45rem;
+  color: var(--ink-2);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+/* A technical name: mono, in its tone, without a background. */
+.tag {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--tone-ink);
+  white-space: nowrap;
+}
+
+.stat {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.statValue {
+  font-size: 2.1rem;
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.statLabel {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.stat::after {
+  content: "";
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 0.4rem;
+  background: var(--tone);
+}
+
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  }
+}

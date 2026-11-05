@@ -1,0 +1,1985 @@
+/* The AI figures, in the language of the devlog diagrams: text set on the
+   sheet, one-pixel rules, a short dash under each block, colour only on a dot,
+   a rule or a label. Variables come from .viz (viz.module.css). @keyframes are
+   local. */
+
+/* --- briques communes ----------------------------------------------------- */
+
+/* The page style puts a background under inline code; in a figure, mono sits
+   on the sheet, without one. */
+.modeApi,
+.toolName,
+.checks code,
+.boundaryLegend code,
+.profFlow code,
+.profFamily,
+.profModel,
+.profHash,
+.timeLabel code,
+.scopeVal,
+.familyApi,
+.familyVal,
+.familyModel code,
+.capHead code,
+.offTag,
+.modOut code,
+.modAction code,
+.polA code,
+.polB code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.stageOuter {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.twoCols {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .twoCols {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+.colHead {
+  margin-bottom: 1.1rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.dash {
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 1.25rem;
+  background: var(--amber);
+}
+
+.dashTeal {
+  background: var(--teal);
+}
+
+.toneDash {
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 1.1rem;
+  background: var(--tone);
+}
+
+.modeIcon {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.modeName {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+
+.modeApi {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--teal-ink);
+}
+
+.modeText {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.toolName {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+/* The devlog's bullet lists: ✓ in teal, × in red. */
+.checks {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+}
+
+.checks li {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.checks code {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.yes::before,
+.no::before {
+  flex: none;
+  width: 0.9rem;
+  font-family: var(--mono);
+}
+
+.yes::before {
+  content: "✓";
+  color: var(--teal-ink);
+}
+
+.no::before {
+  content: "×";
+  color: var(--red-ink);
+}
+
+/* A boundary frame, like the devlog's “Isolation” figure. */
+.boundary {
+  margin: 0;
+  padding: 1rem 1.25rem 1.25rem;
+  border: 1px solid var(--line);
+}
+
+.boundaryLegend {
+  padding: 0 0.5rem;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.boundaryLegend code {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--teal-ink);
+}
+
+/* A marker on a rule. */
+.stationDot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin-bottom: 0.9rem;
+  border-radius: 50%;
+  background: var(--tone, var(--amber));
+}
+
+/* --- AdkModes --------------------------------------------------------------- */
+
+.modeList {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.mode {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.mode .modeIcon {
+  margin-top: 0.1rem;
+}
+
+.modeUnused .modeName {
+  color: var(--ink-2);
+}
+
+.modeUnused .modeApi {
+  color: var(--ink-3);
+}
+
+.modeWhy {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--ink-3);
+}
+
+.modeLater {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--teal-ink);
+}
+
+/* --- AgentVsGraph ------------------------------------------------------------ */
+
+.vsHead {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.4rem;
+}
+
+.vsHead .modeIcon {
+  margin-top: 0.1rem;
+}
+
+.bars {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 1.4rem;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 3.4rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.barLabel {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.barTrack {
+  position: relative;
+  display: block;
+  height: 4px;
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  transform-origin: left center;
+}
+
+.barLoop {
+  background: var(--red);
+  animation: barLoop 8s var(--ease) infinite both;
+}
+
+.barGraph {
+  background: var(--violet);
+  animation: barLoop 8s var(--ease) infinite both;
+}
+
+@keyframes barLoop {
+  0% {
+    transform: scaleX(0);
+  }
+  12%,
+  88% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+.buildStep {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--teal-ink);
+}
+
+/* --- ForgeGraph ---------------------------------------------------------------- */
+
+.graphDesktop {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .graphDesktop {
+    display: block;
+  }
+}
+
+.graphSvg {
+  position: absolute;
+  inset: 0;
+  width: 920px;
+  height: 320px;
+  overflow: visible;
+}
+
+.edge {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.edgeDashed {
+  stroke-dasharray: 4 4;
+}
+
+/* The route taken lights up, in a slightly bolder solid line. */
+.edgeHot {
+  fill: none;
+  stroke-width: 1.5;
+  opacity: 0;
+}
+
+.hotFix {
+  stroke: var(--violet);
+  animation: hotFix 14s linear infinite;
+}
+
+.hotOk {
+  stroke: var(--green);
+  animation: hotOk 14s linear infinite;
+}
+
+@keyframes hotFix {
+  0%,
+  50% {
+    opacity: 0;
+  }
+  52%,
+  70% {
+    opacity: 1;
+  }
+  73%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hotOk {
+  0%,
+  73% {
+    opacity: 0;
+  }
+  75%,
+  94% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.routeTag {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0 0.3rem;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  background: var(--paper);
+}
+
+.gnode {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  background: var(--paper);
+}
+
+/* Agents and the build are nodes: a one-pixel frame, no fill. */
+.g_agent,
+.g_fn {
+  width: 116px;
+  padding: 9px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.g_fn {
+  width: 136px;
+}
+
+/* Briefs are only text: a prepared message, not an actor. */
+.g_brief {
+  padding: 2px 6px;
+}
+
+.g_brief .gLabel {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.g_end {
+  width: 12px;
+  height: 12px;
+  place-items: center;
+  background: none;
+}
+
+.gDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+
+.gLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.gLabel svg {
+  color: var(--ink-2);
+}
+
+.gNote {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.gEndLabel {
+  position: absolute;
+  top: 100%;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* Each node takes its tone's colour when the marker passes (14 s clock). */
+.on_plan {
+  animation: lit_plan 14s linear infinite;
+}
+
+.on_write {
+  animation: lit_write 14s linear infinite;
+}
+
+.on_build {
+  animation: lit_build 14s linear infinite;
+}
+
+.on_fix {
+  animation: lit_fix 14s linear infinite;
+}
+
+.on_briefPlan .gLabel {
+  animation: lit_briefPlan 14s linear infinite;
+}
+
+.on_briefWrite .gLabel {
+  animation: lit_briefWrite 14s linear infinite;
+}
+
+.on_briefFix .gLabel {
+  animation: lit_briefFix 14s linear infinite;
+}
+
+@keyframes lit_briefPlan {
+  0%,
+  3.5%,
+  7%,
+  100% {
+    color: var(--ink-3);
+  }
+  4%,
+  6.5% {
+    color: var(--ink);
+  }
+}
+
+@keyframes lit_briefWrite {
+  0%,
+  14.5%,
+  17.5%,
+  100% {
+    color: var(--ink-3);
+  }
+  15%,
+  17% {
+    color: var(--ink);
+  }
+}
+
+@keyframes lit_briefFix {
+  0%,
+  52.5%,
+  55.5%,
+  100% {
+    color: var(--ink-3);
+  }
+  53%,
+  55% {
+    color: var(--ink);
+  }
+}
+
+@keyframes lit_plan {
+  0%,
+  7.5%,
+  13.5%,
+  100% {
+    border-color: var(--line);
+  }
+  8%,
+  13% {
+    border-color: var(--violet);
+  }
+}
+
+@keyframes lit_write {
+  0%,
+  18.5%,
+  42.5%,
+  100% {
+    border-color: var(--line);
+  }
+  19%,
+  42% {
+    border-color: var(--violet);
+  }
+}
+
+@keyframes lit_fix {
+  0%,
+  56.5%,
+  65.5%,
+  100% {
+    border-color: var(--line);
+  }
+  57%,
+  65% {
+    border-color: var(--violet);
+  }
+}
+
+/* The build: red on the first try (failure), green on the second (success). */
+@keyframes lit_build {
+  0%,
+  44.5%,
+  51.5%,
+  67.5%,
+  74.5%,
+  100% {
+    border-color: var(--line);
+  }
+  45%,
+  51% {
+    border-color: var(--red);
+  }
+  68%,
+  74% {
+    border-color: var(--green);
+  }
+}
+
+.token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+  offset-anchor: center;
+  offset-rotate: 0deg;
+  animation: tokenRun 14s linear infinite;
+}
+
+/* Cumulative distances along the path (1,252 px): brief_plan 8%, plan 18%,
+   brief_write 27.9%, write 37.9%, build 48.7%, brief_fix 60.5%,
+   fix 73.3%, back to build 85.2%, finish 100%. */
+@keyframes tokenRun {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  2% {
+    offset-distance: 0%;
+    opacity: 1;
+  }
+  5% {
+    offset-distance: 8%;
+  }
+  8%,
+  13% {
+    offset-distance: 18%;
+  }
+  16% {
+    offset-distance: 27.9%;
+  }
+  19%,
+  42% {
+    offset-distance: 37.9%;
+  }
+  45%,
+  51% {
+    offset-distance: 48.7%;
+  }
+  54% {
+    offset-distance: 60.5%;
+  }
+  57%,
+  65% {
+    offset-distance: 73.3%;
+  }
+  68%,
+  74% {
+    offset-distance: 85.2%;
+  }
+  79%,
+  93% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/* The upright graph, for a phone: same nodes and same clock, a vertical path
+   for the token. */
+.graphMobileMotion {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+}
+
+.graphMobileMotion > .stageOuter {
+  max-width: 300px;
+}
+
+@media (min-width: 640px) {
+  .graphMobileMotion {
+    display: none;
+  }
+}
+
+/* START, at the top of the upright path: its label on the right, off the rule. */
+.gStartSide .gEndLabel {
+  top: 50%;
+  left: 100%;
+  margin: 0 0 0 8px;
+  transform: translateY(-50%);
+}
+
+.tokenV {
+  animation-name: tokenRunV;
+}
+
+/* Cumulative distances along the upright path (825 px): brief_plan 4.6%,
+   plan 10.9%, brief_write 17.5%, write 23.8%, build 33.4%, brief_fix 51.7%,
+   fix 66.2%, back to build 83.2%, finish 100%. The steps follow tokenRun. */
+@keyframes tokenRunV {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  2% {
+    offset-distance: 0%;
+    opacity: 1;
+  }
+  5% {
+    offset-distance: 4.6%;
+  }
+  8%,
+  13% {
+    offset-distance: 10.9%;
+  }
+  16% {
+    offset-distance: 17.45%;
+  }
+  19%,
+  42% {
+    offset-distance: 23.75%;
+  }
+  45%,
+  51% {
+    offset-distance: 33.44%;
+  }
+  54% {
+    offset-distance: 51.65%;
+  }
+  57%,
+  65% {
+    offset-distance: 66.19%;
+  }
+  68%,
+  74% {
+    offset-distance: 83.21%;
+  }
+  79%,
+  93% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/* --- ClosedTools ------------------------------------------------------------- */
+
+.toolsWrap {
+  display: grid;
+  gap: 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .toolsWrap {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+    gap: 2.5rem;
+  }
+}
+
+.toolsGrid {
+  display: grid;
+  gap: 1.1rem 1.5rem;
+  margin-top: 0.4rem;
+}
+
+@media (min-width: 640px) {
+  .toolsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.tool {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.tool .modeText {
+  margin-top: 0.2rem;
+}
+
+/* --- ProfileTimeline ---------------------------------------------------------- */
+
+.profFlow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-bottom: 2rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.profFlow > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.profFlow code {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--teal-ink);
+}
+
+.profArrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.profGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .profGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* A version: a rule on top, which takes the active colour. */
+.prof {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+
+.profTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.profV {
+  font-size: 1.6rem;
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+.profLive {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--teal-ink);
+  opacity: 0;
+}
+
+.profFamily {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--tone-ink);
+}
+
+.profModel {
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-2);
+}
+
+.profNote {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.profHash {
+  margin-top: 0.3rem;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--ink-3);
+}
+
+/* L'histoire de l'activation en ligne, en quatre temps de 3 s :
+   v1, puis v4, puis v1 de nouveau, puis v6. */
+.act1 {
+  animation: active1 12s steps(1, end) infinite;
+}
+
+.act1 .profLive {
+  animation: live1 12s steps(1, end) infinite;
+}
+
+.act4 {
+  animation: active4 12s steps(1, end) infinite;
+}
+
+.act4 .profLive {
+  animation: live4 12s steps(1, end) infinite;
+}
+
+.act6 {
+  animation: active6 12s steps(1, end) infinite;
+}
+
+.act6 .profLive {
+  animation: live6 12s steps(1, end) infinite;
+}
+
+@keyframes active1 {
+  0%,
+  50% {
+    border-top-color: var(--teal);
+    box-shadow: inset 0 1px 0 var(--teal);
+  }
+  25%,
+  75% {
+    border-top-color: var(--line);
+    box-shadow: none;
+  }
+}
+
+@keyframes live1 {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0;
+  }
+}
+
+@keyframes active4 {
+  0%,
+  50% {
+    border-top-color: var(--line);
+    box-shadow: none;
+  }
+  25% {
+    border-top-color: var(--teal);
+    box-shadow: inset 0 1px 0 var(--teal);
+  }
+}
+
+@keyframes live4 {
+  0%,
+  50% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+}
+
+@keyframes active6 {
+  0% {
+    border-top-color: var(--line);
+    box-shadow: none;
+  }
+  75% {
+    border-top-color: var(--teal);
+    box-shadow: inset 0 1px 0 var(--teal);
+  }
+}
+
+@keyframes live6 {
+  0% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+}
+
+.profHistory {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--ink-3);
+}
+
+.profHistLabel {
+  margin-right: 0.5rem;
+}
+
+.histArrow {
+  color: var(--line);
+}
+
+.h1 {
+  animation: hist1 12s steps(1, end) infinite;
+}
+
+.h4 {
+  animation: hist2 12s steps(1, end) infinite;
+}
+
+.h1b {
+  animation: hist3 12s steps(1, end) infinite;
+}
+
+.h6 {
+  animation: hist4 12s steps(1, end) infinite;
+}
+
+@keyframes hist1 {
+  0% {
+    color: var(--teal-ink);
+  }
+  25% {
+    color: var(--ink-3);
+  }
+}
+
+@keyframes hist2 {
+  0% {
+    color: var(--ink-3);
+  }
+  25% {
+    color: var(--teal-ink);
+  }
+  50% {
+    color: var(--ink-3);
+  }
+}
+
+@keyframes hist3 {
+  0% {
+    color: var(--ink-3);
+  }
+  50% {
+    color: var(--teal-ink);
+  }
+  75% {
+    color: var(--ink-3);
+  }
+}
+
+@keyframes hist4 {
+  0% {
+    color: var(--ink-3);
+  }
+  75% {
+    color: var(--teal-ink);
+  }
+}
+
+/* --- Cassettes (rails) ----------------------------------------------------------- */
+
+.railBlock + .railBlock {
+  margin-top: 2.25rem;
+}
+
+.railLabel {
+  margin-bottom: 1rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--tone-ink);
+}
+
+.rail {
+  position: relative;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+.railLine {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .railLine {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: calc((100% - 3rem) / 3 - 3px);
+    display: block;
+    height: 1px;
+    background: var(--line);
+  }
+}
+
+.railDot {
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: var(--tone);
+  animation: railRun 4s var(--ease) infinite;
+}
+
+.railDotSlow {
+  animation-duration: 6s;
+}
+
+@keyframes railRun {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    left: 100%;
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.station {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 0.35rem;
+}
+
+.station .stationDot {
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--ink-3);
+}
+
+.station .modeText {
+  margin-top: 0;
+}
+
+/* --- TimeBreakdown --------------------------------------------------------------- */
+
+.timeBar {
+  display: grid;
+  gap: 1rem;
+}
+
+.timeWrite,
+.timeRest {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.timeLabel {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.timeLabel code {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--violet-ink);
+}
+
+.timeRest .timeLabel code {
+  color: var(--ink-3);
+}
+
+.timeTrack {
+  position: relative;
+  display: block;
+  height: 6px;
+}
+
+.timeFill,
+.timeFillRest {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  transform-origin: left center;
+  animation: fillIn 1.6s var(--ease) both;
+}
+
+.timeFill {
+  width: 85%;
+  background: var(--violet);
+}
+
+.timeFillRest {
+  width: 15%;
+  background: var(--slate);
+  animation-delay: 0.4s;
+}
+
+@keyframes fillIn {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.timeStats {
+  display: grid;
+  gap: 1.75rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .timeStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+/* --- ScopeChart -------------------------------------------------------------------- */
+
+.scopeStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .scopeStats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.scope {
+  position: relative;
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1.75rem;
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+}
+
+.scopeGuides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scopeGrid {
+  position: absolute;
+  top: 1.75rem;
+  bottom: 1.75rem;
+  width: 0;
+  border-left: 1px solid var(--hair);
+}
+
+.scopeGuide {
+  position: absolute;
+  top: 0;
+  bottom: 1.75rem;
+  width: 0;
+  border-left: 1px dashed var(--violet);
+}
+
+.scopeGuideCap {
+  border-left-color: var(--red);
+}
+
+.scopeGuide em {
+  position: absolute;
+  top: 0;
+  left: 6px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-style: normal;
+  color: var(--violet-ink);
+  white-space: nowrap;
+}
+
+.scopeGuideCap em {
+  color: var(--red-ink);
+}
+
+.scopeRow {
+  position: relative;
+  display: grid;
+  gap: 3px;
+}
+
+.scopeHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.scopeTitle {
+  font-size: 0.86rem;
+}
+
+.scopeNote {
+  color: var(--amber-ink);
+}
+
+.scopeVal {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.scopeBar {
+  display: block;
+  height: 4px;
+  transform-origin: left center;
+  animation: fillIn 1.2s var(--ease) both;
+}
+
+.scopeEst {
+  background: var(--violet);
+}
+
+.scopeOk {
+  background: var(--green);
+}
+
+.scopeOver {
+  background: var(--red);
+}
+
+.scopeAxis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--ink-3);
+}
+
+.scopeAxis span {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.scopeAxis span:first-child {
+  transform: none;
+}
+
+.scopeAxis span:last-child {
+  transform: translateX(-100%);
+}
+
+/* --- ModelFamilies ------------------------------------------------------------------ */
+
+.families {
+  display: grid;
+  gap: 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .families {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+.family {
+  display: grid;
+  align-content: start;
+}
+
+.familyApi {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--tone-ink);
+}
+
+.familyHead {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.familyHead .modeIcon {
+  margin-top: 0.1rem;
+}
+
+.familyKey {
+  margin-top: 1rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+}
+
+.familyVal {
+  margin-top: 0.2rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.familyText {
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.familyModel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.familyModel code {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--ink);
+}
+
+.familyStatus {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.84rem;
+  color: var(--ink-2);
+}
+
+/* --- CostGate ------------------------------------------------------------------------- */
+
+.gate {
+  position: relative;
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .gate {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+.gateLine {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .gateLine {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: calc((100% - 5rem) / 5 - 3px);
+    display: block;
+    height: 1px;
+    background: var(--line);
+  }
+}
+
+/* The marker stops in front of the caps, then moves on. The steps sit at 0,
+   25, 50, 75 and 100% of the rule. */
+.gateDot {
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: var(--teal);
+  animation: gateRun 7s var(--ease) infinite;
+}
+
+@keyframes gateRun {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  6% {
+    left: 0%;
+    opacity: 1;
+  }
+  22%,
+  38% {
+    left: 25%;
+  }
+  55% {
+    left: 50%;
+  }
+  72% {
+    left: 75%;
+  }
+  90% {
+    left: 100%;
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.gateStep {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 0.3rem;
+}
+
+.gateStep .stationDot {
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--ink-3);
+}
+
+.gateStep .modeText,
+.gateStep .modeApi {
+  margin-top: 0;
+}
+
+.gateStep .modeName {
+  font-size: 0.95rem;
+}
+
+/* The check: its marker turns red when the call stops there. */
+.gateCheck .stationDot {
+  animation: gateCheck 7s var(--ease) infinite;
+}
+
+@keyframes gateCheck {
+  0%,
+  20%,
+  40%,
+  100% {
+    background: var(--paper);
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+  24%,
+  36% {
+    background: var(--red);
+    box-shadow: inset 0 0 0 1px var(--red);
+  }
+}
+
+.gateCheck .modeApi {
+  color: var(--red-ink);
+}
+
+.caps {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .caps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+.cap {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.capHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.capHead code {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+}
+
+.capTrack {
+  position: relative;
+  display: block;
+  height: 3px;
+  background: var(--hair);
+}
+
+.capFill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--green);
+  transform-origin: left center;
+  animation: capGrow 7s var(--ease) infinite;
+}
+
+@keyframes capGrow {
+  0%,
+  70% {
+    transform: scaleX(0.85);
+  }
+  80%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* --- ModerationPasses ------------------------------------------------------------------- */
+
+.modWrap {
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 760px) {
+  .modWrap {
+    grid-template-columns: 1.3fr 3rem 1fr 3rem 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.modPasses {
+  display: grid;
+  gap: 1rem;
+}
+
+.modPass {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.modPass .modeIcon {
+  margin-top: 0.1rem;
+}
+
+.modPass .modeApi {
+  color: var(--tone-ink);
+}
+
+.modOff .modeName,
+.modOff .modeText {
+  color: var(--ink-3);
+}
+
+.offTag {
+  margin-left: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--red-ink);
+}
+
+.modLink {
+  position: relative;
+  display: none;
+  height: 1px;
+  background: var(--line);
+}
+
+@media (min-width: 760px) {
+  .modLink {
+    display: block;
+  }
+}
+
+.modLinkDot {
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: var(--teal);
+  animation: linkRun 4s var(--ease) infinite;
+}
+
+@keyframes linkRun {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    left: 100%;
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* On a phone the motion stays: a vertical rule between the blocks, and the
+   same dot running down. */
+@media (max-width: 759.98px) {
+  .modMotion {
+    gap: 1rem;
+  }
+
+  .modMotion .modLink {
+    display: block;
+    justify-self: start;
+    width: 1px;
+    height: 2.75rem;
+    margin-left: 0.55rem;
+  }
+
+  .modMotion .modLinkDot {
+    left: -3px;
+    margin-left: 0;
+    animation-name: linkRunDown;
+  }
+}
+
+@keyframes linkRunDown {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    top: calc(100% - 7px);
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 7px);
+    opacity: 0;
+  }
+}
+
+/* The engine is a component in its own right: a one-pixel frame. */
+.modEngine {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+  border: 1px solid var(--line);
+}
+
+.modEngine .modeText {
+  margin-top: 0;
+}
+
+.modOut {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--teal-ink);
+}
+
+.modLadder {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.modAction {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--hair);
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.modAction code {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--tone-ink);
+}
+
+/* --- PolicySwitch -------------------------------------------------------------------------- */
+
+.polHead {
+  display: flex;
+  margin-bottom: 1.25rem;
+}
+
+/* A v1 · v2 switch: two mono labels and a line that slides under them. */
+.polToggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem 2.5rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.polV1,
+.polV2 {
+  padding: 0.15rem 0 0.4rem;
+  text-align: center;
+}
+
+.polV1 {
+  animation: polTextA 8s steps(1, end) infinite;
+}
+
+.polV2 {
+  animation: polTextB 8s steps(1, end) infinite;
+}
+
+.polKnob {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2.5rem;
+  height: 2px;
+  background: var(--teal);
+  animation: polKnob 8s var(--ease) infinite;
+}
+
+@keyframes polKnob {
+  0%,
+  45% {
+    transform: translateX(0);
+  }
+  50%,
+  95% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes polTextA {
+  0% {
+    color: var(--ink);
+  }
+  48% {
+    color: var(--ink-3);
+  }
+  98% {
+    color: var(--ink);
+  }
+}
+
+@keyframes polTextB {
+  0% {
+    color: var(--ink-3);
+  }
+  48% {
+    color: var(--ink);
+  }
+  98% {
+    color: var(--ink-3);
+  }
+}
+
+.polRows {
+  display: grid;
+  border-top: 1px solid var(--hair);
+}
+
+.polRow {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 0 0.85rem 0.9rem;
+  border-bottom: 1px solid var(--hair);
+}
+
+@media (min-width: 640px) {
+  .polRow {
+    grid-template-columns: 1fr 1.2fr;
+    align-items: center;
+    gap: 1.5rem;
+  }
+}
+
+/* A changing line: a teal rule on the left while v2 is shown. A real element,
+   not a pseudo-element: the off-screen pause does not apply to pseudo-elements,
+   which would drift out of sync. */
+.polMark {
+  position: absolute;
+  top: 0.85rem;
+  bottom: 0.85rem;
+  left: 0;
+  width: 2px;
+  animation: polRowLit 8s var(--ease) infinite;
+}
+
+@keyframes polRowLit {
+  0%,
+  45% {
+    background: transparent;
+  }
+  52%,
+  92% {
+    background: var(--teal);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.polSituation {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.polOutcome {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: 1.5rem;
+  font-size: 0.84rem;
+  color: var(--ink-2);
+}
+
+.polA,
+.polB {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.polA code,
+.polB code {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--tone-ink);
+}
+
+.polA {
+  animation: polFadeA 8s var(--ease) infinite;
+}
+
+.polB {
+  animation: polFadeB 8s var(--ease) infinite;
+}
+
+.polStill {
+  animation: none;
+}
+
+@keyframes polFadeA {
+  0%,
+  42% {
+    opacity: 1;
+  }
+  48%,
+  94% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes polFadeB {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  50%,
+  92% {
+    opacity: 1;
+  }
+  98%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --- phone ----------------------------------------------------------------------------- */
+
+@media (max-width: 639px) {
+  /* Without a rule, a lone marker means nothing. */
+  .station .stationDot,
+  .gateStep .stationDot {
+    display: none;
+  }
+
+  /* The two vertical markers are close: the target is written left of its
+     line, the cap right of its own. */
+  .scopeGuide em {
+    right: 6px;
+    left: auto;
+  }
+
+  .scopeGuideCap em {
+    right: auto;
+    left: 6px;
+  }
+}

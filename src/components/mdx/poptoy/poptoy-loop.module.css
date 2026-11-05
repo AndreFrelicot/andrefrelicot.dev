@@ -1,0 +1,166 @@
+/* Six stations on a rule, like the production line of the Pocket article. A
+   marker runs along the rule; each dot lights up as it passes. */
+
+.loop {
+  --cycle: 9s;
+
+  position: relative;
+  padding-top: 1.75rem;
+}
+
+.rail {
+  display: none;
+}
+
+.stations {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.station {
+  --d: calc(var(--i) / var(--n) * 0.8 * var(--cycle));
+
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 0.15rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.no {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1rem;
+  color: var(--ink-3);
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--tone);
+  animation: on var(--cycle) var(--ease) infinite;
+  animation-delay: var(--d);
+}
+
+.name {
+  margin-top: 0.6rem;
+}
+
+.back {
+  display: none;
+}
+
+@media (min-width: 860px) {
+  .stations {
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    gap: 0 1.75rem;
+  }
+
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .rail {
+    display: block;
+    position: absolute;
+    top: calc(1.75rem + 1rem + 0.55rem + 0.25rem);
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--ink-3);
+    pointer-events: none;
+  }
+
+  .marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1rem;
+    background: var(--teal);
+    animation: sweep var(--cycle) linear infinite;
+  }
+
+  .marker::before {
+    content: "";
+    position: absolute;
+    top: -0.25rem;
+    left: -0.22rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--teal);
+  }
+
+  /* The remix return: a dotted line, from the last station back to the forge. */
+  .back {
+    display: block;
+    position: relative;
+    height: 1.6rem;
+    margin-top: 1.4rem;
+    margin-left: calc((100% + 1.75rem) / var(--n) + 0.22rem);
+    width: calc((100% + 1.75rem) * 4 / var(--n));
+    border: 1px dashed var(--ink-3);
+    border-top: none;
+  }
+
+  .back span {
+    position: absolute;
+    left: 50%;
+    bottom: -0.55rem;
+    transform: translateX(-50%);
+    padding: 0 0.6rem;
+    background: var(--paper);
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+}
+
+@keyframes sweep {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  80% {
+    left: 100%;
+    opacity: 1;
+  }
+  84%,
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes on {
+  0%,
+  9% {
+    background: var(--teal);
+    transform: scale(1.6);
+  }
+  14%,
+  100% {
+    background: var(--tone);
+    transform: none;
+  }
+}

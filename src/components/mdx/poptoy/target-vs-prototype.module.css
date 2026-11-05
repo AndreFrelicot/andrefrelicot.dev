@@ -1,0 +1,142 @@
+/* Two bare columns separated by a rule: on the left the target, which never
+   existed (slate bars), on the right the prototype, which runs (green). The
+   bars are thin lines on a rule, scaled to $35. */
+
+.cols {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 760px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+.vs {
+  display: none;
+}
+
+@media (min-width: 760px) {
+  .vs {
+    display: block;
+    background: var(--hair);
+  }
+}
+
+.col {
+  min-width: 0;
+}
+
+.head {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 1.5rem;
+}
+
+.colTitle {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+}
+
+.total {
+  font-size: 2.1rem;
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.total::after {
+  content: "";
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 0.6rem;
+  background: var(--tone);
+}
+
+.hostile {
+  --tone: var(--red);
+  --tone-ink: var(--red-ink);
+}
+
+.cost {
+  --tone: var(--green);
+  --tone-ink: var(--green-ink);
+}
+
+.cloud {
+  --tone: var(--teal);
+  --tone-ink: var(--teal-ink);
+}
+
+.neutral {
+  --tone: var(--slate);
+  --tone-ink: var(--slate-ink);
+}
+
+.lines {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.lineBody {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.lineTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+.amount {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.track {
+  position: relative;
+  height: 1px;
+  background: var(--hair);
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  top: -1px;
+  display: block;
+  height: 3px;
+  width: max(calc(var(--w) * 100%), 2px);
+  background: var(--tone);
+  transform-origin: left;
+  animation: grow 1.4s var(--ease) both;
+  animation-delay: var(--d);
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}

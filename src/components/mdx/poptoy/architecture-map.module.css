@@ -1,0 +1,220 @@
+/* The overview map. Four columns; trust zones are the only frames, one pixel,
+   with their name on the rule. The numbers follow one creation: each lights up
+   in turn, on the map and in the list. */
+
+.map {
+  --cycle: 12s;
+
+  display: grid;
+  gap: 2rem 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .map {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.col {
+  display: grid;
+  gap: 1.9rem;
+  align-content: start;
+}
+
+.colTitle {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+}
+
+/* --- zones and groups ----------------------------------------------------- */
+
+.zone {
+  position: relative;
+  padding: 1.15rem 0.9rem 0.6rem;
+  border: 1px solid var(--tone);
+}
+
+.dashed {
+  border-style: dashed;
+}
+
+.group {
+  position: relative;
+}
+
+.zoneTitle {
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.zone .zoneTitle {
+  position: absolute;
+  top: -0.68rem;
+  left: 0.6rem;
+  max-width: calc(100% - 1.2rem);
+  padding: 0 0.4rem;
+  white-space: nowrap;
+  background: var(--paper);
+  color: var(--tone-ink);
+}
+
+.group .zoneTitle {
+  margin-bottom: 0.25rem;
+}
+
+.group::after {
+  content: "";
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 0.6rem;
+  background: var(--tone);
+}
+
+.zoneBody {
+  display: grid;
+}
+
+/* --- a service, a domain ---------------------------------------------- */
+
+.chip {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.45rem 0;
+}
+
+.chipIcon {
+  margin-top: 0.12rem;
+  color: var(--ink-2);
+}
+
+.chipText {
+  display: grid;
+  min-width: 0;
+}
+
+.chipLabel {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: normal;
+}
+
+.chipSub {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+.twoUp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.5rem;
+}
+
+/* The step number: quiet mono, which turns teal in its turn. */
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--ink-3);
+  animation: stepOn var(--cycle) var(--ease) infinite;
+  animation-delay: calc(var(--s) * var(--cycle) / 8);
+}
+
+.step::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--line);
+  animation: dotOn var(--cycle) var(--ease) infinite;
+  animation-delay: inherit;
+}
+
+/* --- the path, as a list -------------------------------------------------- */
+
+.path {
+  --cycle: 12s;
+
+  display: grid;
+  gap: 0.6rem 1.5rem;
+  margin: 2.5rem 0 0;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--hair);
+  list-style: none;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+@media (min-width: 640px) {
+  .path {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .path {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.path li {
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  gap: 0.4rem;
+  align-items: baseline;
+  animation: textOn var(--cycle) var(--ease) infinite;
+  animation-delay: calc(var(--s) * var(--cycle) / 8);
+}
+
+.pathNo {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  animation: stepOn var(--cycle) var(--ease) infinite;
+  animation-delay: inherit;
+}
+
+@keyframes stepOn {
+  0%,
+  11% {
+    color: var(--teal-ink);
+  }
+  14%,
+  100% {
+    color: var(--ink-3);
+  }
+}
+
+@keyframes dotOn {
+  0%,
+  11% {
+    background: var(--teal);
+    transform: scale(1.3);
+  }
+  14%,
+  100% {
+    background: var(--line);
+    transform: none;
+  }
+}
+
+@keyframes textOn {
+  0%,
+  11% {
+    color: var(--ink);
+  }
+  14%,
+  100% {
+    color: var(--ink-2);
+  }
+}

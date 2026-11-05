@@ -17,6 +17,7 @@ import { PocketSandbox } from "./pocket/pocket-sandbox";
 import { PocketScenarios } from "./pocket/pocket-scenarios";
 import { PocketStats } from "./pocket/pocket-stats";
 import { PocketTimeline } from "./pocket/pocket-timeline";
+import { poptoyFigures } from "./poptoy";
 import { PubDevLink } from "./pub-dev-link";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import { ThreeCube } from "./three-cube";
@@ -51,6 +52,7 @@ export const mdxComponents = {
   PocketScenarios,
   PocketStats,
   PocketTimeline,
+  ...poptoyFigures,
   PubDevLink,
   ScreenshotGallery,
   ThreeCube,

@@ -1,0 +1,217 @@
+/* The topology, drawn in fine rules: one-line zones (Cloudflare, the two
+   projects), services in small frames, one-pixel links. Four small markers
+   follow four real paths. */
+
+.svgWrap {
+  display: none;
+}
+
+.mobileMotion {
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 720px) {
+  .svgWrap {
+    display: block;
+  }
+
+  .mobileMotion {
+    display: none;
+  }
+}
+
+/* A path on a phone: one-line steps on a vertical rule, a marker that runs down
+   at constant speed, and each step's dot lighting up as it passes (at 80% of the
+   cycle for the last one). */
+.hops {
+  --row: 1.7rem;
+
+  position: relative;
+  display: grid;
+  margin: 0.35rem 0 0;
+  padding: 0 0 0 1.15rem;
+  list-style: none;
+}
+
+.hops::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--row) / 2);
+  bottom: calc(var(--row) / 2);
+  left: 0.2rem;
+  width: 1px;
+  background: var(--line);
+}
+
+.hops li {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  height: var(--row);
+  line-height: var(--row);
+  white-space: nowrap;
+}
+
+.hopDot {
+  position: absolute;
+  top: calc(var(--row) / 2 - 3px);
+  left: calc(-1.15rem + 0.2rem - 3px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  animation: hopLit var(--dur) linear infinite;
+  animation-delay: calc(var(--delay) + var(--dur) * 0.8 * var(--i) / (var(--n) - 1));
+}
+
+.hopName {
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+
+.hopSub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.hopToken {
+  position: absolute;
+  top: calc(var(--row) / 2 - 3.5px);
+  left: calc(0.2rem - 3.5px);
+  z-index: 1;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tone);
+  animation: hopRun var(--dur) linear infinite both;
+  animation-delay: var(--delay);
+}
+
+@keyframes hopRun {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(calc(var(--row) * (var(--n) - 1)));
+    opacity: 1;
+  }
+  92%,
+  100% {
+    transform: translateY(calc(var(--row) * (var(--n) - 1)));
+    opacity: 0;
+  }
+}
+
+@keyframes hopLit {
+  0%,
+  18% {
+    border-color: var(--tone);
+    background: var(--tone);
+  }
+  30%,
+  100% {
+    border-color: var(--line);
+    background: var(--paper);
+  }
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.zone {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.zoneGcp {
+  stroke: var(--teal);
+}
+
+.zoneSandbox {
+  stroke: var(--red);
+}
+
+.zoneLabel {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  fill: var(--ink-3);
+}
+
+.keyLabel {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  fill: var(--teal-ink);
+}
+
+.edge {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.token {
+  fill: var(--tone);
+  offset-rotate: 0deg;
+  animation-name: travel;
+  animation-timing-function: var(--ease);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.nodeBox {
+  fill: var(--paper);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.nodeDot {
+  fill: var(--tone);
+}
+
+.nodeIcon {
+  color: var(--ink-2);
+}
+
+.nodeLabel {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  fill: var(--ink);
+}
+
+.nodeSub {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  fill: var(--ink-3);
+}
+
+@keyframes travel {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  6%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}

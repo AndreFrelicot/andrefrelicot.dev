@@ -1,0 +1,187 @@
+/* Building blocks shared by the figures, taken from the devlog diagrams (the
+   Pocket article): stations on a rule, blocks separated by space and a short
+   dash, round bullet lists, one-pixel frames for boundaries only. The tones
+   (--tone, --tone-ink) come from frame.tsx. */
+
+/* --- textes ------------------------------------------------------------- */
+
+.name {
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+
+.sig {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--teal-ink);
+  overflow-wrap: anywhere;
+}
+
+.desc {
+  margin-top: 0.4rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+
+.icon {
+  display: block;
+  flex: none;
+  color: var(--ink-2);
+}
+
+/* A block: space around it, and a short dash under it, in its tone. */
+.block {
+  position: relative;
+  min-width: 0;
+}
+
+.block::after {
+  content: "";
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  margin-top: 0.9rem;
+  background: var(--tone, var(--amber));
+}
+
+/* --- listes ------------------------------------------------------------- */
+
+.items {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 0.8rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.bullet {
+  width: 0.4rem;
+  height: 0.4rem;
+  border: 1px solid var(--tone, var(--slate));
+  border-radius: 999px;
+  background: var(--tone, var(--slate));
+  transform: translateY(-0.1rem);
+}
+
+.bulletEmpty {
+  border-style: dashed;
+  border-color: var(--ink-3);
+  background: transparent;
+}
+
+.markGood,
+.markBad {
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.markGood {
+  color: var(--teal-ink);
+}
+
+.markBad {
+  color: var(--red-ink);
+}
+
+/* --- frames: a boundary, with its name on the rule ----------------------- */
+
+.frame {
+  position: relative;
+  padding: 1.35rem 1.1rem 1.1rem;
+  border: 1px solid var(--tone, var(--line));
+}
+
+.frameDashed {
+  border-style: dashed;
+}
+
+.frameTab {
+  position: absolute;
+  top: -0.7rem;
+  left: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.45rem;
+  background: var(--paper);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.frameTab svg {
+  color: var(--ink-2);
+}
+
+/* --- mises en page ------------------------------------------------------ */
+
+.split {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 760px) {
+  .split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.cols {
+  display: grid;
+  gap: 2.25rem 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+/* Table rows, separated by a rule. */
+.rows {
+  display: grid;
+}
+
+.row {
+  display: grid;
+  gap: 0.25rem 1.25rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--hair);
+}
+
+.row:last-child {
+  border-bottom: 1px solid var(--hair);
+}
+
+/* --- the marker: a dot that reads the diagram ---------------------------- */
+
+.token {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--teal);
+}

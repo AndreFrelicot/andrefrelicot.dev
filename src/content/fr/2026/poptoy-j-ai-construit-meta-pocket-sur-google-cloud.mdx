@@ -1,0 +1,388 @@
+---
+title: "J'ai construit Meta Pocket sur Google Cloud"
+description: "Après l'analyse de Meta Pocket, la mise à l'épreuve : poptoy, une reconstruction indépendante du concept, conçue avec des agents de code et mise en ligne sur Google Cloud. Ce qu'il a fallu construire, les décisions qui comptent, et ce que l'expérience a vérifié."
+date: 2026-11-03
+tags: [ai, poptoy, pocket-make-gizmos, google-cloud, architecture, coding-agents, agents, adk, gemini, llm, codegen, security, sandbox, cloud-run, cloudflare, finops, flutter, python, fastapi, react, opentofu, terraform]
+en_mdx: poptoy-i-built-meta-pocket-on-google-cloud.mdx
+fr_mdx: poptoy-j-ai-construit-meta-pocket-sur-google-cloud.mdx
+pt_mdx: poptoy-construi-o-meta-pocket-no-google-cloud.mdx
+es_mdx: poptoy-construi-meta-pocket-en-google-cloud.mdx
+image: /images/2026/poptoy/cover.webp
+---
+
+<ThemeImage
+  src="/images/2026/poptoy/cover.webp"
+  alt="Trois écrans de l'app poptoy sur des téléphones, et la marque poptoy"
+  width={1600}
+  height={1200}
+  priority
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/poptoy-idea-to-feed.mp4"
+  title="Vidéo : de l'idée au gizmo dans l'app poptoy"
+  poster="/images/2026/poptoy/idea-to-feed-poster.webp"
+  caption="poptoy en action."
+  vertical
+/>
+
+J'ai publié récemment une [analyse de Pocket: Make Gizmos](/fr/2026/10/pocket-meta-tiktok-du-vibe-coding/), l'app de Meta où l'on fait défiler des mini-applications générées par IA. J'y décrivais le format d'un gizmo, son bac à sable et le pont qui le relie à l'app. J'en concluais que le logiciel généré à grande échelle ne ressemble pas à un développeur augmenté, mais à un cadre très contraint dans lequel un modèle remplit les trous.
+
+Une analyse de ce genre reste une hypothèse tant qu'on ne l'a pas confrontée à une implémentation. J'ai donc conçu et développé **poptoy**, une reconstruction indépendante du concept.
+
+poptoy fonctionne de bout en bout. Une phrase devient un gizmo, construit dans une sandbox sans réseau, modéré, publié dans un feed vertical où d'autres le jouent, le commentent et le remixent. Il y a une app Flutter, un studio web, un site public, une console d'administration, une console de modération, huit services sur Google Cloud et une infrastructure entièrement décrite en code. L'ensemble a été développé en quelques jours avec des agents de code, et tourne en ligne en prototype privé.
+
+Cet article suit les décisions qui ont compté : les contraintes posées avant le code, le traitement du code généré comme hostile, la forge IA, le déploiement sur Google Cloud, puis le produit en usage. La reconstruction confirme l'essentiel de l'analyse, et montre où se trouve vraiment le travail : pas dans l'IA.
+
+## La boucle à reconstruire
+
+<PoptoyLoop />
+
+Un créateur tape une idée, dans l'app ou dans le studio web. La **forge**, un agent écrit avec l'Agent Development Kit (ADK) de Google, planifie le gizmo puis en écrit le code : un composant React, rien de plus. Le **builder** l'assemble avec une boîte à outils figée et le teste dans un navigateur headless, sans réseau. La **modération** décide de sa diffusion. Le gizmo publié rejoint le **feed**. Un autre créateur peut le **remixer** : la forge repart alors de ses sources.
+
+<ThemeImage
+  src="/images/2026/poptoy/gizmos-grid.webp"
+  alt="Six gizmos du feed de démo, écrits par la forge à partir d'une phrase chacun."
+  width={2328}
+  height={2818}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+## Les contraintes avant le code
+
+Quatre contraintes ont été posées avant la première ligne de code, et presque toute l'architecture en découle.
+
+- **Du code que personne n'a relu s'exécute sur le téléphone d'inconnus.** C'est le cœur du problème, bien plus que la génération elle-même.
+- **Les frontières de confiance se tracent d'avance** : ce qui peut détenir un secret, ce qui touche du code généré, ce qui exécute ce code.
+- **Chaque dépense est connue avant d'être faite.** Des agents et des modèles facturés à l'appel peuvent s'emballer ; le système doit savoir à tout moment ce qu'il dépense, et refuser au-delà d'un plafond.
+- **Le résultat se mesure.** Trois critères ont été fixés d'emblée : au moins 85 % de gizmos fonctionnels sur un banc d'évaluation, une génération en moins de 90 secondes en médiane, moins de 0,30 $ par gizmo sans images.
+
+Deux principes viennent de Pocket : **un gizmo est du contenu hostile**, et **la plateforme contraint, le modèle remplit les trous**. Les autres sont des choix d'ingénierie classiques, appliqués sans exception : des artefacts immuables adressés par leur contenu, des zones de confiance séparées, une interface remplaçable devant chaque service payant, et tout ce qui se règle (prompts, modèles, quotas, seuils) traité comme une donnée qu'on modifie sans redéployer.
+
+La stack suit. Le backend est en Python et FastAPI : c'est en Python qu'ADK est le plus complet, et un agent passe son temps à attendre un modèle, la vitesse du langage n'y change rien. Les interfaces web sont en React et TypeScript, l'app en Flutter, l'infrastructure en OpenTofu. Un point de contexte a pesé : Google venait de renommer Vertex AI en _Gemini Enterprise Agent Platform_, et une partie de la documentation en ligne décrivait des API qui n'existaient plus sous ce nom. La règle a été de suivre le code des paquets installés, à version figée. ADK 2 diverge d'ailleurs de sa propre documentation par endroits.
+
+### Le risque d'abord
+
+Le développement a suivi l'ordre des risques, pas celui des écrans. Les premiers gizmos ont été écrits par un agent de code, **avant que la forge existe** : quatre gizmos de référence ont validé le template, le runtime, le pont, le builder, le serveur et le lecteur web. La forge n'est venue qu'ensuite, en ligne de commande, avec un jalon : si moins de 70 % des gizmos générés fonctionnaient, on retravaillait les prompts et le template avant de construire la moindre interface. Les écrans, l'app et le cloud ont suivi. Quand la forge est arrivée, elle n'avait plus qu'à écrire un fichier.
+
+Chaque décision structurante a été consignée avec son contexte, les options écartées et ses conséquences. Quand on revient sur une décision, la trace dit ce qu'on avait écarté et pourquoi ; quand un agent reprend le travail, il lit la décision au lieu de la deviner.
+
+### Écrire avec des agents de code
+
+Le code de poptoy a été écrit par des agents de code : le backend, les interfaces, l'app, l'infrastructure et les tests. Mon travail a porté sur le reste : le cadrage, l'architecture, les arbitrages, la validation des résultats, et la responsabilité de ce qui en sort.
+
+<PoptoyAgentContract />
+
+Une consigne se lit ; un contrôle s'impose. Une commande facturable demande une confirmation, une commande destructrice est refusée, et, dans le dépôt, gitleaks cherche des secrets avant chaque commit. Le lint, le typage strict et les tests jugent chaque changement. Et des parcours dans un vrai navigateur, pilotés par Playwright, trouvent ce que les tests ne voient pas. Avec des agents, **le goulot se déplace de l'écriture vers la décision et la vérification**.
+
+## Un gizmo est du contenu hostile
+
+Un gizmo est écrit par un modèle, à la demande d'inconnus, et s'exécute chez d'autres inconnus. Il faut supposer qu'il cherchera à sortir : parce qu'un créateur l'a demandé, parce que le modèle a mal compris, ou parce qu'un prompt a été conçu pour ça. La réponse tient en une règle : **un gizmo ne contient aucun secret ni jeton, et sa seule sortie passe par un pont contrôlé par l'hôte**. Le reste de l'architecture l'applique, couche par couche.
+
+<PoptoyArchitectureMap />
+
+### Deux domaines, une origine par gizmo
+
+La frontière la plus importante du système est un nom de domaine. `poptoy.app` porte tout ce qui peut détenir un secret : le site, le studio, l'API, les consoles. `poptoyusercontent.app` porte tout ce qui touche du code généré, avec un sous-domaine par gizmo et une origine pour les médias. C'est le modèle de Pocket, et celui de Google avec `googleusercontent.com`. Chaque gizmo a donc sa propre origine : deux gizmos ne lisent pas les données l'un de l'autre.
+
+Les huit services existent pour la même raison. Le serveur des gizmos ne voit pas la base de données : il lit un petit pointeur par gizmo et des blobs adressés par leur empreinte. Le builder vit dans un projet Google Cloud à part, sans réseau ni rôle. Aucune route d'administration ou de modération n'existe sur l'API publique : chaque console a son service et son domaine, derrière IAP. Un monolithe aurait été plus simple à déployer, et chacune de ces frontières aurait disparu.
+
+Reste la Public Suffix List, qui ferait de chaque sous-domaine un site à part entière. Elle n'est pas nécessaire à l'isolement, puisque chaque gizmo a déjà son origine ; elle protège surtout des cookies posés sur le domaine parent pour gêner les autres. Ses règles écartent les petits projets et exigent un domaine enregistré pour au moins deux ans encore. L'inscription est donc reportée à une ouverture publique, et en attendant, aucun cookie ni jeton ne vit sur ce domaine.
+
+### Le modèle ne choisit rien
+
+Le modèle n'écrit pas « un jeu » : il écrit les fichiers `src/*.tsx` d'un template qu'il ne peut pas modifier. Le template importe le runtime de la plateforme avant le code généré, et fixe la liste blanche des imports : React, Three.js et le SDK de poptoy. Tout autre import est refusé, avec la liste dans le message d'erreur pour que le modèle se corrige seul. Le contrôle qui fait foi porte sur le métafichier d'esbuild, qui dit exactement quels fichiers sont entrés dans le bundle : un import détourné par une réexportation n'y échappe pas.
+
+Le builder n'installe rien. Son image contient esbuild et Tailwind, vérifiés par empreinte, le template déjà installé, et Chromium : ni Node ni npm au moment du build. Une attaque par la chaîne d'approvisionnement devrait viser l'image, construite et relue une fois, pas chaque build. Chaque build tourne dans une sandbox jetable, sans réseau, à racine en lecture seule, sans privilège.
+
+Le test headless sert le gizmo comme en production : dans une iframe d'une autre origine, avec les en-têtes exacts du serveur de production, devant une page hôte qui répond au pont. Aucune requête ne quitte le navigateur. Le harnais attend le démarrage du gizmo, le fait jouer quelques secondes, et le fait échouer s'il ne démarre pas, si l'écran reste vide, s'il produit une erreur, s'il viole la politique de sécurité du contenu ou s'il tente une requête. Des gizmos d'évasion passent dans ce test à chaque construction des gizmos de référence : ils doivent échouer, et ils échouent.
+
+<ThemeImage
+  src="/images/2026/poptoy/evasion-report.webp"
+  alt="Les cas d'évasion du banc : une requête réseau, une navigation de l'iframe, une connexion WebRTC. Chacun fait échouer le build."
+  width={2364}
+  height={1358}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Un réseau fermé, et ce qui reste ouvert
+
+Le serveur des gizmos ferme davantage que Pocket. Pocket autorise les connexions vers lui-même et vers son CDN ; poptoy n'en autorise aucune :
+
+```http title="En-têtes d'un gizmo (extrait)"
+content-security-policy:
+  default-src 'none';
+  script-src 'sha256-…';
+  img-src data: blob: https://media.poptoyusercontent.app;
+  connect-src 'none';
+  frame-ancestors https://poptoy.app …
+permissions-policy: camera=(), microphone=(), …
+```
+
+Le seul script autorisé est celui du gizmo, désigné par son empreinte. Les médias ne viennent que de leur origine. La caméra, le micro ou les capteurs ne s'ouvrent que si le build a observé leur usage. Et le serveur refuse de servir un gizmo hors d'une iframe : ouvert dans un onglet, un lien de gizmo ne montre rien. L'app Flutter, dont la WebView charge le gizmo comme un document, s'appuie sur une propriété des navigateurs : ils ne savent pas poser d'en-tête sur une navigation. L'app ajoute le sien ; un onglet ne le peut pas, et reste refusé.
+
+<PoptoyDefenseLayers />
+
+Trois sorties restent ouvertes dans tous les navigateurs actuels, Pocket compris : la **navigation**, qui peut emporter des données dans une URL ; **WebRTC**, auquel Chromium n'applique pas la politique de sécurité ; et le **préchargement DNS**. Le builder détecte les deux premières et fait échouer le build, l'app retire WebRTC de sa WebView, le serveur désactive le préchargement. On les détecte, on ne les ferme pas. C'est la raison d'être de la règle de départ : un gizmo ne détient jamais rien qui vaille d'être volé, sauf ce que le joueur lui donne.
+
+### Un pont, des versions qui ne se réécrivent jamais
+
+Le pont est le seul canal entre un gizmo et le monde : un petit protocole versionné, avec des événements et deux requêtes pour l'IA en cours de partie. Pocket sert deux variantes du HTML d'un gizmo, l'une pour le web, l'autre pour l'app. poptoy n'en sert qu'une : le runtime choisit son transport au démarrage. **Un même artefact sert tous les hôtes**, ce qui le garde adressable par son contenu. Les deux côtés traitent l'autre comme non fiable : un message mal formé est rejeté en entier, jamais corrigé à moitié.
+
+Tout ce que produit la plateforme est immuable : les sources d'une version, son artefact, son rapport de build, chaque média. Revenir en arrière crée une nouvelle version, et l'on peut toujours dire quel prompt a produit ce que l'on voit. Le remix part des sources, jamais du bundle. Le code d'un gizmo ne connaît que des identifiants de médias, qu'un manifeste lie à des fichiers : supprimer une photo la retire de tous les gizmos qui la citent, remixes compris, sans rebuild.
+
+C'est un parcours dans un vrai navigateur qui a trouvé le bug le plus vicieux de cette partie. L'origine des médias répondait « pas modifié » avant de vérifier que le fichier existait encore : **une photo supprimée réapparaissait**. Aucun test unitaire ne l'avait vu.
+
+## La forge : retirer des décisions au modèle
+
+La forge reçoit une phrase et rend les sources d'un gizmo. Son cahier des charges : un jeu qui marche, en une à deux minutes, pour quelques centimes, sans que le modèle ait le moindre pouvoir au-delà de l'écriture de fichiers. Sa leçon principale : **la fiabilité d'un pipeline d'IA vient surtout de ce qu'on retire au modèle**.
+
+### Un graphe, pas un agent libre
+
+Le schéma courant est un agent unique, avec des outils dont `build_and_test`, qui boucle jusqu'à ce qu'il estime avoir fini. Il laisse au modèle la décision de tester : il peut l'oublier, tester en boucle, ou s'arrêter sur un échec en annonçant que tout va bien. Et chaque tour renvoie l'historique complet, si bien que le coût grandit sans plafond naturel.
+
+La forge est un **workflow en graphe** d'ADK 2 : plan, écriture, build, correction. Le build n'est pas un outil offert au modèle, c'est le nœud qui suit l'écriture : il a toujours lieu. Après lui, c'est encore le graphe qui choisit la suite : terminer, corriger tant qu'il reste des essais, abandonner sinon. Le coût d'une génération est borné par construction : trois builds au plus.
+
+<PoptoyForgeGraph />
+
+<ThemeImage
+  src="/images/2026/poptoy/console-generation-flow.webp"
+  alt="Dans la console, le graphe rejoue une génération : ici un premier build en échec, une correction, puis la publication, avec la durée et le coût de chaque étape."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Chaque agent reçoit **un message préparé**, et ne lit jamais la conversation des autres : la demande pour le plan ; la demande et le plan pour l'écriture ; le plan, les sources et les erreurs du build pour la correction. Le contexte de chaque appel est connu d'avance, et son coût aussi. Le budget initial supposait 150 000 jetons de contexte cumulé par gizmo ; avec des messages préparés, l'estimation est tombée à environ 40 000, et la mesure a suivi : **0,06 € par gizmo en moyenne** sur les premières générations, contre 0,08 € estimés.
+
+L'écriture n'a que quatre outils, qui manipulent un espace de fichiers virtuel, et chaque écriture passe par les règles du builder : un chemin interdit ou un fichier trop gros est refusé tout de suite, avec le message que le builder aurait donné. Le modèle corrige ses erreurs de forme sans attendre un build.
+
+### Les prompts et les modèles sont des données
+
+Le modèle, les prompts et les réglages de chaque étape forment un **profil de génération versionné**. Une version naît dans le repo, passe en revue comme du code, puis est copiée en base avec l'empreinte de son contenu ; une version publiée ne change plus. L'activation est une donnée lue au début de chaque job : **changer de modèle, c'est activer une version, pas déployer**. La console d'admin permet aussi d'écrire un prompt : l'enregistrer crée une nouvelle version candidate, avec son auteur et son écart, qu'un export ramène dans le repo pour la revue.
+
+<ThemeImage
+  src="/images/2026/poptoy/console-forge.webp"
+  alt="La forge dans la console : le graphe, et pour chaque étape son modèle, ses réglages et son prompt."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/poptoy/console-prompt-diff.webp"
+  alt="Un prompt modifié dans la console devient une nouvelle version candidate, jamais une modification en place."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+On ne met pas au point un pipeline d'IA en payant chaque essai. Le modèle passe par une interface remplaçable, avec un fournisseur réel, un enregistreur et un **rejeu de cassettes**. En rejeu, tout le reste tourne pour de vrai : le graphe, les outils, le registre des coûts, le builder dans sa sandbox. C'est ce qui a permis de développer et de tester l'essentiel du projet pour **0,66 €** de modèles. Le banc d'évaluation (dix demandes variées) a donné 10 gizmos fonctionnels sur 10 à sa première passe facturée. Ce score dit qu'un profil marche, pas qu'il est meilleur qu'un autre : le banc est trop facile pour départager deux versions, et un banc plus dur reste à écrire.
+
+### Une contrainte écrite n'est qu'un souhait
+
+La durée est restée le point faible : une médiane de 95 secondes sur le banc, au-dessus de la cible. Environ 85 % du temps d'une génération est l'écriture du code, et sa durée suit le nombre de jetons produits. Le levier le plus direct est donc d'écrire moins de code. Une version du profil a confié la portée au plan : un budget d'environ 250 lignes, 400 au plus, et la consigne de ramener une demande démesurée à une version jouet complète.
+
+<PoptoyScopeChart />
+
+Le plan a fait son travail : il estime entre 220 et 280 lignes, et a réduit les demandes trop larges à juste titre (les continents plutôt que les 195 pays, une liste de mots en mémoire plutôt qu'un dictionnaire). L'écriture, elle, a produit **le double** en moyenne, et sept gizmos sur dix dépassent le plafond. Les gizmos restent complets et jouables, mais la contrainte n'est pas tenue. Pour la tenir, il faudrait la porter par le graphe, avec un nœud qui compte les lignes et demande de resserrer. Le prototype s'est arrêté avant.
+
+<ThemeImage
+  src="/images/2026/poptoy/console-generation-scope.webp"
+  alt="La portée dans la console : ce que le plan a estimé, ce que l'écriture a produit, et ce que le plan a coupé."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Plusieurs modèles, un seul registre
+
+La liste des modèles pris en charge est **la grille tarifaire** : un modèle qu'on ne sait pas chiffrer ne peut pas être activé. Gemini Flash, sur Agent Platform, est appelé avec l'identité du service, sans clé. Claude Haiku passe par le Model Garden de Google, et la bascule devait tenir en une version de profil. L'abstraction a fui : le schéma de sortie du plan n'était pas transmis, la réflexion ne se règle pas de la même façon, et le SDK refuse un long appel sans streaming. Surtout, le projet n'a reçu aucun quota pour Claude, et deux demandes ont été refusées.
+
+OpenRouter est alors devenu une troisième famille, appelée par LiteLLM. La bibliothèque est figée à une version publiée depuis plus d'une semaine, parce qu'elle avait déjà connu des versions piégées sur PyPI. La règle a servi depuis : une nouvelle version piégée a été publiée puis retirée en deux heures, et poptoy, figé sur une version antérieure, ne l'a jamais installée. Une dépense OpenRouter échappe en revanche à la coupure de la facturation Google Cloud : seuls les plafonds de l'application et la limite de crédit de la clé la bornent.
+
+Au jeton, Haiku coûte environ sept fois moins que Gemini Flash. Le banc n'a pas tourné sur Haiku : le feed de démo a été rempli avec Gemini, dont le rendu me paraissait meilleur sur les gizmos essayés. C'est un jugement à l'œil, pas une mesure.
+
+Chaque appel facturé passe devant un **registre de coûts** : avant l'appel, trois plafonds (par jour, par génération, au total) ; après, l'usage réel multiplié par une grille versionnée et datée, écrit au registre. Au-delà de sa date de validité, la grille est réputée périmée et la forge refuse de démarrer. Le plafond a prouvé son utilité : lors d'un remplissage du feed de démo, il a arrêté un lot de quarante générations au seizième gizmo, et le relever est resté une décision explicite.
+
+<ThemeImage
+  src="/images/2026/poptoy/console-costs.webp"
+  alt="Le registre de coûts dans la console : chaque appel chiffré, chaque plafond visible."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Modérer des programmes
+
+Un gizmo peut aussi être hostile au sens du contenu : haineux, sexuel, trompeur, ou un faux écran de connexion qui demande un mot de passe. La modération sépare ceux qui observent de celui qui décide. Des **passes** produisent des signaux : des règles sur le prompt, gratuites et immédiates ; un classifieur, coupé dans le prototype en attendant un accord de dépense ; une revue du gizmo produit, qui analyse ses sources et ce que le navigateur a tenté pendant le build. Un **moteur de décision** combine les signaux selon une politique versionnée, activée sans déployer.
+
+<PoptoyModerationPasses />
+
+La première politique était prudente : sans classifieur, chaque publication attendait un modérateur. Un prototype qu'on ne peut pas montrer sans modérateur de garde n'est pas montrable, et une plateforme où chaque publication attend un humain ne passe pas à l'échelle. La politique actuelle **publie par défaut** ce que les passes ne relèvent pas, applique seule un signal sûr, et réserve les humains au doute et aux signalements. Un signal ambigu ouvre un cas, et en attendant, le gizmo est seulement exclu du feed : il reste jouable par lien, mais n'est pas diffusé. Les abus sur mineurs ne profitent jamais du doute.
+
+La console des modérateurs a été refaite pour ce rôle. Elle ne présente plus une file de publications à approuver : elle montre d'abord ce que la machine a vu et décidé seule, et ce que les joueurs signalent.
+
+<ThemeImage
+  src="/images/2026/poptoy/moderation-overview.webp"
+  alt="La vue d'ensemble : ce que la machine a vu, ce qu'elle a décidé seule, ce que les joueurs signalent. Le bandeau rappelle que le classifieur est coupé."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Un cas à trancher s'ouvre sur une fiche. Le gizmo y joue dans un cadre isolé, sur l'origine des gizmos et jamais dans celle de la console. À côté, les signaux qui ont ouvert le cas, avec leur confiance, et les décisions possibles : une décision exige un code motif, que le créateur reçoit avec elle. Les modérateurs externes n'y voient que des données pseudonymisées, sans export, et chaque consultation est journalisée.
+
+<ThemeImage
+  src="/images/2026/poptoy/moderation-case.webp"
+  alt="Un cas à trancher : l'aperçu isolé, les signaux et leur confiance, et la décision avec un code motif obligatoire."
+  width={2880}
+  height={2000}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+La politique elle-même s'affiche en lecture : ses seuils, l'action par sévérité, les exceptions par catégorie. Elle naît dans le repo, passe en revue comme du code, et s'active sans déployer, comme un profil de génération.
+
+<ThemeImage
+  src="/images/2026/poptoy/moderation-policy.webp"
+  alt="La politique active, en lecture : des seuils et des actions versionnés, qu'un modérateur consulte sans pouvoir les modifier."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+La limite est claire : sans classifieur, « rien de relevé » veut dire que des règles et une analyse de code n'ont rien vu. Pour un prototype sur invitation, c'est acceptable ; avant toute ouverture publique, le classifieur doit tourner.
+
+## Google Cloud : un prototype qui dort au repos
+
+Tout ce qui suit est réglé pour un prototype privé, montré en démo et à quelques invités, pas pour une production : les plafonds sont volontairement bas, 2 € par jour et 15 € par mois pour les appels de modèles. Ces montants ne sont pas une référence ; ce qui se transpose, c'est la stratégie de maîtrise des dépenses. Google Cloud ne propose pas de plafond de dépense général : un budget envoie des alertes, avec des heures de retard sur la consommation. Et des briques classiques coûtent même sans utilisateur : un load balancer global environ 18 $ par mois, une politique Cloud Armor 5 $, la plus petite instance Cloud SQL environ 8 $. Plus de 30 $ par mois au repos. Les garde-fous se cumulent donc, et ce qui compte est le moment où ils agissent.
+
+<PoptoyGuardRails />
+
+Les modèles Gemini récents sont servis sur une capacité partagée, sans quota par projet qu'on pourrait abaisser : aucun réglage de Google ne remplace les plafonds de l'application.
+
+La **coupure** suit le schéma documenté par Google : un budget publie sur Pub/Sub, une fonction détache la facturation du projet. L'exemple de Google lui donne les droits d'administration sur tout le compte de facturation ; la mienne n'a que deux rôles, sur les deux seuls projets qu'elle peut couper, et n'agit que si le coût réel atteint le plafond. Elle a d'abord tourné en simulation, ce qui a trouvé un droit de lecture manquant, et un piège : un faux message de test refusé reste en file, et serait rejoué au passage en mode réel. Tous les messages ont été acquittés avant la bascule. Google a rendu disponibles, peu avant la mise en ligne, des plafonds qui mettent en pause Cloud Run ; ils ne couvrent ni la base ni les modèles, qui sont ici ce qui coûte, mais ils sont à réexaminer avant de reconduire une coupure aussi brutale.
+
+<ThemeImage
+  src="/images/2026/poptoy/killswitch-log.webp"
+  alt="La coupure en simulation : ce qu'elle ferait, et la preuve qu'elle en a le droit."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Recadrer la cible
+
+L'architecture de départ visait une production : un load balancer global pour porter les domaines et le wildcard des gizmos, Cloud Armor, une base toujours allumée. Au moment de la mise en ligne, j'ai recadré : poptoy reste **un prototype privé**, montré en démo et à quelques invités, avec des services qui s'arrêtent au repos quitte à attendre au démarrage. Le mappage de domaine de Cloud Run aurait évité le load balancer, mais il ne prend pas de wildcard, donc pas d'origine par gizmo. Une base sans serveur hors de Google aurait ajouté un fournisseur et une latence entre clouds. La solution retenue : Cloudflare devant Cloud Run, IAP branché directement sur les consoles, et Cloud SQL à IP privée, arrêtée par défaut.
+
+<PoptoyTargetVsPrototype />
+
+<PoptoyTopology />
+
+Cloud Run choisit le service d'après l'en-tête `Host`, et l'offre gratuite de Cloudflare ne sait pas le réécrire : un **Worker** reçoit tout ce qui arrive sur les deux domaines et relaie chaque nom d'hôte vers son service, gratuitement à ce volume. Mais le Worker n'est pas une frontière : les URL `run.app` des services restent joignables directement. La frontière est une **clé d'edge**, un secret partagé que le Worker pose sur chaque requête après avoir jeté tout ce que le client aurait pu falsifier, et que chaque service vérifie. Sans elle, une URL `run.app` répond 403 : c'est vérifié en ligne.
+
+Le Worker ne met en cache que ce que l'origine déclare. Le HTML des gizmos n'est jamais gardé : il se revalide à chaque chargement, pour qu'un gizmo retiré par la modération disparaisse aussitôt.
+
+### Tout dort, et la base s'arrête seule
+
+Les huit services tournent avec zéro instance au repos. La forge n'interroge pas sa file en permanence : la file reste dans Postgres, et l'API réveille la forge par une tâche Cloud Tasks, qu'une tâche planifiée double toutes les demi-heures pour ramasser un réveil perdu. La base est la seule pièce qui coûte vraiment. Elle n'a qu'une IP privée, car une IPv4 publique se paie même instance arrêtée. Les services s'y connectent avec leur identité, sans mot de passe. Elle est arrêtée par défaut, démarrée pour une démo, et arrêtée chaque nuit à 2 h par une tâche planifiée qui appelle directement l'API de Cloud SQL, avec un rôle limité à deux permissions.
+
+<ThemeImage
+  src="/images/2026/poptoy/cloud-run-services.webp"
+  alt="Les services et la fonction de coupure, à zéro instance au repos. Le builder vit dans un autre projet."
+  width={2880}
+  height={1800}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Le prix de ce recadrage est le confort. Une démo commence par démarrer la base, ce qui prend plusieurs minutes, et chaque service attend quelques secondes à son premier appel. Pour un prototype, c'est le bon prix ; pour une production, ce serait une autre décision.
+
+### Le builder, l'identité, l'infrastructure
+
+En ligne, le builder vit dans son propre projet, sous un compte de service sans aucun rôle, et seule la forge peut l'appeler. Chaque build s'exécute dans une **sandbox Cloud Run**, une préversion qui isole un processus dans l'instance, sans réseau ni accès aux métadonnées : vérifié en ligne. Le premier build y a échoué sans un mot dans les journaux. La cause : dès qu'un processus orphelin se termine, toute la sandbox est tuée, et Chromium laisse des orphelins à chaque fermeture. Le point d'entrée du build se déclare désormais repreneur des orphelins, les ramasse, et le build passe en une douzaine de secondes. C'est le genre de comportement qu'aucune documentation ne décrit.
+
+Aucun service ne détient de clé de compte de service : une règle d'organisation interdit d'en créer. Chaque service a l'identité attachée à sa révision, les droits sont posés sur la ressource plutôt que sur le projet, et les secrets vivent dans Secret Manager. Les joueurs se connectent par Identity Platform, l'équipe passe par IAP. Toute l'infrastructure est décrite en OpenTofu, et son plan se teste **sans identifiant et sans appel à Google**, avec des fournisseurs simulés : elle a été écrite et vérifiée ainsi avant d'être appliquée.
+
+Presque tous les accrocs de la mise en ligne venaient d'un écart entre le poste de développement et le cloud : un droit IAM, un réseau, une horloge. Une décision de modération était enregistrée en base, puis la mise à jour du pointeur du gizmo échouait faute de droit : une décision « retirer » aurait fermé le cas en laissant le gizmo jouable. Une base qui redémarre se déclare prête avant d'accepter les connexions. Les tests locaux étaient verts à chaque fois.
+
+### Ce que ça coûte
+
+| Poste                                                                  | Montant                    | Nature                 |
+| ---------------------------------------------------------------------- | -------------------------- | ---------------------- |
+| Modèles, pendant tout le développement (banc d'évaluation)             | 0,66 €                     | mesuré par le registre |
+| Une génération de gizmo, sans images                                   | ≈ 0,06 €                   | mesuré par le registre |
+| Deux lots de dix gizmos de démo                                        | 0,65 € et 0,61 €           | mesuré par le registre |
+| Tout arrêté : stockage de la base, images, secrets, buckets            | ≈ 2,3 $ par mois           | estimé                 |
+| Base allumée                                                           | quelques centimes de l'heure | estimé               |
+| Cloud Run, Cloud Tasks, Cloud Scheduler, Identity Platform, Cloudflare | 0, dans les paliers gratuits | estimé               |
+
+Les dépenses de modèles sont mesurées au centime. Les coûts d'infrastructure restent des estimations tant que la facture réelle de Google Cloud n'est pas relevée.
+
+## Le produit en usage
+
+L'app est écrite en **Flutter**, contre les mêmes API que le studio web, avec un client généré depuis le contrat OpenAPI du backend. Dans l'app, il n'y a pas de page hôte : le gizmo **est** le document de la WebView. Un script injecté au tout début du document installe le transport du pont, et retire WebRTC. La navigation est verrouillée : seul le premier chargement passe.
+
+<ThemeImage
+  src="/images/2026/poptoy/app-feed.webp"
+  alt="Le feed : la zone du gizmo lui appartient, on fait défiler depuis la bande en dessous."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+Comme chez Pocket, le gizmo reçoit tous les gestes qui commencent sur lui, glissements verticaux compris : un jeu de dessin ou de plateforme en a besoin. On fait défiler depuis la bande sous le gizmo, et les cartes voisines sont préchargées en pause.
+
+Le téléphone a montré ce que les tests ne pouvaient pas montrer. La carte suivante, préchargée, restait blanche : **la WebView d'Android n'a pas de synthèse vocale**, et le runtime l'appelait à chaque mise en pause. Les tests tournaient sur le Chromium de bureau, qui en a une. Le runtime a été corrigé, mais les gizmos déjà publiés embarquent l'ancien, et leurs artefacts ne changent jamais : c'est le script injecté par l'app qui les répare, en posant une synthèse vocale muette. L'immuabilité a un prix, et une parade.
+
+Un gizmo peut aussi appeler un modèle pendant qu'on y joue : un oracle, un conteur, une photo transformée. Il ne tient jamais de clé : l'hôte relaie sa requête vers une passerelle à part, avec un ticket de partie limité à ce gizmo, des quotas, un cache et les mêmes plafonds. Toute la tuyauterie est réelle ; le modèle ne l'est pas encore, car la passerelle tourne en ligne avec un fournisseur factice.
+
+<PoptoyWhatRuns />
+
+Au milieu, ce qui est écrit et testé mais dort : la photo jointe à une création, les sons et l'IA en cours de partie, que le profil de génération actif ne connaît pas encore, et le classifieur de modération, coupé en attendant un accord de dépense.
+
+## Ce que la reconstruction dit de Pocket
+
+L'expérience devait vérifier l'analyse. Elle en confirme l'essentiel, et en nuance deux points.
+
+- **Le cadre contraint est bien la clé.** Rien de ce qui précède ne tiendrait si le modèle choisissait ses dépendances. Le template, la liste blanche, le runtime installé en premier et le graphe de la forge rendent le code généré constructible, testable et servable.
+- **Une seule variante du gizmo suffit.** Un runtime qui choisit son transport au démarrage sert le web et l'app avec le même artefact. Je ne sais pas pourquoi Meta en sert deux : peut-être un héritage, ou une contrainte de son app native que je n'ai pas.
+- **On peut fermer davantage le réseau.** Aucune connexion n'est permise depuis un gizmo poptoy. Le prix est faible : un gizmo embarque ses données ou les reçoit de l'hôte.
+
+Et une chose que l'analyse ne pouvait pas montrer : **l'essentiel du travail n'est pas dans l'IA**. La forge, le cœur supposé du produit, compte environ 4 300 lignes sur 62 000. Le reste, c'est un builder, un serveur de contenu hostile, un pont, une app, des consoles, une modération, des quotas et une infrastructure. Un clone de Pocket est d'abord une plateforme d'hébergement de code non fiable, à laquelle un modèle fournit le code.
+
+## Ce que j'en retiens
+
+**Écrire les contraintes avant de comparer les options.** Le plafond de dépense, posé avant la première ligne de code, a façonné l'architecture autant que la sécurité : des doubles locaux, un rejeu des modèles, un prototype à l'arrêt au repos.
+
+**Traiter le risque d'abord.** Des gizmos écrits par un agent de code ont validé le template, le builder, le pont et le serveur avant le premier appel de la forge à un modèle.
+
+**Préférer une contrainte à une consigne.** Une liste blanche vérifiée sur le bundle vaut mieux qu'une phrase de prompt ; un build imposé par le graphe vaut mieux qu'un outil laissé au modèle. Le plan a tenu la portée, l'écriture a écrit le double : seule la mesure l'a montré.
+
+**Vérifier sur la vraie cible.** La WebView d'Android n'est pas Chromium, une sandbox Cloud Run n'est pas un conteneur Docker, et en local il n'y a pas d'IAM. Les tests verts mentaient poliment à chaque fois.
+
+**Avec des agents, le travail devient la décision et la vérification.** Les tests, les parcours dans un vrai navigateur et la trace des décisions ne sont pas des à-côtés : c'est là qu'on découvre ce qui a été mal compris.
+
+Le projet est parti d'une question sur Pocket : est-ce le TikTok du vibe coding ? Je ne sais toujours pas si les gens reviendraient jouer. Je sais maintenant ce que coûte la machine qui le permet : pour un prototype privé, quelques euros par mois au repos, une coupure de sûreté, et une liste précise de ce qu'il faudrait ajouter pour une production.
+
+<Callout type="tip" title="Sources">
+  **L'analyse de départ** : [Pocket, le TikTok du vibe coding ?](/fr/2026/10/pocket-meta-tiktok-du-vibe-coding/), sur ce blog.
+
+**Le projet** : les décisions d'architecture, les notes de conception et le journal du projet ne sont pas publiés ; les faits de cet article en viennent.
+
+**Chiffres** : dépenses de modèles lues dans le registre de coûts de la forge ; lignes comptées sur le code Python, TypeScript, Dart et OpenTofu, hors code généré ; coûts d'infrastructure estimés à partir des pages de prix de Google Cloud et de Cloudflare, en dollars.
+
+</Callout>

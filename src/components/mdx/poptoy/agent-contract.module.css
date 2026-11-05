@@ -1,0 +1,221 @@
+/* Three columns: what I decide, what the agent writes, and between them the
+   figure's only frame, the checks that do not depend on the agent. A dot runs
+   from each side towards them: everything goes through them. */
+
+.cols {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr) 2.5rem minmax(0, 1.15fr) 2.5rem minmax(0, 1fr);
+    gap: 0 0.75rem;
+    align-items: start;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.head > span {
+  display: grid;
+}
+
+.list,
+.guards {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.key {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.value {
+  display: block;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.contract {
+  margin-top: 0.7rem;
+  padding-top: 1.5rem;
+}
+
+.guards {
+  margin-top: 0;
+}
+
+.guards li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+}
+
+.guards svg {
+  margin-top: 0.2rem;
+}
+
+.guardName {
+  margin-top: 0;
+  margin-bottom: 0.1rem;
+  font-size: 0.78rem;
+}
+
+/* The link: a horizontal rule, and a dot that runs towards the checks. */
+.link {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .link {
+    display: block;
+    position: relative;
+    align-self: center;
+    height: 1px;
+    background: var(--ink-3);
+  }
+
+  .packet {
+    position: absolute;
+    top: -0.22rem;
+    left: 0;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--teal);
+    animation: toRight 4s var(--ease) infinite;
+  }
+
+  .linkBack .packet {
+    animation-name: toLeft;
+    animation-delay: 2s;
+  }
+}
+
+@keyframes toRight {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    left: calc(100% - 0.45rem);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    left: calc(100% - 0.45rem);
+    opacity: 0;
+  }
+}
+
+@keyframes toLeft {
+  0% {
+    left: calc(100% - 0.45rem);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    left: 0;
+    opacity: 1;
+  }
+  70%,
+  100% {
+    left: 0;
+    opacity: 0;
+  }
+}
+
+/* On a phone the motion stays: the columns stack, and each link becomes a
+   vertical rule. The first dot runs down to the checks, the second runs up to
+   them from the agent. */
+@media (max-width: 899.98px) {
+  .motion {
+    gap: 1rem;
+  }
+
+  .motion .link {
+    display: block;
+    position: relative;
+    justify-self: start;
+    width: 1px;
+    height: 2.75rem;
+    margin-left: 0.6rem;
+    background: var(--ink-3);
+  }
+
+  .motion .packet {
+    position: absolute;
+    top: 0;
+    left: -0.2rem;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--teal);
+    animation: toDown 4s var(--ease) infinite;
+  }
+
+  .motion .linkBack .packet {
+    animation-name: toUp;
+    animation-delay: 2s;
+  }
+}
+
+@keyframes toDown {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    top: calc(100% - 0.45rem);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    top: calc(100% - 0.45rem);
+    opacity: 0;
+  }
+}
+
+@keyframes toUp {
+  0% {
+    top: calc(100% - 0.45rem);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    top: 0;
+    opacity: 1;
+  }
+  70%,
+  100% {
+    top: 0;
+    opacity: 0;
+  }
+}
