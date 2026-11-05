@@ -17,10 +17,10 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "André Frélicot - Builder • Freelance Software Engineer",
-    template: "%s · André Frélicot - Builder • Freelance Software Engineer",
+    default: "André Frélicot - Freelance Software Engineer • Builder",
+    template: "%s · André Frélicot - Freelance Software Engineer • Builder",
   },
-  description: "André Frélicot - Builder • Freelance Software Engineer",
+  description: "André Frélicot - Freelance Software Engineer • Builder",
   alternates: {
     types: {
       "application/rss+xml": `${SITE_URL}/feed.xml`,
