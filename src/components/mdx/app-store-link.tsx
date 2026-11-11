@@ -4,7 +4,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import { type MouseEventHandler, useSyncExternalStore } from "react";
 
 const BADGE_MAP = {
   en: {
@@ -42,12 +42,14 @@ type AppStoreLinkProps = {
   href: string;
   className?: string;
   ariaLabel?: string;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
 export function AppStoreLink({
   href,
   className,
   ariaLabel,
+  onClick,
 }: AppStoreLinkProps) {
   const params = useParams();
   const { resolvedTheme } = useTheme();
@@ -75,6 +77,7 @@ export function AppStoreLink({
       className={clsx("mt-6 inline-flex", className)}
       aria-label={label}
       title={label}
+      onClick={onClick}
     >
       <Image
         key={`${resolvedLocale}-${badgeSrc}`}

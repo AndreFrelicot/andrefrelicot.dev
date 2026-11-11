@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import type { MouseEventHandler } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 
@@ -22,12 +23,14 @@ type PlayStoreLinkProps = {
   href: string;
   className?: string;
   ariaLabel?: string;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
 export function PlayStoreLink({
   href,
   className,
   ariaLabel,
+  onClick,
 }: PlayStoreLinkProps) {
   const params = useParams();
 
@@ -47,6 +50,7 @@ export function PlayStoreLink({
       className={clsx("mt-6 inline-flex", className)}
       aria-label={label}
       title={label}
+      onClick={onClick}
     >
       <Image
         key={`${resolvedLocale}-${badgeSrc}`}

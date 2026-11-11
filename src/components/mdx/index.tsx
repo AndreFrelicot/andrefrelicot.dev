@@ -19,6 +19,7 @@ import { PocketStats } from "./pocket/pocket-stats";
 import { PocketTimeline } from "./pocket/pocket-timeline";
 import { poptoyFigures } from "./poptoy";
 import { PubDevLink } from "./pub-dev-link";
+import { RetiredStoreBadges } from "./retired-store-badges";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import { ThreeCube } from "./three-cube";
 import { VideoEmbed } from "./video-embed";
@@ -54,6 +55,7 @@ export const mdxComponents = {
   PocketTimeline,
   ...poptoyFigures,
   PubDevLink,
+  RetiredStoreBadges,
   ScreenshotGallery,
   ThreeCube,
   VideoEmbed,
