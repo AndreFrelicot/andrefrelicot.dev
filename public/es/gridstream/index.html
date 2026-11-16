@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridStream: hasta doce vídeos a la vez en el iPad</title>
+<meta name="description" content="GridStream reproduce hasta doce vídeos a la vez en el iPad, servidos por tu Mac a través de la red local. Descarga el servidor gratuito para Mac y la app para iPad.">
+<link rel="canonical" href="https://andrefrelicot.dev/es/gridstream/">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafafa;--fg:#171717;--muted:#525252;--line:#e5e5e5;--card:#ffffff;--accent:#eb590d;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0a0a0a;--fg:#ededed;--muted:#a3a3a3;--line:#262626;--card:#141414;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:760px;margin:0 auto;padding:40px 16px 64px}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:40px;font-size:14px}
+header.top a.home{color:var(--fg);font-weight:600;text-decoration:none}
+nav.langs{display:flex;gap:4px;flex-wrap:wrap}
+nav.langs a{color:var(--muted);text-decoration:none;padding:2px 8px;border-radius:6px;border:1px solid transparent}
+nav.langs a[aria-current]{color:var(--fg);border-color:var(--line)}
+a{color:var(--accent)}
+h1{font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0 0 12px;letter-spacing:-0.02em}
+h2{font-size:20px;margin:40px 0 12px}
+p,li{color:var(--fg)}
+.muted{color:var(--muted)}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.brand img{width:64px;height:64px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:32px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{margin:0 0 8px;font-size:18px}
+.card p{margin:0 0 16px}
+.button{display:inline-flex;align-items:center;gap:8px;background:var(--fg);color:var(--bg);text-decoration:none;font-weight:600;padding:10px 16px;border-radius:10px}
+.button:hover{opacity:.88}
+.meta{font-size:13px;color:var(--muted);margin-top:12px!important}
+.badge img{height:44px;width:auto;display:block}
+.badge .dark{display:none}
+@media (prefers-color-scheme:dark){.badge .light{display:none}.badge .dark{display:block}}
+ol{padding-left:22px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+.policy h2{border-top:1px solid var(--line);padding-top:24px}
+.policy code{font-size:.9em;background:var(--line);padding:1px 5px;border-radius:5px}
+.lede{font-size:18px}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><a class="home" href="/es/gridstream/">GridStream</a><nav class="langs" aria-label="Idiomas"><a href="/gridstream/" hreflang="en">English</a><a href="/fr/gridstream/" hreflang="fr">Français</a><a href="/es/gridstream/" hreflang="es" aria-current="page">Español</a><a href="/pt/gridstream/" hreflang="pt-BR">Português</a></nav></header>
+<div class="brand"><img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width="64" height="64"><h1>GridStream</h1></div>
+<p class="lede">Mira hasta doce vídeos a la vez en el iPad, servidos por tu Mac a través de la red local. Sin cuenta, sin nube, sin recopilar ningún dato.</p>
+<div class="cards">
+  <section class="card">
+    <h2>1. El servidor para Mac</h2>
+    <p>GridStream Server escanea tus carpetas de vídeo (.mp4, .m4v, .mov) y las envía al iPad. Vive en la barra de menús.</p>
+    <a class="button" href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg">Descargar para Mac</a>
+    <p class="meta">GridStream 1.0 · imagen de disco firmada y notarizada por Apple · 23,6 MB · macOS 15.6 o posterior</p>
+  </section>
+  <section class="card">
+    <h2>2. La app para iPad</h2>
+    <p>Gratuita en el App Store, para iPadOS 17 o posterior. Encuentra tu Mac en la red local.</p>
+    <a class="badge" href="https://apps.apple.com/app/gridstream/id6833729503" aria-label="Descargar en el App Store">
+      <img class="light" src="/images/appstore/Download_on_the_App_Store_Badge_ES_RGB_wht_100217.svg" alt="Descargar en el App Store">
+      <img class="dark" src="/images/appstore/Download_on_the_App_Store_Badge_ES_RGB_blk_100217.svg" alt="Descargar en el App Store">
+    </a>
+  </section>
+</div>
+<h2>Para empezar</h2>
+<ol><li>Abre GridStream Server en el Mac y añade una o varias carpetas de vídeo.</li><li>Abre GridStream en el iPad, en la misma red: encuentra el Mac por sí solo.</li><li>Introduce el PIN que muestra el menú del servidor en la barra de menús.</li></ol>
+<p><a href="/es/2026/11/gridstream-doce-videos-a-la-vez-en-ipad/">Cómo funciona: el devlog →</a></p>
+<h2>Soporte</h2>
+<p>¿Una pregunta, un fallo, un gesto que proponer? Escribe a <a href="mailto:support@andrefrelicot.dev">support@andrefrelicot.dev</a>.</p>
+<h2>Privacidad</h2>
+<p>GridStream no recopila ningún dato: sin cuenta, sin estadísticas, sin seguimiento. <a href="/es/gridstream/privacy/">Política de privacidad</a>.</p>
+<footer><span>© 2026 André Frélicot</span><a href="/es/gridstream/privacy/">Política de privacidad</a><a href="mailto:support@andrefrelicot.dev">support@andrefrelicot.dev</a><a href="/es/">andrefrelicot.dev</a></footer>
+</main>
+</body>
+</html>

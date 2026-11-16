@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidade do GridStream</title>
+<meta name="description" content="Política de privacidade do GridStream">
+<link rel="canonical" href="https://andrefrelicot.dev/pt/gridstream/privacy/">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafafa;--fg:#171717;--muted:#525252;--line:#e5e5e5;--card:#ffffff;--accent:#eb590d;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0a0a0a;--fg:#ededed;--muted:#a3a3a3;--line:#262626;--card:#141414;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:760px;margin:0 auto;padding:40px 16px 64px}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:40px;font-size:14px}
+header.top a.home{color:var(--fg);font-weight:600;text-decoration:none}
+nav.langs{display:flex;gap:4px;flex-wrap:wrap}
+nav.langs a{color:var(--muted);text-decoration:none;padding:2px 8px;border-radius:6px;border:1px solid transparent}
+nav.langs a[aria-current]{color:var(--fg);border-color:var(--line)}
+a{color:var(--accent)}
+h1{font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0 0 12px;letter-spacing:-0.02em}
+h2{font-size:20px;margin:40px 0 12px}
+p,li{color:var(--fg)}
+.muted{color:var(--muted)}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.brand img{width:64px;height:64px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:32px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{margin:0 0 8px;font-size:18px}
+.card p{margin:0 0 16px}
+.button{display:inline-flex;align-items:center;gap:8px;background:var(--fg);color:var(--bg);text-decoration:none;font-weight:600;padding:10px 16px;border-radius:10px}
+.button:hover{opacity:.88}
+.meta{font-size:13px;color:var(--muted);margin-top:12px!important}
+.badge img{height:44px;width:auto;display:block}
+.badge .dark{display:none}
+@media (prefers-color-scheme:dark){.badge .light{display:none}.badge .dark{display:block}}
+ol{padding-left:22px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+.policy h2{border-top:1px solid var(--line);padding-top:24px}
+.policy code{font-size:.9em;background:var(--line);padding:1px 5px;border-radius:5px}
+.lede{font-size:18px}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><a class="home" href="/pt/gridstream/">GridStream</a><nav class="langs" aria-label="Idiomas"><a href="/gridstream/privacy/" hreflang="en">English</a><a href="/fr/gridstream/privacy/" hreflang="fr">Français</a><a href="/es/gridstream/privacy/" hreflang="es">Español</a><a href="/pt/gridstream/privacy/" hreflang="pt-BR" aria-current="page">Português</a></nav></header>
+<article class="policy">
+<h1>Política de privacidade do GridStream</h1>
+<p><em>Em vigor desde 9 de novembro de 2026</em></p>
+<p>O GridStream é formado por três partes: o app <strong>GridStream</strong> para iPad, o <strong>GridStream Server</strong> para macOS e a interface web hospedada por esse servidor. Eles são desenvolvidos por André Frélicot, engenheiro de software independente na França ("eu" abaixo).</p>
+<p><strong>Resumindo: o GridStream não coleta nenhum dado. Eu não recebo nada dos apps: sem conta, sem análises, sem publicidade, sem rastreamento e sem nenhum SDK de terceiros.</strong></p>
+<h2>O que fica nos seus dispositivos</h2>
+<p>O GridStream funciona na sua rede local, entre o seu Mac e o seu iPad. Tudo o que ele guarda fica neles:</p>
+<ul><li><strong>No seu Mac</strong>, o GridStream Server guarda o catálogo das suas pastas de vídeo (nomes, caminhos, tamanhos, durações e miniaturas dos arquivos), junto com as tags, notas, listas, intervalos de tempo, anotações, capturas de quadros e contagens de reprodução que você cria. Eles ficam em um banco de dados na pasta do app (<code>~/Library/Application Support/GridStream</code> por padrão). O PIN do servidor e a chave que assina as sessões ficam nas Chaves do macOS.</li><li><strong>No seu iPad</strong>, o GridStream guarda seus layouts, predefinições e ajustes de exibição, e a sessão que o conecta ao seu servidor, guardada nas Chaves do iPadOS. Os clipes da demo, se você baixá-la, ficam no armazenamento do próprio app.</li><li><strong>A janela de conexões do servidor</strong> mostra quais dispositivos o usam (o endereço na rede local e o tipo de cliente) e o que estão reproduzindo. Essa lista fica na memória e é apagada quando o servidor é encerrado.</li></ul>
+<p>Seus vídeos são transmitidos do seu Mac para o seu iPad pela sua rede. Eles nunca são enviados nem copiados para nenhum outro lugar.</p>
+<p>Apagar o app do iPad apaga tudo o que ele guardou. No Mac, os ajustes do servidor permitem limpar os dados, e apagar a pasta dele os remove por completo.</p>
+<h2>Acesso à rede</h2>
+<ul><li><strong>Rede local.</strong> O app do iPad pede acesso à rede local para encontrar o GridStream Server com o Bonjour e se comunicar com ele. Esse tráfego fica entre os seus dispositivos.</li><li><strong>Download da demo.</strong> Se você escolher experimentar a demo, o app do iPad baixa um pacote de clipes curtos de <code>videos.andrefrelicot.dev</code>. Como qualquer requisição web, isso revela o seu endereço IP e o identificador técnico do app ao provedor de hospedagem, a Cloudflare, que os processa para entregar os arquivos. Eu não uso essas informações para identificar você e não as combino com mais nada. A política de privacidade da Cloudflare está em <a href="https://www.cloudflare.com/privacypolicy/">https://www.cloudflare.com/privacypolicy/</a>.</li><li><strong>Links.</strong> O link para baixar o GridStream Server (<code>andrefrelicot.dev/gridstream</code>) é compartilhado pela folha de compartilhamento ou aberto no Safari. O que acontece depois depende do app que você escolher e dos termos desse site.</li></ul>
+<p>O GridStream Server não faz nenhuma requisição à internet.</p>
+<h2>Crianças</h2>
+<p>O GridStream não coleta nada, nem de crianças nem de ninguém.</p>
+<h2>Seus direitos</h2>
+<p>Como não tenho nenhum dado pessoal seu por meio do GridStream, não há nada para acessar, corrigir ou apagar do meu lado. Se tiver dúvidas sobre esta política ou sobre seus direitos pela LGPD ou pelo RGPD, escreva para <a href="mailto:support@andrefrelicot.dev">support@andrefrelicot.dev</a>. Você também pode procurar a ANPD (<a href="https://www.gov.br/anpd">https://www.gov.br/anpd</a>).</p>
+<h2>Alterações</h2>
+<p>Se o GridStream um dia passar a coletar dados, esta política dirá isso antes do lançamento da versão que o fizer, e o rótulo de privacidade da App Store mudará junto. A data no topo indica a última alteração.</p>
+<h2>Contato</h2>
+<p>André Frélicot, <a href="mailto:support@andrefrelicot.dev">support@andrefrelicot.dev</a></p>
+</article>
+<footer><span>© 2026 André Frélicot</span><a href="/pt/gridstream/privacy/">Política de privacidade</a><a href="mailto:support@andrefrelicot.dev">support@andrefrelicot.dev</a><a href="/pt/">andrefrelicot.dev</a></footer>
+</main>
+</body>
+</html>
