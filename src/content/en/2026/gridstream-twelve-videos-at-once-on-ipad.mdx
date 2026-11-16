@@ -25,11 +25,14 @@ An experimental video player, and above all a playground for video interactions:
 <div className="not-prose my-10 rounded-xl border border-foreground/15 bg-foreground/[0.03] p-5">
   <p className="text-base font-semibold text-foreground">Try GridStream</p>
   <p className="mt-2 text-sm leading-6 text-foreground/80">The iPad app is free on the App Store. The Mac server is a download below: it scans your video folders and serves them to the iPad over your local network.</p>
-  <div className="mt-4 flex flex-wrap items-center gap-3">
-    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0" />
-    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" className="inline-flex items-center gap-2 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition hover:border-foreground/40 hover:bg-foreground/5">
-      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={24} height={24} />
-      <span>Download the Mac server</span>
+  <div className="mt-5 flex flex-wrap items-center gap-4">
+    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0!" badgeClassName="h-14 w-auto" />
+    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" data-skip-arrow aria-label="Download the Mac server" className="inline-flex h-14 items-center gap-2.5 rounded-lg border border-foreground/70 bg-background pl-2.5 pr-4 text-foreground transition hover:bg-foreground/5">
+      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={44} height={44} className="size-11" />
+      <span className="flex flex-col leading-none">
+        <span className="text-[11px] font-medium text-foreground/75">Download the</span>
+        <span className="mt-1 text-[19px] font-semibold tracking-tight">Mac server</span>
+      </span>
     </a>
     {/* Once the public repository exists: <GitHubLink href="public repository URL" label="Source code" /> */}
   </div>

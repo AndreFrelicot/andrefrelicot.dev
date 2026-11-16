@@ -41,6 +41,7 @@ const getServerSnapshot = () => false;
 type AppStoreLinkProps = {
   href: string;
   className?: string;
+  badgeClassName?: string;
   ariaLabel?: string;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
@@ -48,6 +49,7 @@ type AppStoreLinkProps = {
 export function AppStoreLink({
   href,
   className,
+  badgeClassName,
   ariaLabel,
   onClick,
 }: AppStoreLinkProps) {
@@ -78,6 +80,7 @@ export function AppStoreLink({
       aria-label={label}
       title={label}
       onClick={onClick}
+      data-skip-arrow
     >
       <Image
         key={`${resolvedLocale}-${badgeSrc}`}
@@ -85,7 +88,7 @@ export function AppStoreLink({
         alt={label}
         width={120}
         height={40}
-        className="h-10 w-auto"
+        className={badgeClassName ?? "h-10 w-auto"}
       />
     </a>
   );

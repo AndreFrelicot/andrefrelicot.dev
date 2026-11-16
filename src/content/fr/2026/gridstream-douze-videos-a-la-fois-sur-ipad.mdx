@@ -25,11 +25,14 @@ Un lecteur vidéo expérimental, et surtout un terrain de jeu pour les interacti
 <div className="not-prose my-10 rounded-xl border border-foreground/15 bg-foreground/[0.03] p-5">
   <p className="text-base font-semibold text-foreground">Essayer GridStream</p>
   <p className="mt-2 text-sm leading-6 text-foreground/80">L'app iPad est gratuite sur l'App Store. Le serveur Mac se télécharge ci-dessous : il scanne vos dossiers vidéo et les sert à l'iPad sur le réseau local.</p>
-  <div className="mt-4 flex flex-wrap items-center gap-3">
-    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0" ariaLabel="Télécharger dans l'App Store" />
-    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" className="inline-flex items-center gap-2 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition hover:border-foreground/40 hover:bg-foreground/5">
-      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={24} height={24} />
-      <span>Télécharger le serveur Mac</span>
+  <div className="mt-5 flex flex-wrap items-center gap-4">
+    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0!" ariaLabel="Télécharger dans l'App Store" badgeClassName="h-14 w-auto" />
+    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" data-skip-arrow aria-label="Télécharger le serveur Mac" className="inline-flex h-14 items-center gap-2.5 rounded-lg border border-foreground/70 bg-background pl-2.5 pr-4 text-foreground transition hover:bg-foreground/5">
+      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={44} height={44} className="size-11" />
+      <span className="flex flex-col leading-none">
+        <span className="text-[11px] font-medium text-foreground/75">Télécharger le</span>
+        <span className="mt-1 text-[19px] font-semibold tracking-tight">serveur Mac</span>
+      </span>
     </a>
     {/* Quand le dépôt public existera : <GitHubLink href="URL du dépôt public" label="Code source" /> */}
   </div>
