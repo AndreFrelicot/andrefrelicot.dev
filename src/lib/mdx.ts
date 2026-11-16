@@ -27,6 +27,8 @@ export type PostFrontMatter = {
   type?: string;
   canonical_locale?: Locale;
   translations?: Partial<Record<Locale, string>>;
+  // Published at its URL but left out of the listings, feed, sitemap and search.
+  unlisted?: boolean;
 };
 
 export type Post = {
@@ -287,6 +289,7 @@ export function readPostBySlug(
       readingTimeMinutes: Math.ceil(reading.minutes),
       image: typeof fm.image === "string" ? fm.image : undefined,
       type: typeof fm.type === "string" ? fm.type : undefined,
+      unlisted: fm.unlisted === true,
       translations: Object.keys(translations).length ? translations : undefined,
     },
   };
@@ -297,6 +300,7 @@ export function getAllPosts(locale: Locale = DEFAULT_LOCALE): Post[] {
 
   return slugs
     .map((slug) => readPostBySlug(slug, locale))
+    .filter((post) => !post.frontmatter.unlisted)
     .sort((a, b) => (a.frontmatter.date < b.frontmatter.date ? 1 : -1));
 }
 
@@ -314,6 +318,7 @@ export function getAllPostsWithFallback(locale: Locale): Post[] {
         return readPostBySlug(canonicalSlug, DEFAULT_LOCALE);
       }
     })
+    .filter((post) => !post.frontmatter.unlisted)
     .sort((a, b) => (a.frontmatter.date < b.frontmatter.date ? 1 : -1));
 }
 
