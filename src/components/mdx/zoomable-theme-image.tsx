@@ -22,6 +22,8 @@ type ZoomableThemeImageProps = Omit<
   width?: NextImageProps["width"];
   height?: NextImageProps["height"];
   fill?: NextImageProps["fill"];
+  // Use the full width of the article column instead of the narrower default.
+  wide?: boolean;
 };
 
 export function ZoomableThemeImage({
@@ -36,6 +38,7 @@ export function ZoomableThemeImage({
   width,
   height,
   fill,
+  wide = false,
   unoptimized = true,
   priority = false,
   sizes,
@@ -87,7 +90,9 @@ export function ZoomableThemeImage({
   const modalHeight = height ?? 900;
 
   return (
-    <figure className="mx-auto my-10 w-full max-w-3xl">
+    <figure
+      className={clsx("mx-auto my-10 w-full", wide ? "max-w-5xl" : "max-w-3xl")}
+    >
       <button
         type="button"
         aria-label={`Open image: ${alt}`}
