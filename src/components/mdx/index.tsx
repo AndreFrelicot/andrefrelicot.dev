@@ -3,6 +3,7 @@ import { AppStoreLink } from "./app-store-link";
 import { AppExpressSourceBanner } from "./app-express-source-banner";
 import { Callout } from "./callout";
 import { GitHubLink } from "./github-link";
+import { GridstreamArchitecture } from "./gridstream/architecture";
 import { OsibitsLogo } from "./osibits-logo";
 import { PlayStoreLink } from "./play-store-link";
 import { PocketAnatomy } from "./pocket/pocket-anatomy";
@@ -39,6 +40,7 @@ export const mdxComponents = {
   AppStoreLink,
   Callout,
   GitHubLink,
+  GridstreamArchitecture,
   OsibitsLogo,
   PlayStoreLink,
   PocketAnatomy,

@@ -1,0 +1,294 @@
+---
+title: "GridStream : douze vidéos à la fois sur iPad, servies par votre Mac"
+description: "Un lecteur vidéo expérimental, et surtout un terrain de jeu pour les interactions vidéo : grille, scrub à l'image près, Apple Pencil, fenêtres flottantes. Un serveur Swift sur le Mac, un client SwiftUI sur iPad et une interface web Angular."
+date: 2026-11-16
+en_mdx: gridstream-twelve-videos-at-once-on-ipad.mdx
+fr_mdx: gridstream-douze-videos-a-la-fois-sur-ipad.mdx
+es_mdx: gridstream-doce-videos-a-la-vez-en-ipad.mdx
+pt_mdx: gridstream-doze-videos-ao-mesmo-tempo-no-ipad.mdx
+tags: [apps, source_code, swift, swiftui, ipad, apple-pencil, avfoundation, vapor, angular, streaming]
+image: /images/2026/gridstream/gridstream-cover.webp
+unlisted: true
+---
+
+Un lecteur vidéo expérimental, et surtout un terrain de jeu pour les interactions vidéo : grille, scrub à l'image près, Apple Pencil, fenêtres flottantes. Un serveur Swift sur le Mac, un client SwiftUI sur iPad et une interface web Angular.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-hero.mp4"
+  poster="/images/2026/gridstream/gridstream-cover.webp"
+  title="GridStream en action"
+  caption="GridStream en action."
+  aspect="1920/822"
+  wide
+/>
+
+<div className="not-prose my-10 rounded-xl border border-foreground/15 bg-foreground/[0.03] p-5">
+  <p className="text-base font-semibold text-foreground">Essayer GridStream</p>
+  <p className="mt-2 text-sm leading-6 text-foreground/80">L'app iPad est gratuite sur l'App Store. Le serveur Mac se télécharge ci-dessous : il scanne vos dossiers vidéo et les sert à l'iPad sur le réseau local.</p>
+  <div className="mt-4 flex flex-wrap items-center gap-3">
+    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0" ariaLabel="Télécharger dans l'App Store" />
+    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" className="inline-flex items-center gap-2 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition hover:border-foreground/40 hover:bg-foreground/5">
+      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={24} height={24} />
+      <span>Télécharger le serveur Mac</span>
+    </a>
+    {/* Quand le dépôt public existera : <GitHubLink href="URL du dépôt public" label="Code source" /> */}
+  </div>
+  <p className="mt-3 text-xs text-foreground/60">Serveur Mac : GridStream 1.0, image disque signée et notarisée par Apple (23,6 Mo), macOS 15.6 ou plus récent.</p>
+</div>
+
+## Regarder plusieurs vidéos à la fois
+
+Il y a des moments où une seule vidéo ne suffit pas. Les rushes d'une journée de tournage. Les prises d'une même scène. Une collection de clips qu'on veut parcourir d'un coup d'œil, sans ouvrir chaque fichier un par un. Sur un ordinateur, on finit avec dix fenêtres de lecteur empilées. Sur une tablette, on n'a même pas cette option.
+
+**GridStream** est né de cette envie : poser l'iPad sur la table et y voir jusqu'à **douze vidéos qui jouent en même temps**, tirées de la vidéothèque du Mac. On touche une tuile, le son la suit. On glisse le doigt sur la barre de lecture, l'image suit au frame près. On sort l'Apple Pencil, on entoure un détail, la note reste accrochée à cette image précise.
+
+Ce n'est pas un service de streaming. Pas de compte, pas de cloud, pas de publicité, aucune donnée collectée. Les vidéos restent sur le Mac, l'iPad les lit en direct sur le réseau local. Et c'est volontairement un **lecteur expérimental** : un bac à sable pour les interactions vidéo et pour les façons de travailler avec beaucoup de clips. Parcourir, choisir, annoter, trier, cataloguer : l'app sert à essayer comment ces étapes s'enchaînent, sans prétendre les automatiser toutes.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-grid-nine-videos-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-grid-nine-videos-dark.webp"
+  alt="La grille : de une à douze tuiles, la sélection (orange) porte le son."
+  width={2000}
+  height={1500}
+  priority
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-ipad-live.mp4"
+  title="GridStream Live sur iPad"
+  caption="GridStream Live sur iPad."
+  aspect="4/3"
+/>
+
+## Ce que l'app sait faire
+
+### Une grille qui respire
+
+Le bouton « + » ajoute une tuile, la grille se réorganise d'un ressort : une ligne jusqu'à deux vidéos, deux lignes jusqu'à six, trois au-delà. **Shuffle All** retourne toutes les tuiles vers d'autres vidéos de la bibliothèque (ou d'une liste choisie). Chaque tuile a sa barre de lecture, ses boutons, son volume ; un tap sélectionne, et la tuile sélectionnée est celle qu'on entend. Les dispositions se sauvegardent en presets. La grille est aussi l'étape de préparation : c'est là qu'on choisit les sources et qu'on compose l'ensemble, avant de passer une vidéo en plein écran et les autres en fenêtres flottantes.
+
+### Scrub à trois vitesses
+
+Le scrub, c'est ce geste de glisser sur la barre de lecture pour voir défiler la vidéo. Dans GridStream, un aperçu flottant suit le doigt avec l'image exacte à cet instant. Puis vient le geste que je voulais tester : **monter le doigt**. Un cran plus haut, le slider passe à 1/10 de sa vitesse et une règle apparaît. Encore un cran, et chaque pixel de déplacement avance d'une image, avec son timecode. On lâche, la lecture reprend exactement là.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-scrub.mp4"
+  title="Scrub à trois vitesses"
+  caption="Animation de démonstration : normal, 1/10, image par image, la hauteur du doigt choisit la vitesse."
+/>
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-fullscreen-precision-scrub-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-fullscreen-precision-scrub-dark.webp"
+  alt="En plein écran : la règle du mode précis et l'aperçu flottant, timecode à l'image près."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Apple Pencil : écrire sur l'image
+
+Le bouton crayon met la vidéo en pause et ouvre une couche de dessin **PencilKit** sur l'image. On entoure, on flèche, on ajoute une note texte. Le dessin est attaché à **ce frame** : les flèches ‹ › avancent image par image, l'encre disparaît sur les voisines et revient sur la bonne. On annote des images fixes, pas une animation : l'encre ne s'affiche qu'en mode Pencil, la vidéo en pause, jamais pendant la lecture. La liste « Frames » rassemble toutes les images annotées d'un clip, un tap y ramène. Le lecteur de l'interface web retrouve les mêmes dessins et notes, avec une barre qui repère les frames annotés.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-annotation-robot-arm-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-annotation-robot-arm-dark.webp"
+  alt="Encre et note sur une image en pause ; elles ne reviennent que sur ce frame, en mode Pencil."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-pencil.mp4"
+  title="Le Pencil sur l'iPad"
+  caption="Filmé en vrai : le Pencil sur l'iPad, la liste « Frames » à gauche."
+  vertical
+/>
+
+### Plein écran et fenêtres flottantes
+
+Une vidéo passe en grand, les autres deviennent des fenêtres flottantes qu'on déplace, pince, tourne. Un tap échange une fenêtre avec la vidéo principale. Côté son, **SuperSolo** coupe tout sauf la vidéo principale, et le son d'une fenêtre peut suivre sa place à l'écran. Un balayage à deux doigts range les fenêtres dans un coin.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-fullscreen-floating-windows-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-fullscreen-floating-windows-dark.webp"
+  alt="Une vidéo principale, les autres en fenêtres flottantes."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Une bibliothèque qui se range toute seule
+
+Chaque vidéo se note en cœurs (sur 10), reçoit des tags colorés, des plages temporelles nommées, des captures d'images. Les **listes intelligentes** sont des règles : note minimale, tags (avec une note par tag), jamais regardée, contient des notes texte. Elles se recalculent à chaque modification : noter une vidéo 8/10 la fait entrer dans « Top rated » sans rien faire d'autre. Les listes simples, elles, se composent à la main.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-library.mp4"
+  title="Noter, filtrer, choisir une liste"
+  caption="Animation de démonstration : noter, filtrer par tag, choisir une liste intelligente."
+/>
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-smart-list-editor-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-smart-list-editor-dark.webp"
+  alt="Une liste intelligente se règle condition par condition, avec l'aperçu des vidéos retenues."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Plages temporelles et captures
+
+Dans un clip, on marque des **plages** : un début, une fin, un nom. Elles s'affichent sur la barre de lecture et en vignettes, un tap y saute. Dans l'interface web, le bouton « Play selections » lit à la suite les plages des vidéos affichées, l'une après l'autre, sans réencoder ni créer de fichier. Ce workflow reste expérimental : assembler ces plages en une seule vidéo exportée est une piste, qui dépendra de l'intérêt qu'elle suscite. Les **captures** gardent une image précise du clip ; elles se retrouvent dans une bande sous la vidéo et, côté web, dans une page qui les rassemble toutes.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-ranges.mp4"
+  title="Marquer une plage"
+  caption="Animation de démonstration : marquer une plage, la retrouver sur la barre de lecture."
+/>
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/gridstream/ipad-time-ranges-dark.webp",
+      alt: "Les plages d'un clip.",
+      width: 2000,
+      height: 1500,
+    },
+    {
+      src: "/images/2026/gridstream/ipad-captures-dark.webp",
+      alt: "Les captures, image par image.",
+      width: 2000,
+      height: 1500,
+    },
+  ]}
+  caption="Les plages d'un clip, et ses captures image par image."
+/>
+
+### Et sur le Mac
+
+Le serveur est une app de barre des menus, et d'abord un **indexeur de vidéothèque**. On lui donne des dossiers, il les scanne (`.mp4`, `.m4v`, `.mov`), catalogue chaque fichier et précalcule en tâche de fond les images qui rendent le scrub instantané. Il diffuse ensuite les vidéos en streaming à l'iPad sur le réseau local, où il s'annonce tout seul. Ses réglages montrent les appareils connectés, les flux en cours et un journal de connexion. Il sert aussi une interface web Angular sur le même port, pour gérer la bibliothèque depuis un navigateur.
+
+<ThemeImage
+  src="/images/2026/gridstream/mac-server-activity.webp"
+  alt="Le serveur Mac : appareils connectés, débit, journal des lectures."
+  width={760}
+  height={731}
+  loading="lazy"
+  style={{ width: "100%", maxWidth: 560, height: "auto" }}
+/>
+
+### L'interface web
+
+Le Mac sert aussi une **interface web** complète, sur le même port que l'API : un navigateur sur le réseau local et le même code PIN suffisent. On y retrouve toute la bibliothèque, avec recherche, filtres, notes et tags ; des filtres qu'on enregistre d'un clic en liste intelligente ; un lecteur qui affiche les annotations faites au Pencil, frame par frame ; la lecture des plages à la suite ; la page des captures ; l'historique et la gestion des dossiers sources. C'est l'endroit confortable pour ranger et cataloguer depuis un ordinateur, pendant que l'iPad sert à regarder.
+
+<ThemeImage
+  src="/images/2026/gridstream/web-library-content.webp"
+  alt="L'interface web : la bibliothèque, avec notes, tags et lectures."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-library-filters.webp"
+  alt="Des filtres sur les tags et la note, enregistrables en liste intelligente."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-player-annotations.webp"
+  alt="Le lecteur web retrouve l'encre et la note posées au Pencil, et la liste des frames annotés."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-play-selections-sequence.webp"
+  alt="« Play selections » : les plages de plusieurs vidéos lues à la suite, une couleur par segment."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-captures.webp"
+  alt="Toutes les captures d'images au même endroit, avec leur vidéo et leur timecode."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-web-player.mp4"
+  title="Le lecteur web"
+  caption="Animation de démonstration : le lecteur web, annotations comprises."
+/>
+
+## Sous le capot
+
+GridStream tient en trois applications et un paquet partagé. Le Mac est la source de vérité : il possède le catalogue, les notes, les tags, les annotations, rangés dans une base **SQLite** (via GRDB). L'iPad est un client avec beaucoup d'état local (la disposition, la lecture, les fenêtres), mais qui ne garde jamais sa propre version des métadonnées.
+
+<GridstreamArchitecture locale="fr" caption="Un Mac source de vérité, deux clients, un contrat partagé." />
+
+### Streamer sans transcoder
+
+Pas de HLS, pas de transcodage : le serveur répond aux requêtes **HTTP Range** et `AVPlayer` lit le fichier comme s'il était local, en demandant les octets dont il a besoin. Douze lecteurs, ce sont douze clients qui sautent dans des fichiers différents ; le serveur Vapor ne fait que servir des tranches. Les chemins de fichiers ne transitent jamais : l'iPad demande un `fileId`, le serveur retrouve le fichier dans son catalogue.
+
+Ce `fileId` est dérivé du contenu : un hash **xxHash64** de quelques morceaux du fichier plus sa taille. Renommer ou déplacer une vidéo ne lui fait pas perdre ses notes, ses tags ni ses annotations. Ne pas confondre avec l'UUID de la base, qui reste interne.
+
+Le serveur demande un code. Au premier lancement, le Mac génère un PIN à six chiffres ; l'iPad le saisit et reçoit en échange un jeton de session, gardé dans le trousseau. Chaque appel à l'API porte ce jeton dans un en-tête. Les lecteurs du système (`AVPlayer` pour la vidéo, `AsyncImage` pour les images) chargent eux-mêmes leurs adresses et ne permettent pas facilement d'y ajouter cet en-tête : pour ces seules requêtes média, le jeton voyage dans l'URL, et le serveur l'efface avant d'écrire ses journaux. Les routes de métadonnées, elles, le refusent dans l'URL.
+
+### Le scrub, ou servir une image en quelques millisecondes
+
+Décoder une image précise d'un H.264 coûte cher : il faut repartir de l'image clé précédente. Le Mac précalcule donc une grille d'images par vidéo, en tâche de fond, et les garde en cache ; pendant le scrub normal, l'iPad demande l'image de la grille la plus proche. En mode précis (1/10 et image par image), la requête porte un `exact=true` : le serveur génère l'image au timestamp demandé, sans l'arrondir ni la mettre en cache. Le premier cas est instantané, le second est juste à temps, et le geste du doigt fait la transition entre les deux.
+
+### Annoter un frame, pas un instant
+
+Deux décisions rendent les annotations fiables. Les coordonnées sont **normalisées** aux dimensions de la vidéo : le même trait tombe au même endroit sur une tuile, en plein écran ou dans une fenêtre tournée. Et la clé d'une annotation est le **numéro de frame**, pas un temps en secondes : `12.5` et `12.500000001` ne doivent pas être deux images différentes.
+
+### Du son en temps réel
+
+Chaque lecteur passe par un `MTAudioProcessingTap` : un compresseur qui normalise le volume et un panoramique stéréo. En plein écran, quand l'option est activée, c'est la position horizontale d'une fenêtre flottante qui règle ce panoramique : à gauche de l'écran, le son part à gauche ; au centre, il est centré ; à droite, il passe à droite. C'est un panoramique automatique lié à la place à l'écran, pas de l'audio spatial. Ce code tourne sur le thread de rendu audio, où une allocation, un verrou ou un calcul trop lourd s'entend tout de suite en craquement. Les paramètres changent de façon atomique, chaque flux garde son propre état d'enveloppe.
+
+### Un contrat, trois clients
+
+Les types qui circulent entre Mac et iPad vivent dans un paquet Swift local, **GridStreamKit** : DTO, décodage tolérant des dates, codec des critères de listes intelligentes. Des fixtures JSON servent de référence : les tests du paquet les décodent, et un test côté serveur vérifie que les vraies routes produisent exactement ces payloads. Le web Angular s'aligne sur les mêmes formes.
+
+### Swift 6, concurrence stricte
+
+Le serveur macOS compile en mode Swift 6 avec la vérification de concurrence complète : isolation MainActor par défaut, types côté serveur `nonisolated`, base de données derrière un actor. L'app iPad est en Swift 5 avec `SWIFT_STRICT_CONCURRENCY = complete`. La règle : zéro nouveau warning.
+
+## Un terrain de jeu
+
+GridStream reste un lecteur expérimental, et c'est ce qui me plaît : c'est un bac à sable pour la vidéo, où chaque geste est une hypothèse. Monter le doigt pour ralentir le scrub en était une, l'encre attachée à un frame en était une autre. Au-delà des gestes, ce sont des façons de travailler que j'essaie : parcourir beaucoup de vidéos d'un coup, choisir celles qui comptent, les annoter, les noter, les ranger, et voir comment ces petites étapes forment une chaîne de curation. Certaines tiennent déjà, comme les listes intelligentes qui se remplissent toutes seules ; d'autres, comme la lecture des plages à la suite, sont des débuts. Celles qui tiennent restent, les autres partent.
+
+Une question, un bug, un geste à proposer ? Écrivez-moi à [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).
+
+<Callout title="Crédits">
+
+Les vidéos de démonstration sont des extraits raccourcis et réencodés de films libres de la Blender Foundation. Merci à leurs auteurs.
+
+- *Tears of Steel*, (CC) Blender Foundation | [mango.blender.org](https://mango.blender.org), sous licence [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- *Sintel*, © copyright Blender Foundation | [durian.blender.org](https://durian.blender.org), sous licence [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- *Elephants Dream*, (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org ([orange.blender.org](https://orange.blender.org)), sous licence [CC BY 2.5](https://creativecommons.org/licenses/by/2.5/).
+
+</Callout>

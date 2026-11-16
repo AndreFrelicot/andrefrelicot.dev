@@ -1,0 +1,294 @@
+---
+title: "GridStream: twelve videos at once on iPad, served by your Mac"
+description: "An experimental video player, and above all a playground for video interactions: a grid, frame-accurate scrubbing, Apple Pencil, floating windows. A Swift server on the Mac, a SwiftUI client on iPad and an Angular web interface."
+date: 2026-11-16
+en_mdx: gridstream-twelve-videos-at-once-on-ipad.mdx
+fr_mdx: gridstream-douze-videos-a-la-fois-sur-ipad.mdx
+es_mdx: gridstream-doce-videos-a-la-vez-en-ipad.mdx
+pt_mdx: gridstream-doze-videos-ao-mesmo-tempo-no-ipad.mdx
+tags: [apps, source_code, swift, swiftui, ipad, apple-pencil, avfoundation, vapor, angular, streaming]
+image: /images/2026/gridstream/gridstream-cover.webp
+unlisted: true
+---
+
+An experimental video player, and above all a playground for video interactions: a grid, frame-accurate scrubbing, Apple Pencil, floating windows. A Swift server on the Mac, a SwiftUI client on iPad and an Angular web interface.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-hero.mp4"
+  poster="/images/2026/gridstream/gridstream-cover.webp"
+  title="GridStream in action"
+  caption="GridStream in action."
+  aspect="1920/822"
+  wide
+/>
+
+<div className="not-prose my-10 rounded-xl border border-foreground/15 bg-foreground/[0.03] p-5">
+  <p className="text-base font-semibold text-foreground">Try GridStream</p>
+  <p className="mt-2 text-sm leading-6 text-foreground/80">The iPad app is free on the App Store. The Mac server is a download below: it scans your video folders and serves them to the iPad over your local network.</p>
+  <div className="mt-4 flex flex-wrap items-center gap-3">
+    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0" />
+    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" className="inline-flex items-center gap-2 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition hover:border-foreground/40 hover:bg-foreground/5">
+      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={24} height={24} />
+      <span>Download the Mac server</span>
+    </a>
+    {/* Once the public repository exists: <GitHubLink href="public repository URL" label="Source code" /> */}
+  </div>
+  <p className="mt-3 text-xs text-foreground/60">Mac server: GridStream 1.0, disk image signed and notarized by Apple (23.6 MB), macOS 15.6 or later.</p>
+</div>
+
+## Watching many videos at once
+
+Sometimes one video is not enough. A day's worth of rushes. Several takes of the same scene. A collection of clips you want to take in at a glance, without opening every file one by one. On a computer, you end up with ten player windows piled on top of each other. On a tablet, you don't even get that option.
+
+**GridStream** grew out of that wish: set the iPad down on the table and see up to **twelve videos playing at the same time**, pulled from the Mac's video library. Tap a tile and the sound follows it. Slide a finger along the playback bar and the picture follows, frame by frame. Take out the Apple Pencil, circle a detail, and the note stays pinned to that exact frame.
+
+It is not a streaming service. No account, no cloud, no ads, no data collected. The videos stay on the Mac and the iPad plays them live over the local network. And it is deliberately an **experimental player**: a sandbox for video interactions and for ways of working with lots of clips. Browsing, picking, annotating, sorting, cataloguing: the app is there to try out how those steps fit together, without claiming to automate them all.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-grid-nine-videos-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-grid-nine-videos-dark.webp"
+  alt="The grid: from one to twelve tiles; the selected tile (orange) carries the sound."
+  width={2000}
+  height={1500}
+  priority
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-ipad-live.mp4"
+  title="GridStream live on iPad"
+  caption="GridStream live on iPad."
+  aspect="4/3"
+/>
+
+## What the app does
+
+### A grid that breathes
+
+The "+" button adds a tile and the grid springs into a new arrangement: one row up to two videos, two rows up to six, three beyond that. **Shuffle All** flips every tile to other videos from the library (or from a chosen list). Each tile has its own playback bar, buttons and volume; a tap selects it, and the selected tile is the one you hear. Layouts can be saved as presets. The grid is also where you prepare: that's where you pick the sources and compose the set, before sending one video to full screen and the others into floating windows.
+
+### Scrubbing at three speeds
+
+Scrubbing is the gesture of sliding along the playback bar to watch the video run by. In GridStream, a floating preview follows your finger with the exact frame at that point. Then comes the gesture I wanted to try: **move your finger up**. One notch higher, the slider drops to 1/10 of its speed and a ruler appears. One more notch, and each pixel of movement advances one frame, with its timecode. Let go, and playback resumes right there.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-scrub.mp4"
+  title="Scrubbing at three speeds"
+  caption="Demo animation: normal, 1/10, frame by frame; the height of your finger picks the speed."
+/>
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-fullscreen-precision-scrub-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-fullscreen-precision-scrub-dark.webp"
+  alt="In full screen: the precision-mode ruler and the floating preview, with a frame-accurate timecode."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Apple Pencil: writing on the picture
+
+The pencil button pauses the video and opens a **PencilKit** drawing layer over the frame. Circle, draw arrows, add a text note. The drawing is attached to **that frame**: the ‹ › arrows step frame by frame, the ink disappears on the neighbouring frames and comes back on the right one. You annotate still frames, not an animation: the ink only shows in Pencil mode, with the video paused, never during playback. The "Frames" list gathers every annotated frame of a clip, and a tap takes you back to it. The web interface's player shows the same drawings and notes, with a bar that marks the annotated frames.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-annotation-robot-arm-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-annotation-robot-arm-dark.webp"
+  alt="Ink and a note on a paused frame; they only come back on that frame, in Pencil mode."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-pencil.mp4"
+  title="The Pencil on the iPad"
+  caption="Filmed for real: the Pencil on the iPad, with the “Frames” list on the left."
+  vertical
+/>
+
+### Full screen and floating windows
+
+One video goes big and the others become floating windows you can move, pinch and rotate. A tap swaps a window with the main video. On the audio side, **SuperSolo** mutes everything except the main video, and a window's sound can follow its position on screen. A two-finger swipe tucks the windows into a corner.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-fullscreen-floating-windows-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-fullscreen-floating-windows-dark.webp"
+  alt="One main video, the others in floating windows."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### A library that sorts itself
+
+Each video gets a rating in hearts (out of 10), coloured tags, named time ranges and frame captures. **Smart lists** are rules: minimum rating, tags (with a rating per tag), never watched, contains text notes. They update with every change: rate a video 8/10 and it lands in "Top rated" without you doing anything else. Simple lists, on the other hand, are put together by hand.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-library.mp4"
+  title="Rate, filter, pick a list"
+  caption="Demo animation: rate, filter by tag, pick a smart list."
+/>
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-smart-list-editor-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-smart-list-editor-dark.webp"
+  alt="A smart list is set up one condition at a time, with a preview of the matching videos."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Time ranges and captures
+
+Within a clip, you mark **ranges**: a start, an end, a name. They show up on the playback bar and as thumbnails, and a tap jumps to them. In the web interface, the "Play selections" button plays the ranges of the videos on screen back to back, one after another, without re-encoding or creating a file. This workflow is still experimental: assembling those ranges into a single exported video is an idea, and whether it happens depends on the interest it gets. **Captures** keep a precise frame of the clip; you find them in a strip below the video and, on the web side, on a page that gathers them all.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-ranges.mp4"
+  title="Marking a range"
+  caption="Demo animation: mark a range, find it again on the playback bar."
+/>
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/gridstream/ipad-time-ranges-dark.webp",
+      alt: "A clip's ranges.",
+      width: 2000,
+      height: 1500,
+    },
+    {
+      src: "/images/2026/gridstream/ipad-captures-dark.webp",
+      alt: "Captures, frame by frame.",
+      width: 2000,
+      height: 1500,
+    },
+  ]}
+  caption="A clip's ranges, and its frame-by-frame captures."
+/>
+
+### And on the Mac
+
+The server is a menu bar app, and first of all a **video library indexer**. You give it folders, it scans them (`.mp4`, `.m4v`, `.mov`), catalogues every file and, in the background, precomputes the frames that make scrubbing instant. It then streams the videos to the iPad over the local network, where it announces itself. Its settings show the connected devices, the streams in progress and a connection log. It also serves an Angular web interface on the same port, to manage the library from a browser.
+
+<ThemeImage
+  src="/images/2026/gridstream/mac-server-activity.webp"
+  alt="The Mac server: connected devices, throughput, playback log."
+  width={760}
+  height={731}
+  loading="lazy"
+  style={{ width: "100%", maxWidth: 560, height: "auto" }}
+/>
+
+### The web interface
+
+The Mac also serves a full **web interface**, on the same port as the API: a browser on the local network and the same PIN are all it takes. It has the whole library, with search, filters, ratings and tags; filters you save as a smart list in one click; a player that shows the Pencil annotations, frame by frame; back-to-back playback of ranges; the captures page; the history and the management of source folders. It's the comfortable place to sort and catalogue from a computer, while the iPad is for watching.
+
+<ThemeImage
+  src="/images/2026/gridstream/web-library-content.webp"
+  alt="The web interface: the library, with ratings, tags and plays."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-library-filters.webp"
+  alt="Filters on tags and rating, which can be saved as a smart list."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-player-annotations.webp"
+  alt="The web player shows the ink and the note drawn with the Pencil, and the list of annotated frames."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-play-selections-sequence.webp"
+  alt="“Play selections”: the ranges of several videos played back to back, one colour per segment."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-captures.webp"
+  alt="All the frame captures in one place, with their video and timecode."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-web-player.mp4"
+  title="The web player"
+  caption="Demo animation: the web player, annotations included."
+/>
+
+## Under the hood
+
+GridStream is three apps and a shared package. The Mac is the source of truth: it owns the catalogue, the ratings, the tags and the annotations, stored in a **SQLite** database (through GRDB). The iPad is a client with a lot of local state (the layout, playback, the windows), but it never keeps its own version of the metadata.
+
+<GridstreamArchitecture locale="en" caption="One Mac as the source of truth, two clients, one shared contract." />
+
+### Streaming without transcoding
+
+No HLS, no transcoding: the server answers **HTTP Range** requests and `AVPlayer` reads the file as if it were local, asking for the bytes it needs. Twelve players means twelve clients jumping around in different files; the Vapor server just serves slices. File paths never travel over the wire: the iPad asks for a `fileId` and the server looks the file up in its catalogue.
+
+That `fileId` is derived from the content: an **xxHash64** hash of a few chunks of the file plus its size. Renaming or moving a video doesn't lose its ratings, tags or annotations. Not to be confused with the database UUID, which stays internal.
+
+The server asks for a code. On first launch, the Mac generates a six-digit PIN; the iPad enters it and gets a session token in return, kept in the Keychain. Every API call carries that token in a header. The system players (`AVPlayer` for video, `AsyncImage` for images) load their URLs themselves and don't make it easy to add that header: for those media requests only, the token travels in the URL, and the server strips it before writing its logs. The metadata routes refuse it in the URL.
+
+### Scrubbing, or serving a frame in a few milliseconds
+
+Decoding one specific frame of an H.264 file is expensive: you have to start again from the previous keyframe. So the Mac precomputes a grid of frames for each video, in the background, and caches them; during normal scrubbing, the iPad asks for the nearest frame on that grid. In precision mode (1/10 and frame by frame), the request carries `exact=true`: the server generates the frame at the requested timestamp, without rounding it or caching it. The first case is instant, the second is just in time, and the finger gesture handles the transition between the two.
+
+### Annotating a frame, not a moment
+
+Two decisions make annotations reliable. Coordinates are **normalized** to the video's dimensions: the same stroke lands in the same place on a tile, in full screen or in a rotated window. And an annotation's key is the **frame number**, not a time in seconds: `12.5` and `12.500000001` must not be two different frames.
+
+### Real-time audio
+
+Each player goes through an `MTAudioProcessingTap`: a compressor that evens out the volume, and stereo panning. In full screen, when the option is on, a floating window's horizontal position sets that panning: on the left of the screen, the sound goes left; in the middle, it's centred; on the right, it moves right. It's automatic panning tied to the position on screen, not spatial audio. This code runs on the audio render thread, where an allocation, a lock or a heavy calculation is immediately audible as a crackle. Parameters change atomically, and each stream keeps its own envelope state.
+
+### One contract, three clients
+
+The types exchanged between Mac and iPad live in a local Swift package, **GridStreamKit**: DTOs, tolerant date decoding, the smart-list criteria codec. JSON fixtures serve as the reference: the package tests decode them, and a server-side test checks that the real routes produce exactly those payloads. The Angular web app follows the same shapes.
+
+### Swift 6, strict concurrency
+
+The macOS server builds in Swift 6 language mode with complete concurrency checking: MainActor isolation by default, server-side types `nonisolated`, the database behind an actor. The iPad app is in Swift 5 with `SWIFT_STRICT_CONCURRENCY = complete`. The rule: zero new warnings.
+
+## A playground
+
+GridStream remains an experimental player, and that's what I like about it: it's a sandbox for video, where every gesture is a hypothesis. Moving your finger up to slow down scrubbing was one; ink attached to a frame was another. Beyond gestures, I'm trying out ways of working: going through lots of videos at once, picking the ones that matter, annotating them, rating them, sorting them, and seeing how those small steps form a curation chain. Some already hold up, like smart lists that fill themselves; others, like back-to-back playback of ranges, are a beginning. The ones that hold up stay, the others go.
+
+A question, a bug, a gesture to suggest? Write to me at [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).
+
+<Callout title="Credits">
+
+The demo videos are shortened, re-encoded excerpts of open films by the Blender Foundation. Thanks to their authors.
+
+- *Tears of Steel*, (CC) Blender Foundation | [mango.blender.org](https://mango.blender.org), licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- *Sintel*, © copyright Blender Foundation | [durian.blender.org](https://durian.blender.org), licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- *Elephants Dream*, (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org ([orange.blender.org](https://orange.blender.org)), licensed under [CC BY 2.5](https://creativecommons.org/licenses/by/2.5/).
+
+</Callout>

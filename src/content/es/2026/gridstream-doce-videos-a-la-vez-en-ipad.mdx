@@ -1,0 +1,294 @@
+---
+title: "GridStream: doce vídeos a la vez en el iPad, servidos por tu Mac"
+description: "Un reproductor de vídeo experimental y, sobre todo, un campo de pruebas para las interacciones con vídeo: cuadrícula, scrub fotograma a fotograma, Apple Pencil, ventanas flotantes. Un servidor Swift en el Mac, un cliente SwiftUI en el iPad y una interfaz web Angular."
+date: 2026-11-16
+en_mdx: gridstream-twelve-videos-at-once-on-ipad.mdx
+fr_mdx: gridstream-douze-videos-a-la-fois-sur-ipad.mdx
+es_mdx: gridstream-doce-videos-a-la-vez-en-ipad.mdx
+pt_mdx: gridstream-doze-videos-ao-mesmo-tempo-no-ipad.mdx
+tags: [apps, source_code, swift, swiftui, ipad, apple-pencil, avfoundation, vapor, angular, streaming]
+image: /images/2026/gridstream/gridstream-cover.webp
+unlisted: true
+---
+
+Un reproductor de vídeo experimental y, sobre todo, un campo de pruebas para las interacciones con vídeo: cuadrícula, scrub fotograma a fotograma, Apple Pencil, ventanas flotantes. Un servidor Swift en el Mac, un cliente SwiftUI en el iPad y una interfaz web Angular.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-hero.mp4"
+  poster="/images/2026/gridstream/gridstream-cover.webp"
+  title="GridStream en acción"
+  caption="GridStream en acción."
+  aspect="1920/822"
+  wide
+/>
+
+<div className="not-prose my-10 rounded-xl border border-foreground/15 bg-foreground/[0.03] p-5">
+  <p className="text-base font-semibold text-foreground">Probar GridStream</p>
+  <p className="mt-2 text-sm leading-6 text-foreground/80">La app para iPad es gratuita en el App Store. El servidor para Mac se descarga aquí abajo: escanea tus carpetas de vídeo y se las sirve al iPad a través de la red local.</p>
+  <div className="mt-4 flex flex-wrap items-center gap-3">
+    <AppStoreLink href="https://apps.apple.com/app/gridstream/id6833729503" className="mt-0" ariaLabel="Descargar en el App Store" />
+    <a href="https://videos.andrefrelicot.dev/gridstream/GridStream-1.0.dmg" className="inline-flex items-center gap-2 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition hover:border-foreground/40 hover:bg-foreground/5">
+      <img src="/images/2026/gridstream/gridstream-mac-icon.webp" alt="" width={24} height={24} />
+      <span>Descargar el servidor para Mac</span>
+    </a>
+    {/* Cuando exista el repositorio público: <GitHubLink href="URL del repositorio público" label="Código fuente" /> */}
+  </div>
+  <p className="mt-3 text-xs text-foreground/60">Servidor para Mac: GridStream 1.0, imagen de disco firmada y notarizada por Apple (23,6 MB), macOS 15.6 o posterior.</p>
+</div>
+
+## Ver muchos vídeos a la vez
+
+Hay momentos en los que un solo vídeo no basta. Los brutos de un día de rodaje. Las tomas de una misma escena. Una colección de clips que quieres recorrer de un vistazo, sin abrir cada archivo uno por uno. En un ordenador, acabas con diez ventanas de reproductor apiladas. En una tableta, ni siquiera tienes esa opción.
+
+**GridStream** nació de esas ganas: dejar el iPad sobre la mesa y ver en él hasta **doce vídeos reproduciéndose a la vez**, sacados de la videoteca del Mac. Tocas una celda y el sonido la sigue. Deslizas el dedo por la barra de reproducción y la imagen lo sigue, fotograma a fotograma. Sacas el Apple Pencil, rodeas un detalle y la nota se queda anclada a esa imagen precisa.
+
+No es un servicio de streaming. Sin cuenta, sin nube, sin publicidad, sin recopilar ningún dato. Los vídeos se quedan en el Mac y el iPad los reproduce en directo a través de la red local. Y es, a propósito, un **reproductor experimental**: un banco de pruebas para las interacciones con vídeo y para las formas de trabajar con muchos clips. Recorrer, elegir, anotar, ordenar, catalogar: la app sirve para probar cómo encajan esos pasos, sin pretender automatizarlos todos.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-grid-nine-videos-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-grid-nine-videos-dark.webp"
+  alt="La cuadrícula: de una a doce celdas; la seleccionada (naranja) lleva el sonido."
+  width={2000}
+  height={1500}
+  priority
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-ipad-live.mp4"
+  title="GridStream en directo en el iPad"
+  caption="GridStream en directo en el iPad."
+  aspect="4/3"
+/>
+
+## Lo que hace la app
+
+### Una cuadrícula que respira
+
+El botón «+» añade una celda y la cuadrícula se reorganiza con un efecto de muelle: una fila hasta dos vídeos, dos filas hasta seis, tres a partir de ahí. **Shuffle All** cambia todas las celdas a otros vídeos de la biblioteca (o de una lista elegida). Cada celda tiene su barra de reproducción, sus botones y su volumen; un toque la selecciona, y la celda seleccionada es la que se oye. Las disposiciones se guardan como presets. La cuadrícula es también la fase de preparación: ahí eliges las fuentes y compones el conjunto, antes de pasar un vídeo a pantalla completa y los demás a ventanas flotantes.
+
+### Scrub a tres velocidades
+
+El scrub es ese gesto de deslizar por la barra de reproducción para ver pasar el vídeo. En GridStream, una vista previa flotante sigue al dedo con la imagen exacta de ese instante. Luego viene el gesto que quería probar: **subir el dedo**. Un escalón más arriba, el control pasa a 1/10 de su velocidad y aparece una regla. Otro escalón, y cada píxel de desplazamiento avanza un fotograma, con su código de tiempo. Sueltas y la reproducción continúa justo ahí.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-scrub.mp4"
+  title="Scrub a tres velocidades"
+  caption="Animación de demostración: normal, 1/10, fotograma a fotograma; la altura del dedo elige la velocidad."
+/>
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-fullscreen-precision-scrub-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-fullscreen-precision-scrub-dark.webp"
+  alt="En pantalla completa: la regla del modo preciso y la vista previa flotante, con código de tiempo exacto al fotograma."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Apple Pencil: escribir sobre la imagen
+
+El botón del lápiz pausa el vídeo y abre una capa de dibujo **PencilKit** sobre la imagen. Rodeas, dibujas flechas, añades una nota de texto. El dibujo queda unido a **ese fotograma**: las flechas ‹ › avanzan fotograma a fotograma, la tinta desaparece en los vecinos y vuelve en el correcto. Se anotan imágenes fijas, no una animación: la tinta solo se muestra en modo Pencil, con el vídeo en pausa, nunca durante la reproducción. La lista «Frames» reúne todos los fotogramas anotados de un clip, y un toque te lleva a cada uno. El reproductor de la interfaz web muestra los mismos dibujos y notas, con una barra que señala los fotogramas anotados.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-annotation-robot-arm-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-annotation-robot-arm-dark.webp"
+  alt="Tinta y una nota sobre un fotograma en pausa; solo vuelven en ese fotograma, en modo Pencil."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-pencil.mp4"
+  title="El Pencil en el iPad"
+  caption="Grabado de verdad: el Pencil en el iPad, con la lista «Frames» a la izquierda."
+  vertical
+/>
+
+### Pantalla completa y ventanas flotantes
+
+Un vídeo pasa a ocupar la pantalla y los demás se convierten en ventanas flotantes que puedes mover, pellizcar y girar. Un toque intercambia una ventana con el vídeo principal. En cuanto al sonido, **SuperSolo** silencia todo salvo el vídeo principal, y el sonido de una ventana puede seguir su posición en la pantalla. Un deslizamiento con dos dedos recoge las ventanas en una esquina.
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-fullscreen-floating-windows-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-fullscreen-floating-windows-dark.webp"
+  alt="Un vídeo principal y los demás en ventanas flotantes."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Una biblioteca que se ordena sola
+
+Cada vídeo se puntúa con corazones (sobre 10) y recibe etiquetas de colores, rangos de tiempo con nombre y capturas de fotogramas. Las **listas inteligentes** son reglas: puntuación mínima, etiquetas (con una puntuación por etiqueta), nunca visto, contiene notas de texto. Se recalculan con cada cambio: puntúa un vídeo con 8/10 y entra en «Top rated» sin hacer nada más. Las listas simples, en cambio, se componen a mano.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-library.mp4"
+  title="Puntuar, filtrar, elegir una lista"
+  caption="Animación de demostración: puntuar, filtrar por etiqueta, elegir una lista inteligente."
+/>
+
+<ThemeImage
+  lightSrc="/images/2026/gridstream/ipad-smart-list-editor-light.webp"
+  darkSrc="/images/2026/gridstream/ipad-smart-list-editor-dark.webp"
+  alt="Una lista inteligente se ajusta condición a condición, con la vista previa de los vídeos que cumplen."
+  width={2000}
+  height={1500}
+  loading="lazy"
+  style={{ width: "100%", height: "auto" }}
+/>
+
+### Rangos de tiempo y capturas
+
+Dentro de un clip marcas **rangos**: un inicio, un final, un nombre. Aparecen en la barra de reproducción y como miniaturas, y un toque salta a ellos. En la interfaz web, el botón «Play selections» reproduce seguidos los rangos de los vídeos en pantalla, uno tras otro, sin recodificar ni crear ningún archivo. Este flujo de trabajo sigue siendo experimental: unir esos rangos en un único vídeo exportado es una idea, y que llegue dependerá del interés que despierte. Las **capturas** guardan un fotograma preciso del clip; aparecen en una franja bajo el vídeo y, en la web, en una página que las reúne todas.
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-ranges.mp4"
+  title="Marcar un rango"
+  caption="Animación de demostración: marcar un rango y encontrarlo en la barra de reproducción."
+/>
+
+<ScreenshotGallery
+  images={[
+    {
+      src: "/images/2026/gridstream/ipad-time-ranges-dark.webp",
+      alt: "Los rangos de un clip.",
+      width: 2000,
+      height: 1500,
+    },
+    {
+      src: "/images/2026/gridstream/ipad-captures-dark.webp",
+      alt: "Las capturas, fotograma a fotograma.",
+      width: 2000,
+      height: 1500,
+    },
+  ]}
+  caption="Los rangos de un clip y sus capturas fotograma a fotograma."
+/>
+
+### Y en el Mac
+
+El servidor es una app de la barra de menús y, ante todo, un **indexador de videoteca**. Le das carpetas, las escanea (`.mp4`, `.m4v`, `.mov`), cataloga cada archivo y precalcula en segundo plano los fotogramas que hacen que el scrub sea instantáneo. Después envía los vídeos en streaming al iPad a través de la red local, donde se anuncia solo. Sus ajustes muestran los dispositivos conectados, las transmisiones en curso y un registro de conexiones. También sirve una interfaz web Angular en el mismo puerto, para gestionar la biblioteca desde un navegador.
+
+<ThemeImage
+  src="/images/2026/gridstream/mac-server-activity.webp"
+  alt="El servidor para Mac: dispositivos conectados, caudal, registro de reproducciones."
+  width={760}
+  height={731}
+  loading="lazy"
+  style={{ width: "100%", maxWidth: 560, height: "auto" }}
+/>
+
+### La interfaz web
+
+El Mac también sirve una **interfaz web** completa, en el mismo puerto que la API: basta un navegador en la red local y el mismo PIN. Ahí está toda la biblioteca, con búsqueda, filtros, puntuaciones y etiquetas; filtros que se guardan con un clic como lista inteligente; un reproductor que muestra las anotaciones hechas con el Pencil, fotograma a fotograma; la reproducción seguida de los rangos; la página de capturas; el historial y la gestión de las carpetas de origen. Es el sitio cómodo para ordenar y catalogar desde un ordenador, mientras el iPad sirve para mirar.
+
+<ThemeImage
+  src="/images/2026/gridstream/web-library-content.webp"
+  alt="La interfaz web: la biblioteca, con puntuaciones, etiquetas y reproducciones."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-library-filters.webp"
+  alt="Filtros por etiquetas y puntuación, que se pueden guardar como lista inteligente."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-player-annotations.webp"
+  alt="El reproductor web muestra la tinta y la nota hechas con el Pencil, y la lista de fotogramas anotados."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-play-selections-sequence.webp"
+  alt="«Play selections»: los rangos de varios vídeos reproducidos seguidos, un color por segmento."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<ThemeImage
+  src="/images/2026/gridstream/web-captures.webp"
+  alt="Todas las capturas de fotogramas en un mismo sitio, con su vídeo y su código de tiempo."
+  width={2400}
+  height={1500}
+  loading="lazy"
+  wide
+  style={{ width: "100%", height: "auto" }}
+/>
+
+<VideoEmbed
+  src="https://videos.andrefrelicot.dev/2026/gridstream/gridstream-web-player.mp4"
+  title="El reproductor web"
+  caption="Animación de demostración: el reproductor web, anotaciones incluidas."
+/>
+
+## Bajo el capó
+
+GridStream son tres aplicaciones y un paquete compartido. El Mac es la fuente de verdad: posee el catálogo, las puntuaciones, las etiquetas y las anotaciones, guardados en una base de datos **SQLite** (mediante GRDB). El iPad es un cliente con mucho estado local (la disposición, la reproducción, las ventanas), pero nunca guarda su propia versión de los metadatos.
+
+<GridstreamArchitecture locale="es" caption="Un Mac como fuente de verdad, dos clientes, un contrato compartido." />
+
+### Hacer streaming sin transcodificar
+
+Sin HLS, sin transcodificación: el servidor responde a peticiones **HTTP Range** y `AVPlayer` lee el archivo como si fuera local, pidiendo los bytes que necesita. Doce reproductores son doce clientes saltando por archivos distintos; el servidor Vapor solo sirve trozos. Las rutas de los archivos nunca viajan: el iPad pide un `fileId` y el servidor busca el archivo en su catálogo.
+
+Ese `fileId` se deriva del contenido: un hash **xxHash64** de unos cuantos fragmentos del archivo más su tamaño. Renombrar o mover un vídeo no le hace perder sus puntuaciones, etiquetas ni anotaciones. No hay que confundirlo con el UUID de la base de datos, que sigue siendo interno.
+
+El servidor pide un código. En el primer arranque, el Mac genera un PIN de seis cifras; el iPad lo introduce y recibe a cambio un token de sesión, guardado en el Llavero. Cada llamada a la API lleva ese token en una cabecera. Los reproductores del sistema (`AVPlayer` para el vídeo, `AsyncImage` para las imágenes) cargan sus direcciones por su cuenta y no facilitan añadir esa cabecera: solo para esas peticiones de medios, el token viaja en la URL, y el servidor lo borra antes de escribir sus registros. Las rutas de metadatos, en cambio, lo rechazan en la URL.
+
+### El scrub, o servir un fotograma en pocos milisegundos
+
+Decodificar un fotograma concreto de un H.264 es caro: hay que volver a partir del fotograma clave anterior. Por eso el Mac precalcula una cuadrícula de fotogramas por vídeo, en segundo plano, y los guarda en caché; durante el scrub normal, el iPad pide el fotograma más cercano de esa cuadrícula. En modo preciso (1/10 y fotograma a fotograma), la petición lleva un `exact=true`: el servidor genera el fotograma en la marca de tiempo pedida, sin redondearla ni guardarla en caché. El primer caso es instantáneo, el segundo llega justo a tiempo, y el gesto del dedo hace la transición entre ambos.
+
+### Anotar un fotograma, no un instante
+
+Dos decisiones hacen fiables las anotaciones. Las coordenadas están **normalizadas** a las dimensiones del vídeo: el mismo trazo cae en el mismo sitio en una celda, en pantalla completa o en una ventana girada. Y la clave de una anotación es el **número de fotograma**, no un tiempo en segundos: `12.5` y `12.500000001` no deben ser dos imágenes distintas.
+
+### Audio en tiempo real
+
+Cada reproductor pasa por un `MTAudioProcessingTap`: un compresor que iguala el volumen y un paneo estéreo. En pantalla completa, cuando la opción está activada, la posición horizontal de una ventana flotante ajusta ese paneo: a la izquierda de la pantalla, el sonido va a la izquierda; en el centro, queda centrado; a la derecha, pasa a la derecha. Es un paneo automático ligado a la posición en la pantalla, no audio espacial. Este código corre en el hilo de renderizado de audio, donde una asignación de memoria, un bloqueo o un cálculo demasiado pesado se oyen al instante como un chasquido. Los parámetros cambian de forma atómica y cada flujo conserva su propio estado de envolvente.
+
+### Un contrato, tres clientes
+
+Los tipos que circulan entre el Mac y el iPad viven en un paquete Swift local, **GridStreamKit**: DTO, decodificación tolerante de fechas, códec de los criterios de las listas inteligentes. Unas fixtures JSON sirven de referencia: los tests del paquete las decodifican, y un test en el servidor comprueba que las rutas reales producen exactamente esos payloads. La web Angular sigue las mismas formas.
+
+### Swift 6, concurrencia estricta
+
+El servidor macOS compila en modo Swift 6 con la comprobación de concurrencia completa: aislamiento MainActor por defecto, tipos del servidor `nonisolated`, base de datos detrás de un actor. La app para iPad está en Swift 5 con `SWIFT_STRICT_CONCURRENCY = complete`. La regla: cero avisos nuevos.
+
+## Un campo de pruebas
+
+GridStream sigue siendo un reproductor experimental, y eso es lo que me gusta: es un banco de pruebas para el vídeo, donde cada gesto es una hipótesis. Subir el dedo para frenar el scrub era una; la tinta unida a un fotograma era otra. Más allá de los gestos, lo que pruebo son formas de trabajar: recorrer muchos vídeos de golpe, elegir los que importan, anotarlos, puntuarlos, ordenarlos, y ver cómo esos pequeños pasos forman una cadena de curación. Algunas ya funcionan, como las listas inteligentes que se llenan solas; otras, como la reproducción seguida de los rangos, son un comienzo. Las que funcionan se quedan, las demás se van.
+
+¿Una pregunta, un fallo, un gesto que proponer? Escríbeme a [support@andrefrelicot.dev](mailto:support@andrefrelicot.dev).
+
+<Callout title="Créditos">
+
+Los vídeos de demostración son fragmentos acortados y recodificados de películas libres de la Blender Foundation. Gracias a sus autores.
+
+- *Tears of Steel*, (CC) Blender Foundation | [mango.blender.org](https://mango.blender.org), con licencia [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- *Sintel*, © copyright Blender Foundation | [durian.blender.org](https://durian.blender.org), con licencia [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- *Elephants Dream*, (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org ([orange.blender.org](https://orange.blender.org)), con licencia [CC BY 2.5](https://creativecommons.org/licenses/by/2.5/).
+
+</Callout>
